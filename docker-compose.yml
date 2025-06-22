@@ -1,0 +1,19 @@
+version: '3'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db/postgres
+      SECRET_KEY: changeme
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+volumes:
+  db-data:
