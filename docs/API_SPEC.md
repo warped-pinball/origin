@@ -56,7 +56,7 @@ The current models in `app/models.py` include `User`, `Machine` and `Score` tabl
 - `Achievement` and `UserAchievement` – unlockable badges and progress.
 - `CosmeticItem` and `UserInventory` – purchased customizations.
 
-When designing new tables, omit `created_at` and `updated_at` fields in the base tables. Instead, maintain a corresponding `<table>_history` table recording every change with a `history_id` primary key and `valid_from`/`valid_to` timestamps. Optional flags such as `is_active` or `deleted_at` handle soft deletion. These history tables enable "as of" queries for any point in time.
+When designing new tables, omit `created_at` and `updated_at` fields in the base tables. Instead, maintain a corresponding `<table>_history` table recording every change with a `history_id` primary key and `valid_from`/`valid_to` timestamps. These history tables enable "as of" queries for any point in time.
 
 ## 4. Authentication Flow
 
@@ -108,7 +108,10 @@ To avoid running a full mail server in each environment, configure the applicati
 
 ## 8. Docker Build and Deployment
 
-Build the container image with `docker build -t pinball-api:$VERSION .` and push it to a private registry. Portainer can watch this registry via webhooks—trigger a webhook after pushing `dev`, `stg` or `prd` tags. Each tag corresponds to its own stack with environment-specific variables for databases, secrets and SMTP credentials. This keeps the code private while enabling automated updates across environments.
+Build the container image with `docker build -t pinball-api:$VERSION .` and publish it to a private registry.
+
+1. **GitHub Container Registry (GHCR)** – create a personal access token with the `write:packages` scope and authenticate using `docker login ghcr.io`. Push images as `ghcr.io/<owner>/pinball-api:$VERSION`. GHCR supports private repositories and works seamlessly with GitHub Actions.
+
 
 ## 9. Next Steps
 
