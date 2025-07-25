@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from .database import Base, engine
 from .routers import auth, users, machines, scores
+from .version import __version__
 import os
 
 # Create tables
@@ -19,3 +20,8 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(machines.router)
 app.include_router(scores.router)
+
+@app.get("/version")
+def get_version():
+    return {"version": __version__}
+

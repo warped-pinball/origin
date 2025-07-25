@@ -1,0 +1,16 @@
+name: Trigger Portainer deployment
+inputs:
+  webhook:
+    description: Portainer webhook URL
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: Deploy via Portainer webhook
+      run: |
+        if [ -n "${{ inputs.webhook }}" ]; then
+          curl -X POST "${{ inputs.webhook }}"
+        else
+          echo "Portainer webhook not set"
+        fi
+      shell: bash
