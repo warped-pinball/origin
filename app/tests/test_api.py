@@ -38,3 +38,10 @@ def test_create_user_and_login():
     assert response.status_code == 200
     token = response.json()["access_token"]
     assert token
+
+from ..version import __version__
+
+def test_version_endpoint():
+    response = client.get("/version")
+    assert response.status_code == 200
+    assert response.json() == {"version": __version__}

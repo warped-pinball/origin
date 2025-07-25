@@ -33,6 +33,11 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
       - name: Trigger Portainer deployment
-        run: curl -X POST "$PORTAINER_WEBHOOK"
+        run: |
+          if [ -n "$PORTAINER_WEBHOOK" ]; then
+            curl -X POST "$PORTAINER_WEBHOOK"
+          else
+            echo "Portainer webhook not set"
+          fi
         env:
           PORTAINER_WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK }}
