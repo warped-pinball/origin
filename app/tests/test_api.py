@@ -10,6 +10,7 @@ os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 from ..main import app
 from ..database import Base, get_db
 from .. import models
+from ..version import __version__
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -40,12 +41,11 @@ def test_create_user_and_login():
     assert token
 
 
-def test_root_message():
+def test_root_page():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello, world!"}
-
-from ..version import __version__
+    assert "Create Account" in response.text
+    assert __version__ in response.text
 
 def test_version_endpoint():
     response = client.get("/api/v1/version")

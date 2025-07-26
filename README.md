@@ -1,4 +1,4 @@
-# Pinball Score Tracker
+# Origin
 
 Backend service for tracking pinball scores using FastAPI.
 
