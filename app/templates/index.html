@@ -17,7 +17,9 @@
                 <button onclick='toggleTheme()' aria-label='Toggle theme' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;'>
                     <span id='theme-icon' class='material-icons'>light_mode</span>
                 </button>
-                <button id='logout-btn' onclick='logout()' style='position:fixed;top:1rem;right:4rem;display:none;'>Logout</button>
+                <button id='logout-btn' onclick='logout()' aria-label='Logout' style='position:fixed;top:1rem;right:4rem;width:2rem;height:2rem;display:none;align-items:center;justify-content:center;'>
+                    <span class='material-icons'>logout</span>
+                </button>
                 <section id='login-section'>
                     <article>
                         <h2>Login</h2>
@@ -28,7 +30,10 @@
                             <span id='login-error' class='error'></span>
                         </form>
                         <small>Don't have an account? <a href='#' onclick='openSignup(event)'>Sign Up</a></small>
-                        <p><small>Get our Android app today! iOS is coming soon.</small></p>
+                        <div class='grid'>
+                            <a href='#'><img src='/static/google-play-badge.png' alt='Get it on Google Play' style='height:40px'></a>
+                            <a href='#'><img src='/static/app-store-badge.png' alt='Download on the App Store' style='height:40px'></a>
+                        </div>
                     </article>
                 </section>
                 <dialog id='signup-dialog'>
@@ -39,9 +44,9 @@
                             <span id='signup-email-error' class='error'></span>
                             <input id='signup-screen' type='text' placeholder='Screen name' required />
                             <input id='signup-password' type='password' placeholder='Password' required />
-                            <footer>
-                                <button type='submit'>Create Account</button>
+                            <footer class='grid'>
                                 <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
+                                <button type='submit'>Create Account</button>
                             </footer>
                         </form>
                     </article>

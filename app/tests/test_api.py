@@ -51,6 +51,29 @@ def test_create_user_and_login():
     assert token
 
 
+def test_login_user_not_found():
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "missing@example.com", "password": "pass"},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+
+def test_login_wrong_password():
+    # create user
+    client.post(
+        "/api/v1/users/",
+        json={"email": "wp@example.com", "password": "right", "screen_name": "u"},
+    )
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "wp@example.com", "password": "wrong"},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Incorrect password"
+
+
 def test_root_page():
     response = client.get("/")
     assert response.status_code == 200
