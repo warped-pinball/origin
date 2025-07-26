@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from .database import Base, engine
+from .database import Base, engine, run_migrations
 from .routers import auth, users, machines, scores
 from .version import __version__
 import os
 
 # Create tables
 Base.metadata.create_all(bind=engine)
+run_migrations()
 
 app = FastAPI(title="Origin")
 
@@ -74,7 +75,9 @@ def read_root():
                             showLogin();
                         }}
                     }} else if (res.status === 422) {{
-                        document.getElementById('signup-email-error').textContent = 'Please enter a valid email address.';
+                        const emailInput = document.getElementById('signup-email');
+                        emailInput.setCustomValidity('Please enter a valid email address.');
+                        emailInput.reportValidity();
                     }} else {{
                         showToast('Signup failed', 'error');
                     }}
@@ -114,6 +117,10 @@ def read_root():
 
                 function closeSignup() {{
                     document.getElementById('signup-dialog').close();
+                    const emailInput = document.getElementById('signup-email');
+                    if (emailInput) {{
+                        emailInput.setCustomValidity('');
+                    }}
                     document.getElementById('signup-email-error').textContent = '';
                 }}
 
@@ -132,7 +139,13 @@ def read_root():
                     localStorage.getItem('token') ? showLoggedIn() : showLogin();
                 }}
 
-                document.addEventListener('DOMContentLoaded', checkAuth);
+                document.addEventListener('DOMContentLoaded', () => {{
+                    checkAuth();
+                    const emailInput = document.getElementById('signup-email');
+                    if (emailInput) {{
+                        emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+                    }}
+                }});
             </script>
         </head>
         <body>
@@ -174,7 +187,7 @@ def read_root():
                     <h2>You are logged in</h2>
                     <button onclick='logout()'>Logout</button>
                 </section>
-                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;'></div>
+                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
             </main>
             <footer style='margin-top:20px;text-align:center;'>Version {__version__}</footer>
         </body>
