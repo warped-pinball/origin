@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect, text, exc
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import re
@@ -33,23 +33,22 @@ Base = declarative_base()
 
 
 def get_db_version() -> int:
-    insp = inspect(engine)
-    if "schema_version" not in insp.get_table_names():
-        return 0
+    """Return the current schema version or 0 if the version table is absent."""
     with engine.connect() as conn:
-        res = conn.execute(text("SELECT version FROM schema_version LIMIT 1"))
+        try:
+            res = conn.execute(text("SELECT version FROM schema_version LIMIT 1"))
+        except exc.SQLAlchemyError:
+            return 0
         row = res.fetchone()
         return row[0] if row else 0
 
 
 def set_db_version(version: int) -> None:
-    insp = inspect(engine)
+    """Create the version table if needed and record the provided version."""
     with engine.begin() as conn:
-        if "schema_version" not in insp.get_table_names():
-            conn.execute(text("CREATE TABLE schema_version (version INTEGER NOT NULL)"))
-            conn.execute(text("INSERT INTO schema_version (version) VALUES (:v)"), {"v": version})
-        else:
-            conn.execute(text("UPDATE schema_version SET version = :v"), {"v": version})
+        conn.execute(text("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)"))
+        conn.execute(text("DELETE FROM schema_version"))
+        conn.execute(text("INSERT INTO schema_version (version) VALUES (:v)"), {"v": version})
 
 
 def run_migrations() -> None:
