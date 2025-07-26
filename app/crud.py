@@ -38,6 +38,25 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[models
         return None
     return user
 
+def update_user(db: Session, user: models.User, updates: schemas.UserUpdate) -> models.User:
+    for field, value in updates.model_dump(exclude_unset=True).items():
+        setattr(user, field, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_user_password(db: Session, user: models.User, password: str) -> models.User:
+    user.hashed_password = pwd_context.hash(password)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+def delete_user(db: Session, user: models.User):
+    db.delete(user)
+    db.commit()
+
 # Machines
 
 def create_machine(db: Session, machine: schemas.MachineCreate) -> models.Machine:
