@@ -1,8 +1,18 @@
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+import re
+from pathlib import Path
 
-LATEST_DB_VERSION = 1
+# Migrations live in app/migrations as numbered SQL files. The highest
+# numbered file represents the latest schema version.
+MIGRATIONS_DIR = Path(__file__).parent / "migrations"
+MIGRATIONS = {}
+for fp in MIGRATIONS_DIR.glob("*.sql"):
+    m = re.match(r"(\d+)", fp.stem)
+    if m:
+        MIGRATIONS[int(m.group(1))] = fp
+LATEST_DB_VERSION = max(MIGRATIONS.keys(), default=0)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db/postgres")
 
@@ -32,15 +42,31 @@ def set_db_version(version: int) -> None:
 
 
 def run_migrations() -> None:
-    version = get_db_version()
-    if version < 1:
-        insp = inspect(engine)
-        if "users" in insp.get_table_names():
-            cols = {c["name"] for c in insp.get_columns("users")}
-            if "screen_name" not in cols:
-                with engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE users ADD COLUMN screen_name VARCHAR"))
-        set_db_version(1)
+    current = get_db_version()
+    insp = inspect(engine)
+    for target_version in sorted(MIGRATIONS.keys()):
+        if target_version <= current:
+            continue
+
+        # Example introspection for the first migration so new databases are not
+        # altered twice when the column already exists.
+        if target_version == 1:
+            if "users" in insp.get_table_names():
+                cols = {c["name"] for c in insp.get_columns("users")}
+                if "screen_name" in cols:
+                    set_db_version(target_version)
+                    current = target_version
+                    continue
+
+        path = MIGRATIONS[target_version]
+        with open(path) as f:
+            sql = f.read()
+        statements = [s.strip() for s in sql.split(";") if s.strip()]
+        with engine.begin() as conn:
+            for stmt in statements:
+                conn.execute(text(stmt))
+        set_db_version(target_version)
+        current = target_version
 
 def get_db():
     db = SessionLocal()
