@@ -1,6 +1,6 @@
 # API Roadmap and Specification
 
-This document outlines a high-level plan for the Pinball Score Tracker API. It covers core features, suggested endpoints, database structure and authentication considerations.
+This document outlines a high-level plan for the Origin API. It covers core features, suggested endpoints, database structure and authentication considerations.
 
 ## 1. Overview
 
