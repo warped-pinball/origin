@@ -11,6 +11,9 @@ class TokenData(BaseModel):
 
 class UserBase(BaseModel):
     email: EmailStr
+    screen_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     name: Optional[str] = None
     initials: Optional[str] = None
     profile_picture: Optional[str] = None
