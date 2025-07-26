@@ -54,8 +54,18 @@ showLogin();
 
 async function login(e) {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    emailInput.setCustomValidity('');
+    passwordInput.setCustomValidity('');
+    document.getElementById('login-error').textContent = '';
+    if(!/^\S+@\S+\.\S+$/.test(email)) {
+        emailInput.setCustomValidity('Please enter a valid email address.');
+        emailInput.reportValidity();
+        return;
+    }
     const body = new URLSearchParams({username: email, password});
     const res = await fetch('/api/v1/auth/token', {
         method: 'POST',
@@ -67,6 +77,12 @@ async function login(e) {
         localStorage.setItem('token', data.access_token);
         document.getElementById('login-error').textContent = '';
         showLoggedIn();
+    } else if (res.status === 404) {
+        emailInput.setCustomValidity('User not found.');
+        emailInput.reportValidity();
+    } else if (res.status === 401) {
+        passwordInput.setCustomValidity('Incorrect password.');
+        passwordInput.reportValidity();
     } else if (res.status >= 500) {
         showToast('Server error', 'error');
     } else {
@@ -181,6 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.getElementById('signup-email');
     if (emailInput) {
         emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+    }
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    if (loginEmail) {
+        loginEmail.addEventListener('input', () => loginEmail.setCustomValidity(''));
+    }
+    if (loginPassword) {
+        loginPassword.addEventListener('input', () => loginPassword.setCustomValidity(''));
     }
 });
 

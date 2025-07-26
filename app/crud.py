@@ -5,6 +5,10 @@ from typing import List, Optional
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Return True if the password matches the hashed password."""
+    return pwd_context.verify(plain_password, hashed_password)
+
 # Users
 
 def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
