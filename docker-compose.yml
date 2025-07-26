@@ -1,19 +1,37 @@
-version: '3'
+version: "3.8"
+
+networks:
+  default:
+    external: true
+    name: "traefik_default"
+
 services:
+  origin:
+    image: ghcr.io/youruser/pinball-score-tracker:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db/postgres
+      SECRET_KEY: 9829uhf087w4hiou4whsdd
+    depends_on:
+      - db
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.http.routers.origin.rule=Host(`origin.beta.doze.dev`)"
+      - "traefik.http.services.origin.loadbalancer.server.port=8000"
+      - "flame.type=application"
+      - "flame.name=Origin Beta"
+      - "flame.url=https://origin.beta.doze.dev"
+      - "flame.icon=mdi:gamepad-variant"
+
   db:
     image: postgres:15
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
-  origin:
-    build: .
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db/postgres
-      SECRET_KEY: changeme
-    depends_on:
-      - db
-    ports:
-      - "8000:8000"
+      - "db-data:/var/lib/postgresql/data"
+
 volumes:
   db-data:
