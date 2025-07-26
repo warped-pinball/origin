@@ -110,6 +110,65 @@ def read_root():
                     showLogin();
                 }}
 
+                function showPage(id) {{
+                    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'block';
+                }}
+
+                async function updateScreenName(e) {{
+                    e.preventDefault();
+                    const screen_name = document.getElementById('account-screen').value;
+                    const token = localStorage.getItem('token');
+                    const res = await fetch('/api/v1/users/me', {{
+                        method: 'PATCH',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        }},
+                        body: JSON.stringify({{screen_name}})
+                    }});
+                    if (res.ok) {{
+                        showToast('Screen name updated', 'success');
+                    }} else {{
+                        showToast('Update failed', 'error');
+                    }}
+                }}
+
+                async function updatePassword(e) {{
+                    e.preventDefault();
+                    const password = document.getElementById('account-password').value;
+                    const token = localStorage.getItem('token');
+                    const res = await fetch('/api/v1/users/me/password', {{
+                        method: 'POST',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        }},
+                        body: JSON.stringify({{password}})
+                    }});
+                    if (res.ok) {{
+                        showToast('Password changed', 'success');
+                    }} else {{
+                        showToast('Password change failed', 'error');
+                    }}
+                }}
+
+                async function deleteAccount() {{
+                    if(!confirm('Are you sure you want to delete your account?')) return;
+                    const token = localStorage.getItem('token');
+                    const res = await fetch('/api/v1/users/me', {{
+                        method: 'DELETE',
+                        headers: {{'Authorization': 'Bearer ' + token}}
+                    }});
+                    if (res.ok) {{
+                        logout();
+                        showToast('Account deleted', 'success');
+                    }} else {{
+                        showToast('Delete failed', 'error');
+                    }}
+                }}
+
                 function openSignup(e) {{
                     e.preventDefault();
                     document.getElementById('signup-dialog').showModal();
@@ -128,11 +187,15 @@ def read_root():
                     document.getElementById('login-section').style.display = 'block';
                     document.getElementById('loggedin-section').style.display = 'none';
                     document.getElementById('login-error').textContent = '';
+                    showPage('landing');
+                    document.getElementById('logout-btn').style.display = 'none';
                 }}
 
                 function showLoggedIn() {{
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('loggedin-section').style.display = 'block';
+                    showPage('landing');
+                    document.getElementById('logout-btn').style.display = 'flex';
                 }}
 
                 function checkAuth() {{
@@ -154,6 +217,7 @@ def read_root():
                 <button onclick='toggleTheme()' aria-label='Toggle theme' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;'>
                     <span id='theme-icon' class='material-icons'>light_mode</span>
                 </button>
+                <button id='logout-btn' onclick='logout()' style='position:fixed;top:1rem;right:4rem;display:none;'>Logout</button>
                 <section id='login-section'>
                     <article>
                         <h2>Login</h2>
@@ -164,6 +228,7 @@ def read_root():
                             <span id='login-error' class='error'></span>
                         </form>
                         <small>Don't have an account? <a href='#' onclick='openSignup(event)'>Sign Up</a></small>
+                        <p><small>Get our Android app today! iOS is coming soon.</small></p>
                     </article>
                 </section>
                 <dialog id='signup-dialog'>
@@ -184,8 +249,53 @@ def read_root():
                     </article>
                 </dialog>
                 <section id='loggedin-section' style='display:none;'>
-                    <h2>You are logged in</h2>
-                    <button onclick='logout()'>Logout</button>
+                    <nav id='landing' class='page'>
+                        <ul>
+                            <li><a href='#' onclick="showPage('achievements')">Achievements</a></li>
+                            <li><a href='#' onclick="showPage('map')">Nearby Arcades</a></li>
+                            <li><a href='#' onclick="showPage('shop')">Shop</a></li>
+                            <li><a href='#' onclick="showPage('inventory')">Inventory / Avatar</a></li>
+                            <li><a href='#' onclick="showPage('machines')">Manage My Machines</a></li>
+                            <li><a href='#' onclick="showPage('play')">Play a Game</a></li>
+                            <li><a href='#' onclick="showPage('account')">Manage Account</a></li>
+                        </ul>
+                    </nav>
+                    <section id='achievements' class='page' style='display:none;'>
+                        <h2>Achievements</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='map' class='page' style='display:none;'>
+                        <h2>Nearby Arcades</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='shop' class='page' style='display:none;'>
+                        <h2>Shop</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='inventory' class='page' style='display:none;'>
+                        <h2>Inventory / Avatar Builder</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='machines' class='page' style='display:none;'>
+                        <h2>Manage My Machines</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='play' class='page' style='display:none;'>
+                        <h2>Play a Game</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='account' class='page' style='display:none;'>
+                        <h2>Manage Account</h2>
+                        <form onsubmit='updateScreenName(event)'>
+                            <input id='account-screen' type='text' placeholder='New screen name' required />
+                            <button type='submit'>Change Screen Name</button>
+                        </form>
+                        <form onsubmit='updatePassword(event)'>
+                            <input id='account-password' type='password' placeholder='New password' required />
+                            <button type='submit'>Change Password</button>
+                        </form>
+                        <button onclick='deleteAccount()' class='secondary'>Delete Account</button>
+                    </section>
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
             </main>
