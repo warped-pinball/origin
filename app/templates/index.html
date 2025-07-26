@@ -8,6 +8,8 @@
             <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
             <style>
                 .error { color: red; font-size: small; }
+                .store-badges { display:flex; gap:0.5rem; justify-content:center; }
+                .store-badges img { height:60px; width:45%; max-width:160px; }
             </style>
             <script src="/static/app.js"></script>
         </head>
@@ -30,9 +32,9 @@
                             <button type='submit'>Log In</button>
                             <span id='login-error' class='error'></span>
                         </form>
-                        <div class='grid' style='justify-items:center;'>
-                            <a href='#'><img src='/static/google-play-badge.png' alt='Get it on Google Play' style='height:60px;display:block;margin:auto;'></a>
-                            <a href='#'><img src='/static/app-store-badge.svg' alt='Download on the App Store' style='height:60px;display:block;margin:auto;'></a>
+                        <div class='store-badges'>
+                            <a href='#'><img src='/static/google-play-badge.png' alt='Get it on Google Play'></a>
+                            <a href='#'><img src='/static/app-store-badge.svg' alt='Download on the App Store'></a>
                         </div>
                     </article>
                 </section>
@@ -52,7 +54,7 @@
                     </article>
                 </dialog>
                 <section id='loggedin-section' style='display:none;'>
-                    <nav id='landing' class='page'>
+                    <nav id='navbar'>
                         <ul class='grid' style='grid-template-columns:repeat(4,1fr);text-align:center;'>
                             <li><a href='#' onclick="showPage('achievements')" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>emoji_events</span>
