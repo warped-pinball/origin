@@ -98,7 +98,9 @@ Background workers or scheduled tasks can handle leaderboard calculations, tourn
 
 - **Queue system**: Use a message broker (e.g., RabbitMQ or Redis) for tasks like score processing, email notifications and analytics computation.
 - **Caching**: Cache frequent leaderboard queries to reduce database load.
-- **Database migrations**: Track schema changes using Alembic so upgrades are consistent across environments.
+- **Database migrations**: Schema changes are stored as numbered SQL files in
+  `app/migrations`. The application executes any pending files on startup so all
+  environments upgrade in lockstep.
 - **Sharding/Replication**: Plan for read replicas once traffic grows; keep writes centralized initially.
 - **API versioning**: Prefix routes with `/v1/` (e.g., `/v1/scores/`) so future versions can coexist.
 
