@@ -96,10 +96,18 @@ function logout() {
     showLogin();
 }
 
-function showPage(id) {
+function displayPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
+}
+
+function showPage(id) {
+    if (location.hash !== '#' + id) {
+        location.hash = id;
+    } else {
+        displayPage(id);
+    }
 }
 
 async function updateScreenName(e) {
@@ -173,14 +181,17 @@ function showLogin() {
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('loggedin-section').style.display = 'none';
     document.getElementById('login-error').textContent = '';
-    showPage('landing');
+    displayPage('');
+    if (location.hash) history.replaceState(null, '', ' ');
     document.getElementById('logout-btn').style.display = 'none';
 }
 
 function showLoggedIn() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('loggedin-section').style.display = 'block';
-    showPage('landing');
+    const page = location.hash.substring(1) || 'achievements';
+    displayPage(page);
+    if (!location.hash) location.hash = page;
     document.getElementById('logout-btn').style.display = 'flex';
 }
 
@@ -190,6 +201,10 @@ function checkAuth() {
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
+    window.addEventListener('hashchange', () => {
+        const page = location.hash.substring(1);
+        if (page) displayPage(page);
+    });
     const emailInput = document.getElementById('signup-email');
     if (emailInput) {
         emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
