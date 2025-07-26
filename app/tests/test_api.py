@@ -29,19 +29,25 @@ client = TestClient(app)
 
 
 def test_create_user_and_login():
-    response = client.post("/users/", json={"email": "user@example.com", "password": "pass"})
+    response = client.post("/api/v1/users/", json={"email": "user@example.com", "password": "pass"})
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "user@example.com"
 
-    response = client.post("/auth/token", data={"username": "user@example.com", "password": "pass"})
+    response = client.post("/api/v1/auth/token", data={"username": "user@example.com", "password": "pass"})
     assert response.status_code == 200
     token = response.json()["access_token"]
     assert token
 
+
+def test_root_message():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Hello, world!"}
+
 from ..version import __version__
 
 def test_version_endpoint():
-    response = client.get("/version")
+    response = client.get("/api/v1/version")
     assert response.status_code == 200
     assert response.json() == {"version": __version__}
