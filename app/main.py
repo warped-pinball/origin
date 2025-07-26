@@ -21,22 +21,42 @@ def read_root():
             <meta name='viewport' content='width=device-width,initial-scale=1'>
             <title>Origin</title>
             <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
+            <style>
+                .error {{ color: red; font-size: small; }}
+            </style>
             <script>
                 function toggleTheme() {{
                     const html = document.documentElement;
                     html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
                 }}
 
+                function showToast(msg) {{
+                    const toast = document.getElementById('toast');
+                    toast.textContent = msg;
+                    toast.style.display = 'block';
+                    setTimeout(() => toast.style.display = 'none', 3000);
+                }}
+
                 async function signup(e) {{
                     e.preventDefault();
                     const email = document.getElementById('signup-email').value;
                     const password = document.getElementById('signup-password').value;
+                    const screen_name = document.getElementById('signup-screen').value;
+                    const first_name = document.getElementById('signup-first').value;
+                    const last_name = document.getElementById('signup-last').value;
                     const res = await fetch('/api/v1/users/', {{
                         method: 'POST',
                         headers: {{'Content-Type': 'application/json'}},
-                        body: JSON.stringify({{email, password}})
+                        body: JSON.stringify({{email, password, screen_name, first_name, last_name}})
                     }});
-                    alert(res.ok ? 'Account created' : 'Signup failed');
+                    if (res.ok) {{
+                        closeSignup();
+                        showToast('Account created');
+                    }} else if (res.status === 422) {{
+                        document.getElementById('signup-email-error').textContent = 'Invalid email';
+                    }} else {{
+                        showToast('Signup failed');
+                    }}
                 }}
 
                 async function login(e) {{
@@ -54,13 +74,23 @@ def read_root():
                         localStorage.setItem('token', data.access_token);
                         showLoggedIn();
                     }} else {{
-                        alert('Login failed');
+                        showToast('Login failed');
                     }}
                 }}
 
                 function logout() {{
                     localStorage.removeItem('token');
                     showLogin();
+                }}
+
+                function openSignup(e) {{
+                    e.preventDefault();
+                    document.getElementById('signup-dialog').showModal();
+                }}
+
+                function closeSignup() {{
+                    document.getElementById('signup-dialog').close();
+                    document.getElementById('signup-email-error').textContent = '';
                 }}
 
                 function showLogin() {{
@@ -85,25 +115,40 @@ def read_root():
                 <h1>Origin</h1>
                 <button onclick='toggleTheme()' style='float:right'>Toggle Theme</button>
                 <section id='login-section'>
-                    <h2>Create Account</h2>
-                    <form onsubmit='signup(event)'>
-                        <input id='signup-email' type='email' placeholder='Email' required />
-                        <input id='signup-password' type='password' placeholder='Password' required />
-                        <button type='submit'>Sign Up</button>
-                    </form>
-                    <h2>Login</h2>
-                    <form onsubmit='login(event)'>
-                        <input id='login-email' type='text' placeholder='Email' required />
-                        <input id='login-password' type='password' placeholder='Password' required />
-                        <button type='submit'>Log In</button>
-                    </form>
+                    <article>
+                        <h2>Login</h2>
+                        <form onsubmit='login(event)'>
+                            <input id='login-email' type='text' placeholder='Email' required />
+                            <input id='login-password' type='password' placeholder='Password' required />
+                            <button type='submit'>Log In</button>
+                        </form>
+                        <small>Don't have an account? <a href='#' onclick='openSignup(event)'>Sign Up</a></small>
+                    </article>
                 </section>
+                <dialog id='signup-dialog'>
+                    <article>
+                        <h3>Create Account</h3>
+                        <form onsubmit='signup(event)'>
+                            <input id='signup-email' type='email' placeholder='Email' required />
+                            <span id='signup-email-error' class='error'></span>
+                            <input id='signup-screen' type='text' placeholder='Screen name' required />
+                            <input id='signup-first' type='text' placeholder='First name' required />
+                            <input id='signup-last' type='text' placeholder='Last name' required />
+                            <input id='signup-password' type='password' placeholder='Password' required />
+                            <footer>
+                                <button type='submit'>Create Account</button>
+                                <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
+                            </footer>
+                        </form>
+                    </article>
+                </dialog>
                 <section id='loggedin-section' style='display:none;'>
                     <h2>You are logged in</h2>
                     <button onclick='logout()'>Logout</button>
                 </section>
-                <p style='margin-top:20px;font-size:small;'>Version {__version__}</p>
+                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;'></div>
             </main>
+            <footer style='margin-top:20px;text-align:center;'>Version {__version__}</footer>
         </body>
     </html>
     """
