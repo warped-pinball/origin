@@ -26,13 +26,13 @@
                         <form onsubmit='login(event)'>
                             <input id='login-email' type='text' placeholder='Email' required />
                             <input id='login-password' type='password' placeholder='Password' required />
+                            <p style='font-size:0.9rem;'>Don't have an account?  <a href='#' onclick='openSignup(event)'>Sign Up</a></p>
                             <button type='submit'>Log In</button>
                             <span id='login-error' class='error'></span>
                         </form>
-                        <small>Don't have an account? <a href='#' onclick='openSignup(event)'>Sign Up</a></small>
                         <div class='grid'>
                             <a href='#'><img src='/static/google-play-badge.png' alt='Get it on Google Play' style='height:40px'></a>
-                            <a href='#'><img src='/static/app-store-badge.png' alt='Download on the App Store' style='height:40px'></a>
+                            <a href='#'><img src='/static/app-store-badge.svg' alt='Download on the App Store' style='height:40px'></a>
                         </div>
                     </article>
                 </section>
