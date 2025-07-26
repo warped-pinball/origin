@@ -12,7 +12,9 @@ for fp in MIGRATIONS_DIR.glob("*.sql"):
     m = re.match(r"(\d+)", fp.stem)
     if m:
         MIGRATIONS[int(m.group(1))] = fp
-LATEST_DB_VERSION = max(MIGRATIONS.keys(), default=0)
+
+# Update this constant when adding a new migration
+EXPECTED_DB_VERSION = max(MIGRATIONS.keys(), default=0)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db/postgres")
 
@@ -43,22 +45,10 @@ def set_db_version(version: int) -> None:
 
 def run_migrations() -> None:
     current = get_db_version()
-    insp = inspect(engine)
-    for target_version in sorted(MIGRATIONS.keys()):
-        if target_version <= current:
+    for target_version in range(current + 1, EXPECTED_DB_VERSION + 1):
+        path = MIGRATIONS.get(target_version)
+        if not path:
             continue
-
-        # Example introspection for the first migration so new databases are not
-        # altered twice when the column already exists.
-        if target_version == 1:
-            if "users" in insp.get_table_names():
-                cols = {c["name"] for c in insp.get_columns("users")}
-                if "screen_name" in cols:
-                    set_db_version(target_version)
-                    current = target_version
-                    continue
-
-        path = MIGRATIONS[target_version]
         with open(path) as f:
             sql = f.read()
         statements = [s.strip() for s in sql.split(";") if s.strip()]
@@ -66,7 +56,6 @@ def run_migrations() -> None:
             for stmt in statements:
                 conn.execute(text(stmt))
         set_db_version(target_version)
-        current = target_version
 
 def get_db():
     db = SessionLocal()

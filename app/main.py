@@ -6,9 +6,9 @@ from .routers import auth, users, machines, scores
 from .version import __version__
 import os
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Run migrations before ensuring all tables exist
 run_migrations()
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Origin")
 
