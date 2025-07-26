@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -21,8 +21,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MachineBase(BaseModel):
     name: str
@@ -33,8 +32,7 @@ class MachineCreate(MachineBase):
 class Machine(MachineBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ScoreBase(BaseModel):
     game: str
@@ -50,8 +48,7 @@ class Score(ScoreBase):
     user: User
     machine: Machine
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ScoreOut(BaseModel):
     id: int
@@ -59,5 +56,4 @@ class ScoreOut(BaseModel):
     created_at: datetime
     user: User
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
