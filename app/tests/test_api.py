@@ -6,6 +6,9 @@ from sqlalchemy.orm import sessionmaker
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
+# ensure a clean database for each test run
+if os.path.exists("test.db"):
+    os.remove("test.db")
 
 from ..main import app
 from ..database import Base, get_db
