@@ -39,8 +39,6 @@ def test_create_user_and_login():
             "email": "user@example.com",
             "password": "pass",
             "screen_name": "user1",
-            "first_name": "User",
-            "last_name": "One",
         },
     )
     assert response.status_code == 200
