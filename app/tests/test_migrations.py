@@ -1,6 +1,6 @@
 import os
 import importlib
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, inspect
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, inspect, text
 from sqlalchemy.orm import declarative_base
 
 
@@ -51,3 +51,15 @@ def test_run_all_migrations(tmp_path):
     cols = {c["name"] for c in insp.get_columns("users")}
     for col in ["screen_name", "first_name", "last_name", "name", "initials", "profile_picture"]:
         assert col in cols
+    if db.engine.dialect.name != 'sqlite':
+        # verify users.id column autoincrements via sequence
+        with db.engine.connect() as conn:
+            res = conn.execute(
+                text(
+                    "SELECT column_default FROM information_schema.columns "
+                    "WHERE table_name='users' AND column_name='id'"
+                )
+            )
+            default = res.scalar()
+            assert default and 'nextval' in default
+
