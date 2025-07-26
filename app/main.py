@@ -30,9 +30,11 @@ def read_root():
                     html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
                 }}
 
-                function showToast(msg) {{
+                function showToast(msg, type = 'info') {{
                     const toast = document.getElementById('toast');
-                    toast.textContent = msg;
+                    const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+                    toast.textContent = `${{icon}} ${{msg}}`;
+                    toast.style.background = type === 'error' ? '#b91c1c' : type === 'success' ? '#15803d' : '#333';
                     toast.style.display = 'block';
                     setTimeout(() => toast.style.display = 'none', 3000);
                 }}
@@ -50,12 +52,25 @@ def read_root():
                         body: JSON.stringify({{email, password, screen_name, first_name, last_name}})
                     }});
                     if (res.ok) {{
+                        const loginRes = await fetch('/api/v1/auth/token', {{
+                            method: 'POST',
+                            headers: {{'Content-Type': 'application/x-www-form-urlencoded'}},
+                            body: new URLSearchParams({{username: email, password}})
+                        }});
                         closeSignup();
-                        showToast('Account created');
+                        if (loginRes.ok) {{
+                            const data = await loginRes.json();
+                            localStorage.setItem('token', data.access_token);
+                            showLoggedIn();
+                            showToast('Account created', 'success');
+                        }} else {{
+                            showToast('Account created but login failed', 'error');
+                            showLogin();
+                        }}
                     }} else if (res.status === 422) {{
-                        document.getElementById('signup-email-error').textContent = 'Invalid email';
+                        document.getElementById('signup-email-error').textContent = 'Please enter a valid email address.';
                     }} else {{
-                        showToast('Signup failed');
+                        showToast('Signup failed', 'error');
                     }}
                 }}
 
@@ -72,9 +87,12 @@ def read_root():
                     if (res.ok) {{
                         const data = await res.json();
                         localStorage.setItem('token', data.access_token);
+                        document.getElementById('login-error').textContent = '';
                         showLoggedIn();
+                    }} else if (res.status >= 500) {{
+                        showToast('Server error', 'error');
                     }} else {{
-                        showToast('Login failed');
+                        document.getElementById('login-error').textContent = 'Login failed';
                     }}
                 }}
 
@@ -96,6 +114,7 @@ def read_root():
                 function showLogin() {{
                     document.getElementById('login-section').style.display = 'block';
                     document.getElementById('loggedin-section').style.display = 'none';
+                    document.getElementById('login-error').textContent = '';
                 }}
 
                 function showLoggedIn() {{
@@ -121,6 +140,7 @@ def read_root():
                             <input id='login-email' type='text' placeholder='Email' required />
                             <input id='login-password' type='password' placeholder='Password' required />
                             <button type='submit'>Log In</button>
+                            <span id='login-error' class='error'></span>
                         </form>
                         <small>Don't have an account? <a href='#' onclick='openSignup(event)'>Sign Up</a></small>
                     </article>
