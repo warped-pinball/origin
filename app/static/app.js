@@ -77,12 +77,8 @@ async function login(e) {
         localStorage.setItem('token', data.access_token);
         document.getElementById('login-error').textContent = '';
         showLoggedIn();
-    } else if (res.status === 404) {
-        emailInput.setCustomValidity('User not found.');
-        emailInput.reportValidity();
-    } else if (res.status === 401) {
-        passwordInput.setCustomValidity('Incorrect password.');
-        passwordInput.reportValidity();
+    } else if (res.status === 401 || res.status === 404) {
+        document.getElementById('login-error').textContent = 'Invalid email or password.';
     } else if (res.status >= 500) {
         showToast('Server error', 'error');
     } else {
