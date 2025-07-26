@@ -21,13 +21,19 @@ def read_root():
             <meta name='viewport' content='width=device-width,initial-scale=1'>
             <title>Origin</title>
             <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
+            <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
             <style>
                 .error {{ color: red; font-size: small; }}
             </style>
             <script>
                 function toggleTheme() {{
                     const html = document.documentElement;
-                    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+                    const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+                    html.dataset.theme = newTheme;
+                    const icon = document.getElementById('theme-icon');
+                    if (icon) {{
+                        icon.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+                    }}
                 }}
 
                 function showToast(msg) {{
@@ -113,7 +119,9 @@ def read_root():
         <body>
             <main class='container'>
                 <h1>Origin</h1>
-                <button onclick='toggleTheme()' style='float:right'>Toggle Theme</button>
+                <button onclick='toggleTheme()' aria-label='Toggle theme' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;'>
+                    <span id='theme-icon' class='material-icons'>light_mode</span>
+                </button>
                 <section id='login-section'>
                     <article>
                         <h2>Login</h2>
