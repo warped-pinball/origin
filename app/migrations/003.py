@@ -19,7 +19,7 @@ def upgrade(engine):
         if not default or 'nextval' not in str(default):
             conn.execute(text("CREATE SEQUENCE IF NOT EXISTS users_id_seq"))
             conn.execute(text(
-                "SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 0))"
+                "SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 0) + 1, false)"
             ))
             conn.execute(text(
                 "ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq')"
