@@ -56,8 +56,8 @@ def test_login_user_not_found():
         "/api/v1/auth/token",
         data={"username": "missing@example.com", "password": "pass"},
     )
-    assert response.status_code == 404
-    assert response.json()["detail"] == "User not found"
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid email or password"
 
 
 def test_login_wrong_password():
@@ -71,7 +71,7 @@ def test_login_wrong_password():
         data={"username": "wp@example.com", "password": "wrong"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Incorrect password"
+    assert response.json()["detail"] == "Invalid email or password"
 
 
 def test_root_page():
