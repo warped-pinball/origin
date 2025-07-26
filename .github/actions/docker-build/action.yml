@@ -9,7 +9,6 @@ inputs:
   push:
     description: Push image after build
     default: 'true'
-secrets:
   GITHUB_TOKEN:
     description: Token for registry login
     required: true
@@ -25,7 +24,7 @@ runs:
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.GITHUB_TOKEN }}
     - name: Build and push
       uses: docker/build-push-action@v4
       with:

@@ -20,6 +20,7 @@ jobs:
         uses: ./.github/actions/docker-build
         with:
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-beta
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Portainer deployment
         uses: ./.github/actions/portainer-deploy
         with:
