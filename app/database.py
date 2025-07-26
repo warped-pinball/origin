@@ -17,7 +17,15 @@ for fp in MIGRATIONS_DIR.glob("*.py"):
 # Update this constant when adding a new migration
 EXPECTED_DB_VERSION = max(MIGRATIONS.keys(), default=0)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db/postgres")
+# Build DATABASE_URL from individual settings if not provided
+if "DATABASE_URL" in os.environ:
+    DATABASE_URL = os.environ["DATABASE_URL"]
+else:
+    db_user = os.getenv("POSTGRES_USER", "postgres")
+    db_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    db_host = os.getenv("POSTGRES_HOST", "db")
+    db_name = os.getenv("POSTGRES_DB", "postgres")
+    DATABASE_URL = f"postgresql://{db_user}:{db_password}@{db_host}/{db_name}"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

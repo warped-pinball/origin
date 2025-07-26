@@ -12,7 +12,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db/postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db
+      POSTGRES_DB: postgres
       SECRET_KEY: 9829uhf087w4hiou4whsdd
     depends_on:
       - db
@@ -29,6 +32,7 @@ services:
     image: postgres:15
     restart: unless-stopped
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - "db-data:/var/lib/postgresql/data"
