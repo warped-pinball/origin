@@ -9,6 +9,10 @@ inputs:
   push:
     description: Push image after build
     default: 'true'
+secrets:
+  GITHUB_TOKEN:
+    description: Token for registry login
+    required: true
 runs:
   using: composite
   steps:
