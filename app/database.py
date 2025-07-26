@@ -2,13 +2,14 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 import re
+import importlib.util
 from pathlib import Path
 
-# Migrations live in app/migrations as numbered SQL files. The highest
+# Migrations live in app/migrations as numbered Python files. The highest
 # numbered file represents the latest schema version.
 MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 MIGRATIONS = {}
-for fp in MIGRATIONS_DIR.glob("*.sql"):
+for fp in MIGRATIONS_DIR.glob("*.py"):
     m = re.match(r"(\d+)", fp.stem)
     if m:
         MIGRATIONS[int(m.group(1))] = fp
@@ -49,12 +50,12 @@ def run_migrations() -> None:
         path = MIGRATIONS.get(target_version)
         if not path:
             continue
-        with open(path) as f:
-            sql = f.read()
-        statements = [s.strip() for s in sql.split(";") if s.strip()]
-        with engine.begin() as conn:
-            for stmt in statements:
-                conn.execute(text(stmt))
+        spec = importlib.util.spec_from_file_location(f"migration_{target_version}", path)
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+        if hasattr(mod, "upgrade"):
+            mod.upgrade(engine)
         set_db_version(target_version)
 
 def get_db():
