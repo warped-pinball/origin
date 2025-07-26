@@ -1,183 +1,186 @@
-function toggleTheme() {{
+function toggleTheme() {
     const html = document.documentElement;
     const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
     html.dataset.theme = newTheme;
     const icon = document.getElementById('theme-icon');
-    if (icon) {{
+    if (icon) {
         icon.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
-    }}
-}}
+    }
+}
 
-function showToast(msg, type = 'info') {{
+function showToast(msg, type = 'info') {
     const toast = document.getElementById('toast');
     const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
-    toast.textContent = `${{icon}} ${{msg}}`;
+    toast.textContent = `${icon} ${msg}`;
     toast.style.background = type === 'error' ? '#b91c1c' : type === 'success' ? '#15803d' : '#333';
     toast.style.display = 'block';
     setTimeout(() => toast.style.display = 'none', 3000);
-}}
+}
 
-async function signup(e) {{
+async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
-    const first_name = document.getElementById('signup-first').value;
-    const last_name = document.getElementById('signup-last').value;
-    const res = await fetch('/api/v1/users/', {{
+    const res = await fetch('/api/v1/users/', {
         method: 'POST',
-        headers: {{'Content-Type': 'application/json'}},
-        body: JSON.stringify({{email, password, screen_name, first_name, last_name}})
-    }});
-    if (res.ok) {{
-        const loginRes = await fetch('/api/v1/auth/token', {{
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email, password, screen_name})
+    });
+    if (res.ok) {
+        const loginRes = await fetch('/api/v1/auth/token', {
 method: 'POST',
-headers: {{'Content-Type': 'application/x-www-form-urlencoded'}},
-body: new URLSearchParams({{username: email, password}})
-        }});
+headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+body: new URLSearchParams({username: email, password})
+        });
         closeSignup();
-        if (loginRes.ok) {{
+        if (loginRes.ok) {
 const data = await loginRes.json();
 localStorage.setItem('token', data.access_token);
 showLoggedIn();
 showToast('Account created', 'success');
-        }} else {{
+        } else {
 showToast('Account created but login failed', 'error');
 showLogin();
-        }}
-    }} else if (res.status === 422) {{
+        }
+    } else if (res.status === 422) {
         const emailInput = document.getElementById('signup-email');
         emailInput.setCustomValidity('Please enter a valid email address.');
         emailInput.reportValidity();
-    }} else {{
+    } else {
         showToast('Signup failed', 'error');
-    }}
-}}
+    }
+}
 
-async function login(e) {{
+async function login(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-    const body = new URLSearchParams({{username: email, password}});
-    const res = await fetch('/api/v1/auth/token', {{
+    const body = new URLSearchParams({username: email, password});
+    const res = await fetch('/api/v1/auth/token', {
         method: 'POST',
-        headers: {{'Content-Type': 'application/x-www-form-urlencoded'}},
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body
-    }});
-    if (res.ok) {{
+    });
+    if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
         document.getElementById('login-error').textContent = '';
         showLoggedIn();
-    }} else if (res.status >= 500) {{
+    } else if (res.status >= 500) {
         showToast('Server error', 'error');
-    }} else {{
-        document.getElementById('login-error').textContent = 'Login failed';
-    }}
-}}
+    } else {
+        let msg = 'Login failed';
+        try {
+            const err = await res.json();
+            if (err.detail) msg = err.detail;
+        } catch {}
+        document.getElementById('login-error').textContent = msg;
+    }
+}
 
-function logout() {{
+function logout() {
     localStorage.removeItem('token');
     showLogin();
-}}
+}
 
-function showPage(id) {{
+function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
-}}
+}
 
-async function updateScreenName(e) {{
+async function updateScreenName(e) {
     e.preventDefault();
     const screen_name = document.getElementById('account-screen').value;
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/v1/users/me', {{
+    const res = await fetch('/api/v1/users/me', {
         method: 'PATCH',
-        headers: {{
+        headers: {
 'Content-Type': 'application/json',
 'Authorization': 'Bearer ' + token
-        }},
-        body: JSON.stringify({{screen_name}})
-    }});
-    if (res.ok) {{
+        },
+        body: JSON.stringify({screen_name})
+    });
+    if (res.ok) {
         showToast('Screen name updated', 'success');
-    }} else {{
+    } else {
         showToast('Update failed', 'error');
-    }}
-}}
+    }
+}
 
-async function updatePassword(e) {{
+async function updatePassword(e) {
     e.preventDefault();
     const password = document.getElementById('account-password').value;
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/v1/users/me/password', {{
+    const res = await fetch('/api/v1/users/me/password', {
         method: 'POST',
-        headers: {{
+        headers: {
 'Content-Type': 'application/json',
 'Authorization': 'Bearer ' + token
-        }},
-        body: JSON.stringify({{password}})
-    }});
-    if (res.ok) {{
+        },
+        body: JSON.stringify({password})
+    });
+    if (res.ok) {
         showToast('Password changed', 'success');
-    }} else {{
+    } else {
         showToast('Password change failed', 'error');
-    }}
-}}
+    }
+}
 
-async function deleteAccount() {{
+async function deleteAccount() {
     if(!confirm('Are you sure you want to delete your account?')) return;
     const token = localStorage.getItem('token');
-    const res = await fetch('/api/v1/users/me', {{
+    const res = await fetch('/api/v1/users/me', {
         method: 'DELETE',
-        headers: {{'Authorization': 'Bearer ' + token}}
-    }});
-    if (res.ok) {{
+        headers: {'Authorization': 'Bearer ' + token}
+    });
+    if (res.ok) {
         logout();
         showToast('Account deleted', 'success');
-    }} else {{
+    } else {
         showToast('Delete failed', 'error');
-    }}
-}}
+    }
+}
 
-function openSignup(e) {{
+function openSignup(e) {
     e.preventDefault();
     document.getElementById('signup-dialog').showModal();
-}}
+}
 
-function closeSignup() {{
+function closeSignup() {
     document.getElementById('signup-dialog').close();
     const emailInput = document.getElementById('signup-email');
-    if (emailInput) {{
+    if (emailInput) {
         emailInput.setCustomValidity('');
-    }}
+    }
     document.getElementById('signup-email-error').textContent = '';
-}}
+}
 
-function showLogin() {{
+function showLogin() {
     document.getElementById('login-section').style.display = 'block';
     document.getElementById('loggedin-section').style.display = 'none';
     document.getElementById('login-error').textContent = '';
     showPage('landing');
     document.getElementById('logout-btn').style.display = 'none';
-}}
+}
 
-function showLoggedIn() {{
+function showLoggedIn() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('loggedin-section').style.display = 'block';
     showPage('landing');
     document.getElementById('logout-btn').style.display = 'flex';
-}}
+}
 
-function checkAuth() {{
+function checkAuth() {
     localStorage.getItem('token') ? showLoggedIn() : showLogin();
-}}
+}
 
-document.addEventListener('DOMContentLoaded', () => {{
+document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     const emailInput = document.getElementById('signup-email');
-    if (emailInput) {{
+    if (emailInput) {
         emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
-    }}
-}});
+    }
+});
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime
 
 class Token(BaseModel):
@@ -12,22 +12,12 @@ class TokenData(BaseModel):
 class UserBase(BaseModel):
     email: EmailStr
     screen_name: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    name: Optional[str] = None
-    initials: Optional[str] = None
-    profile_picture: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
 
 class UserUpdate(BaseModel):
     screen_name: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    name: Optional[str] = None
-    initials: Optional[str] = None
-    profile_picture: Optional[str] = None
 
 
 class PasswordUpdate(BaseModel):
