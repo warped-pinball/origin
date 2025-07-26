@@ -20,6 +20,7 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Portainer deployment
         uses: ./.github/actions/portainer-deploy
         with:
