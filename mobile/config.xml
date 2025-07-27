@@ -12,7 +12,7 @@
     <plugin name="cordova-plugin-chrome-apps-sockets-udp" />
     <plugin name="cordova-plugin-file" />
     <plugin name="cordova-plugin-splashscreen" />
-    <icon src="www/logo.svg" />
+    <icon src="www/logo.png" />
     <!-- Use a plain background during startup -->
     <preference name="AndroidWindowSplashScreenBackgroundColor" value="#0172ad" />
     <preference name="SplashScreenBackgroundColor" value="#0172ad" />
@@ -30,7 +30,7 @@
         </host>
     </universal-links>
     <platform name="android">
-        <resource-file src="www/logo.svg" target="app/src/main/res/drawable/logo.svg" />
+        <resource-file src="www/logo.png" target="app/src/main/res/drawable/logo.png" />
     </platform>
     <deep-link scheme="https" host="warpedpinball.com" path="*" />
 </widget>
