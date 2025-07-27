@@ -29,5 +29,8 @@
             <path url="*" />
         </host>
     </universal-links>
+    <platform name="android">
+        <resource-file src="www/logo.svg" target="app/src/main/res/drawable/logo.svg" />
+    </platform>
     <deep-link scheme="https" host="warpedpinball.com" path="*" />
 </widget>
