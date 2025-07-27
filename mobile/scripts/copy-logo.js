@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join(__dirname, '../www/logo.png');
+const src = path.join(__dirname, '../www/logo.svg');
 const dest = path.join(
   __dirname,
-  '../platforms/android/app/src/main/res/drawable/logo.png'
+  '../platforms/android/app/src/main/res/drawable/logo.svg'
 );
 
 try {

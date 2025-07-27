@@ -12,7 +12,7 @@
     <plugin name="cordova-plugin-chrome-apps-sockets-udp" />
     <plugin name="cordova-plugin-file" />
     <plugin name="cordova-plugin-splashscreen" />
-    <icon src="mobile/www/logo.png" />
+    <icon src="mobile/www/logo.svg" />
     <!-- Use a plain black background during startup and hide default Cordova icon -->
     <preference name="AndroidWindowSplashScreenAnimatedIcon" value="@drawable/logo" />
     <preference name="AndroidWindowSplashScreenBackgroundColor" value="#0172ad" />
@@ -21,7 +21,7 @@
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="ShowSplashScreenSpinner" value="false" />
     <preference name="FadeSplashScreen" value="false" />
-    <splash src="mobile/www/logo.png" />
+    <splash src="mobile/www/logo.svg" />
     <preference name="android-minSdkVersion" value="24" />
     <preference name="android-targetSdkVersion" value="35" />
     <preference name="android-compileSdkVersion" value="35" />
