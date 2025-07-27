@@ -7,3 +7,14 @@ venv/
 .DS_Store
 *~
 test.db
+
+# Mobile app
+mobile/node_modules/
+mobile/platforms/
+mobile/plugins/
+mobile/.cordova/
+mobile/build/
+mobile/debug.keystore
+mobile/www/logo.png
+mobile/www/logo.svg
+mobile/docs/

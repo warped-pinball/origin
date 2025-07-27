@@ -8,6 +8,8 @@ test(
   'copy-logo copies logo to android resources',
   { concurrency: false },
   () => {
+    const srcFile = path.join('www', 'logo.png');
+    fs.writeFileSync(srcFile, '');
     const destDir = path.join(
       'platforms',
       'android',
@@ -21,5 +23,6 @@ test(
     const destFile = path.join(destDir, 'logo.png');
     execFileSync('node', [path.join('scripts', 'copy-logo.js')]);
     assert(fs.existsSync(destFile));
+    fs.rmSync(srcFile, { force: true });
   }
 );

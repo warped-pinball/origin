@@ -11,6 +11,9 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
     permissions:
       contents: write
     steps:
@@ -24,11 +27,11 @@ jobs:
           path: |
             ~/.npm
             ~/.cordova
-            node_modules
-            platforms/android
-            plugins
-            platforms/android/.gradle
-          key: ${{ runner.os }}-cordova-${{ hashFiles('package-lock.json') }}
+            mobile/node_modules
+            mobile/platforms/android
+            mobile/plugins
+            mobile/platforms/android/.gradle
+          key: ${{ runner.os }}-cordova-${{ hashFiles('mobile/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-cordova-
       - name: Determine build version
@@ -79,10 +82,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: platforms/android/app/build/outputs/apk/release/origin.apk
+          path: mobile/platforms/android/app/build/outputs/apk/release/origin.apk
       - name: Upload APK to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: platforms/android/app/build/outputs/apk/release/origin.apk
+          files: mobile/platforms/android/app/build/outputs/apk/release/origin.apk
 
