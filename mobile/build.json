@@ -1,0 +1,18 @@
+{
+  "android": {
+    "release": {
+      "keystore": "debug.keystore",
+      "storePassword": "android",
+      "alias": "androiddebugkey",
+      "password": "android"
+    }
+  },
+  "ios": {
+    "release": {
+      "codeSignIdentity": "iPhone Distribution",
+      "developmentTeam": "TEAMID",
+      "packageType": "app-store",
+      "provisioningProfile": "PROFILE_UUID"
+    }
+  }
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {{head}}
+  <title>Settings - Origin</title>
+</head>
+<body>
+  <main class="container">
+    <h1>Settings</h1>
+    <label for="theme-select">Theme</label>
+    <select id="theme-select">
+      <option value="auto">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+    <h2>Detected Games</h2>
+    <pre id="devices"></pre>
+    <p class="version">Version {{version}}</p>
+  </main>
+  {{nav}}
+  <script src="cordova.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/text-encoding/0.7.0/encoding.min.js"></script>
+  <script src="index.js"></script>
+  <script>
+    (function(){
+      const select = document.getElementById('theme-select');
+      function applyTheme(t){
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      const saved = localStorage.getItem('theme');
+      if (saved) {
+        applyTheme(saved);
+        select.value = saved;
+      }
+      select.addEventListener('change', () => {
+        const val = select.value;
+        applyTheme(val);
+        localStorage.setItem('theme', val);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+name: Origin Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, beta]
+  release:
+    types: [published]
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cordova
+            mobile/node_modules
+            mobile/platforms/android
+            mobile/plugins
+            mobile/platforms/android/.gradle
+          key: ${{ runner.os }}-cordova-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cordova-
+      - name: Determine build version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=$(node -p "require('./package.json').version")
+            echo "VERSION=${BASE}-dev${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            BASE=$(node -p "require('./package.json').version")
+            if [ "${{ github.ref_name }}" = "beta" ]; then
+              echo "VERSION=${BASE}-beta" >> $GITHUB_ENV
+            else
+              echo "VERSION=$BASE" >> $GITHUB_ENV
+            fi
+          fi
+      - run: node scripts/set-version.js "$VERSION"
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: |
+          rm -rf platforms
+          npx cordova platform add android
+      - run: npx cordova prepare
+      - run: node scripts/patch-barcodescanner.js
+      - name: Generate debug keystore
+        run: |
+          keytool -genkeypair -v -keystore debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+            -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+      - name: Configure Android signing
+        run: |
+          cat > build.json <<'EOF'
+          {
+            "android": {
+              "release": {
+                "keystore": "debug.keystore",
+                "storePassword": "android",
+                "alias": "androiddebugkey",
+                "password": "android"
+              }
+            }
+          }
+          EOF
+      - run: npx cordova build android --release --buildConfig build.json -- --packageType=apk
+      - name: Rename APK
+        run: mv platforms/android/app/build/outputs/apk/release/app-release.apk platforms/android/app/build/outputs/apk/release/origin.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: mobile/platforms/android/app/build/outputs/apk/release/origin.apk
+      - name: Upload APK to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/platforms/android/app/build/outputs/apk/release/origin.apk
+
