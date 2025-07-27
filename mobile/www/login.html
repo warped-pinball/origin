@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+<script>
+(function(){
+  var t = localStorage.getItem('theme');
+  if(t){
+    document.documentElement.setAttribute('data-theme', t);
+  }
+})();
+</script>
+<script>
+if (location.protocol === 'file:') {
+  window.API_BASE = 'https://origin-beta.doze.dev';
+}
+</script>
+<link rel="stylesheet" href="pico.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="styles.css">
+
+  <title>Login - Origin</title>
+  <style>
+    .error { color: red; font-size: small; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Origin</h1>
+    <section id="login-section">
+      <article>
+        <h2>Login</h2>
+        <form onsubmit="login(event)">
+          <input id="login-email" type="email" placeholder="Email" required />
+          <input id="login-password" type="password" placeholder="Password" required />
+          <p style="font-size:0.9rem;">Don't have an account? <a href="#" onclick="openSignup(event)">Sign Up</a></p>
+          <button type="submit">Log In</button>
+          <span id="login-error" class="error"></span>
+        </form>
+      </article>
+    </section>
+    <dialog id="signup-dialog">
+      <article>
+        <h3>Create Account</h3>
+        <form onsubmit="signup(event)">
+          <input id="signup-email" type="email" placeholder="Email" required />
+          <span id="signup-email-error" class="error"></span>
+          <input id="signup-screen" type="text" placeholder="Screen name" required />
+          <input id="signup-password" type="password" placeholder="Password" required />
+          <footer class="grid">
+            <button type="button" onclick="closeSignup()" class="secondary">Cancel</button>
+            <button type="submit">Create Account</button>
+          </footer>
+        </form>
+      </article>
+    </dialog>
+  </main>
+  <script src="cordova.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
