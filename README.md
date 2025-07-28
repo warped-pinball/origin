@@ -51,6 +51,14 @@ The workflow generates a debug keystore for Android so the APK is installable wi
 
 Screenshots are produced automatically by the **Update Mobile Screenshots** workflow and uploaded as artifacts. They are not committed to the repository.
 
+## Shared JavaScript Client
+
+API calls used by both the web UI and the mobile app live under `shared/`.
+Run `node shared/scripts/build.js` to generate `api.js` and copy it into the
+correct locations. The script also respects the `PUBLIC_API_URL` environment
+variable so both clients use the same API base URL. See
+`docs/JS_CLIENT.md` for details.
+
 ## Continuous Integration
 
 Pull requests run both backend and mobile tests. Building the backend Docker image and Android APK happens when changes land on `main` or a release is published. Check the workflow runs for downloadable artifacts.

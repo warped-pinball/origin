@@ -15,9 +15,11 @@ app = FastAPI(title="Origin")
 
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
+API_BASE = os.environ.get("PUBLIC_API_URL", "")
+
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    return templates.TemplateResponse(request, "index.html", {"version": __version__})
+    return templates.TemplateResponse(request, "index.html", {"version": __version__, "api_base": API_BASE})
 
 # Mount static files for universal links
 static_root = os.path.join(os.path.dirname(__file__), 'static')

@@ -28,17 +28,9 @@ async function signup(e) {
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
-    const res = await fetch(API_BASE + '/api/v1/users/', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, password, screen_name})
-    });
+    const res = await OriginApi.signup(email, password, screen_name);
     if (res.ok) {
-        const loginRes = await fetch(API_BASE + '/api/v1/auth/token', {
-method: 'POST',
-headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-body: new URLSearchParams({username: email, password})
-        });
+        const loginRes = await OriginApi.login(email, password);
         closeSignup();
         if (loginRes.ok) {
 const data = await loginRes.json();
@@ -72,12 +64,7 @@ async function login(e) {
         emailInput.reportValidity();
         return;
     }
-    const body = new URLSearchParams({username: email, password});
-    const res = await fetch(API_BASE + '/api/v1/auth/token', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body
-    });
+    const res = await OriginApi.login(email, password);
     if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
@@ -120,14 +107,7 @@ async function updateScreenName(e) {
     e.preventDefault();
     const screen_name = document.getElementById('account-screen').value;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me', {
-        method: 'PATCH',
-        headers: {
-'Content-Type': 'application/json',
-'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({screen_name})
-    });
+    const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
     } else {
@@ -139,14 +119,7 @@ async function updatePassword(e) {
     e.preventDefault();
     const password = document.getElementById('account-password').value;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me/password', {
-        method: 'POST',
-        headers: {
-'Content-Type': 'application/json',
-'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({password})
-    });
+    const res = await OriginApi.updatePassword(token, password);
     if (res.ok) {
         showToast('Password changed', 'success');
     } else {
@@ -157,10 +130,7 @@ async function updatePassword(e) {
 async function deleteAccount() {
     if(!confirm('Are you sure you want to delete your account?')) return;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me', {
-        method: 'DELETE',
-        headers: {'Authorization': 'Bearer ' + token}
-    });
+    const res = await OriginApi.deleteAccount(token);
     if (res.ok) {
         logout();
         showToast('Account deleted', 'success');
