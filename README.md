@@ -54,15 +54,20 @@ The workflow generates a debug keystore for Android so the APK is installable wi
 
 Screenshots are produced automatically by the **Update Mobile Screenshots** workflow and uploaded as artifacts. They are not committed to the repository.
 
-## Shared JavaScript Client
+## SDK Generation
 
-API calls used by both the web UI and the mobile app live under `shared/`.
-Run `node shared/scripts/build.js` to generate `api.js` and copy it into the
-correct locations. The script respects the `PUBLIC_API_URL` environment
-variable so both clients use the same API base URL. The mobile build falls
-back to the value exported from `mobile/api-base.js` (set to
-`https://origin-beta.doze.dev`). See `docs/JS_CLIENT.md` for details.
+API clients are generated from `openapi.json` using
+[Fern](https://buildwithfern.com). Running
+`./scripts/generate-sdks.sh` produces TypeScript and Python SDKs in
+`sdks/typescript` and `sdks/python` respectively. The web host and Cordova
+app consume the TypeScript build. The API base URL continues to come from the
+`PUBLIC_API_URL` environment variable or `mobile/api-base.js`.
+See `docs/SDKS.md` for details.
 
 ## Continuous Integration
 
-Pull requests run both backend and mobile tests. Building the backend Docker image and Android APK happens when changes land on `main` or a release is published. Check the workflow runs for downloadable artifacts.
+Pull requests run backend, mobile and SDK tests. On `main` the workflow
+also executes `scripts/generate-sdks.sh` and publishes the resulting
+packages to npm and PyPI using repository secrets for authentication.
+Docker images and Android APKs are still built for releases and attached as
+artifacts.

@@ -4,7 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const SRC = path.join(__dirname, '../src/api.js');
+const SRC = path.join(__dirname, '../dist/api.js');
 
 function loadApi(fetchImpl, apiBase) {
   const code = fs.readFileSync(SRC, 'utf8');
