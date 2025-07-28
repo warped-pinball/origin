@@ -23,14 +23,51 @@ function showToast(msg, type = 'info') {
     }
 }
 
+function logToFile(msg) {
+    if (window.resolveLocalFileSystemURL && window.cordova && cordova.file) {
+        const dir = cordova.file.externalRootDirectory + 'Download/';
+        window.resolveLocalFileSystemURL(dir, function (d) {
+            d.getFile('origin-log.txt', { create: true }, function (file) {
+                file.createWriter(function (w) {
+                    w.seek(w.length);
+                    w.write(msg + '\n');
+                });
+            });
+        }, function () {});
+    }
+    console.log(msg);
+}
+
 async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
-    const res = await OriginApi.signup(email, password, screen_name);
+    const btn = document.getElementById('signup-submit');
+    const spinner = document.getElementById('signup-spinner');
+    const errEl = document.getElementById('signup-error');
+    if (errEl) errEl.textContent = '';
+    if (spinner) spinner.style.display = 'inline-block';
+    if (btn) btn.disabled = true;
+    logToFile('Signup attempt: ' + email);
+    let res;
+    try {
+        res = await OriginApi.signup(email, password, screen_name);
+    } catch (err) {
+        if (errEl) errEl.textContent = 'Network error';
+        logToFile('Signup network error: ' + err);
+        if (spinner) spinner.style.display = 'none';
+        if (btn) btn.disabled = false;
+        return;
+    }
     if (res.ok) {
-        const loginRes = await OriginApi.login(email, password);
+        let loginRes;
+        try {
+            loginRes = await OriginApi.login(email, password);
+        } catch (err) {
+            logToFile('Auto-login error: ' + err);
+            loginRes = { ok: false };
+        }
         closeSignup();
         if (loginRes.ok) {
 const data = await loginRes.json();
@@ -48,6 +85,8 @@ showLogin();
     } else {
         showToast('Signup failed', 'error');
     }
+    if (spinner) spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
 }
 
 async function login(e) {

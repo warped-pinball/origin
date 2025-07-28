@@ -43,6 +43,9 @@ cordova emulate android   # or ios
 
 Tag an NFC tag, scan a QR code or open a deep link to see the URL logged on the page.
 
+When running on a real device the app writes a log to `Download/origin-log.txt` which
+records signup and login attempts.
+
 ### Signing
 
 The workflow generates a debug keystore for Android so the APK is installable without secrets. Edit `build.json` if you wish to use your own signing credentials. For iOS create a `build.json` with your Apple developer team ID and provisioning profile as shown in the comments of the file.

@@ -42,3 +42,11 @@ Then call the helper functions:
 ```javascript
 const res = await OriginApi.login(email, password);
 ```
+
+## Testing
+
+Run the client tests with Node's test runner:
+
+```bash
+npm --prefix shared test
+```

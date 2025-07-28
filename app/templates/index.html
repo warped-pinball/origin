@@ -10,6 +10,8 @@
                 .error { color: red; font-size: small; }
                 .store-badges { display:flex; gap:0.5rem; justify-content:center; }
                 .store-badges img { width:45%; height:auto; max-width:160px; }
+                .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/api.js"></script>
@@ -50,8 +52,12 @@
                             <input id='signup-password' type='password' placeholder='Password' required />
                             <footer class='grid'>
                                 <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
-                                <button type='submit'>Create Account</button>
+                                <button id='signup-submit' type='submit'>
+                                    <span id='signup-spinner' class='spinner' style='display:none'></span>
+                                    <span id='signup-btn-text'>Create Account</span>
+                                </button>
                             </footer>
+                            <span id='signup-error' class='error'></span>
                         </form>
                     </article>
                 </dialog>
