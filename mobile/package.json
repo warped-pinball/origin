@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build:pages": "node scripts/build-pages.js",
-    "prepare": "node scripts/set-version.js && npm run build:pages && cordova prepare && node scripts/patch-barcodescanner.js && node scripts/copy-logo.js",
+    "prepare": "node scripts/set-version.js && npm run build:pages && cordova prepare && node scripts/patch-barcodescanner.js",
     "build:android": "cordova build android --release --buildConfig build.json -- --packageType=apk",
     "test": "node --test --test-concurrency=1",
     "prebuild:android": "npm test"
