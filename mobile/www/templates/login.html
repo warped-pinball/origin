@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  {{head}}
+  <title>Login - Origin</title>
+  <style>
+    .error { color: red; font-size: small; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Origin</h1>
+    <section id="login-section">
+      <article>
+        <h2>Login</h2>
+        <form onsubmit="login(event)">
+          <input id="login-email" type="email" placeholder="Email" required />
+          <input id="login-password" type="password" placeholder="Password" required />
+          <p style="font-size:0.9rem;">Don't have an account? <a href="#" onclick="openSignup(event)">Sign Up</a></p>
+          <button type="submit">Log In</button>
+          <span id="login-error" class="error"></span>
+        </form>
+      </article>
+    </section>
+    <dialog id="signup-dialog">
+      <article>
+        <h3>Create Account</h3>
+        <form onsubmit="signup(event)">
+          <input id="signup-email" type="email" placeholder="Email" required />
+          <span id="signup-email-error" class="error"></span>
+          <input id="signup-screen" type="text" placeholder="Screen name" required />
+          <input id="signup-password" type="password" placeholder="Password" required />
+          <footer class="grid">
+            <button type="button" onclick="closeSignup()" class="secondary">Cancel</button>
+            <button type="submit">Create Account</button>
+          </footer>
+        </form>
+      </article>
+    </dialog>
+  </main>
+  <script src="cordova.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
