@@ -8,10 +8,10 @@ const SRC = path.join(__dirname, '../src/api.js');
 
 function loadApi(fetchImpl, apiBase) {
   const code = fs.readFileSync(SRC, 'utf8');
-  const sandbox = { fetch: fetchImpl, API_BASE: apiBase };
+  const sandbox = { fetch: fetchImpl };
   Object.setPrototypeOf(sandbox, global);
   vm.runInNewContext(code, sandbox, { filename: SRC });
-  return sandbox.OriginApi;
+  return sandbox.createOriginApi(apiBase);
 }
 
 test('signup posts to /users/', async () => {

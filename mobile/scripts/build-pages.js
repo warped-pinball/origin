@@ -8,7 +8,7 @@ const partials = {
 partials.nav = fs.readFileSync(path.join(__dirname, '../www/partials/nav.html'), 'utf8');
 
 const pkg = require('../package.json');
-const apiBase = process.env.PUBLIC_API_URL || '';
+const apiBase = process.env.PUBLIC_API_URL || require('../api-base');
 
 const templateDir = path.join(__dirname, '../www/templates');
 for (const file of fs.readdirSync(templateDir)) {

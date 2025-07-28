@@ -58,9 +58,10 @@ Screenshots are produced automatically by the **Update Mobile Screenshots** work
 
 API calls used by both the web UI and the mobile app live under `shared/`.
 Run `node shared/scripts/build.js` to generate `api.js` and copy it into the
-correct locations. The script also respects the `PUBLIC_API_URL` environment
-variable so both clients use the same API base URL. See
-`docs/JS_CLIENT.md` for details.
+correct locations. The script respects the `PUBLIC_API_URL` environment
+variable so both clients use the same API base URL. The mobile build falls
+back to the value exported from `mobile/api-base.js` (set to
+`https://origin-beta.doze.dev`). See `docs/JS_CLIENT.md` for details.
 
 ## Continuous Integration
 

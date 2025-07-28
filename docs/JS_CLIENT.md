@@ -1,9 +1,10 @@
 # JavaScript API Client
 
 The `shared` folder contains a small JavaScript package used by both the web UI
-and the mobile application. It exposes the `OriginApi` global with helper
-functions for common API requests. The build script copies the bundled file into
-`app/static/` and `mobile/www/` so both projects include the same code.
+and the mobile application. It exposes a `createOriginApi(base)` factory and an
+`OriginApi` global created with `window.API_BASE`. The build script copies the
+bundled file into `app/static/` and `mobile/www/` so both projects include the
+same code.
 
 ## Building
 
@@ -24,8 +25,8 @@ The script creates `shared/dist/api.js` and copies it to:
 
 Both applications expect `window.API_BASE` to contain the base URL of the API.
 For the web server this value comes from the `PUBLIC_API_URL` environment
-variable. The mobile build injects the same value into its templates when running
-`npm run build:pages`.
+variable. The mobile build injects the same value or falls back to the value
+exported from `mobile/api-base.js`.
 
 ## Usage
 
@@ -37,10 +38,15 @@ Include the generated script before `app.js` in the HTML:
 <script src="app.js"></script>
 ```
 
-Then call the helper functions:
+Create a client using the global instance or the factory:
 
 ```javascript
+// using the automatically created global
 const res = await OriginApi.login(email, password);
+
+// or explicitly specify the base URL
+const api = createOriginApi('https://api.example.com');
+await api.signup('a@b.c', 'secret', 'Name');
 ```
 
 ## Testing

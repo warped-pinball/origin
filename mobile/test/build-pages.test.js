@@ -20,7 +20,7 @@ test('build-pages generates pages with partials', () => {
       .replace('{{head}}', head)
       .replace('{{nav}}', nav)
       .replace(/{{version}}/g, pkg.version)
-      .replace(/{{apiBase}}/g, process.env.PUBLIC_API_URL || '');
+      .replace(/{{apiBase}}/g, process.env.PUBLIC_API_URL || require('../api-base'));
     const output = fs.readFileSync(path.join('www', file), 'utf8');
     assert.strictEqual(output, expected);
   }
