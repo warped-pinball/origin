@@ -29,7 +29,7 @@ function logToFile(msg) {
 
 async function signup(e) {
     e.preventDefault();
-    const email = document.getElementById('signup-email').value;
+    const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
     const btn = document.getElementById('signup-submit');
@@ -82,7 +82,7 @@ async function login(e) {
     e.preventDefault();
     const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
-    const email = emailInput.value;
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     emailInput.setCustomValidity('');
     passwordInput.setCustomValidity('');

@@ -74,6 +74,18 @@ def test_login_wrong_password():
     assert response.json()["detail"] == "Invalid email or password"
 
 
+def test_login_trailing_space():
+    client.post(
+        "/api/v1/users/",
+        json={"email": "ts@example.com", "password": "pass", "screen_name": "ts"},
+    )
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "ts@example.com ", "password": "pass"},
+    )
+    assert response.status_code == 200
+
+
 def test_root_page():
     response = client.get("/")
     assert response.status_code == 200

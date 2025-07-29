@@ -14,7 +14,8 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    user = crud.get_user_by_email(db, form_data.username)
+    email = form_data.username.strip()
+    user = crud.get_user_by_email(db, email)
     if not user or not crud.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
