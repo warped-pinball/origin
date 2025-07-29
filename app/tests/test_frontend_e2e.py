@@ -57,11 +57,13 @@ def test_signup_and_login_workflow(server):
         page.fill("#signup-password", "pass")
         page.click("#signup-submit")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        # open profile page to verify login succeeded
-        page.click("li[data-page='account'] a")
-        page.wait_for_selector("#profile-name-text", timeout=2000)
-        profile = page.text_content("#profile-name-text")
+        # open profile overlay to verify login succeeded
+        page.click("#profile-avatar")
+        page.wait_for_selector("#account-overlay.show", timeout=2000)
+        page.wait_for_function("document.getElementById('account-screen').value !== ''")
+        profile = page.input_value("#account-screen")
         welcome_hidden = page.is_hidden("#welcome-title")
+        page.click("#account-overlay")
         browser.close()
     assert profile == "tester" and welcome_hidden, (
         "Signup flow did not complete correctly or the profile name was not " "loaded."
@@ -130,13 +132,15 @@ def test_edit_profile_name(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        page.click("li[data-page='account'] a")
-        page.wait_for_selector("#edit-name-btn")
-        page.click("#edit-name-btn")
+        page.click("#profile-avatar")
+        page.wait_for_selector("#account-overlay.show")
         page.fill("#account-screen", "new")
-        page.click("#edit-name-form button[type='submit']")
-        page.wait_for_function("document.querySelector('#profile-name-text').textContent === 'new'")
-        updated = page.text_content("#profile-name-text")
+        page.wait_for_selector("#account-save", state="visible")
+        page.evaluate("document.getElementById('account-save').click()")
+        page.wait_for_function(
+            "!document.getElementById('account-overlay').classList.contains('show')"
+        )
+        updated = page.input_value("#account-screen")
         browser.close()
     assert updated == "new"
 

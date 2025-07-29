@@ -124,8 +124,6 @@ async function loadUserInfo() {
         const res = await OriginApi.getMe(token);
         if (res.ok) {
             const user = await res.json();
-            const nameEl = document.getElementById('profile-name-text');
-            if (nameEl) nameEl.textContent = user.screen_name || user.email;
             const screenInput = document.getElementById('account-screen');
             if (screenInput) screenInput.value = user.screen_name || '';
         }
@@ -164,12 +162,13 @@ async function updateScreenName(e) {
     const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
-        const nameEl = document.getElementById('profile-name-text');
-        if (nameEl) nameEl.textContent = screen_name;
-        const form = document.getElementById('edit-name-form');
-        const btn = document.getElementById('edit-name-btn');
-        if (form) form.style.display = 'none';
-        if (btn) btn.style.display = 'inline-flex';
+        const avatarInput = document.getElementById('account-screen');
+        if (avatarInput) avatarInput.value = screen_name;
+        const overlay = document.getElementById('account-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+            overlay.style.display = 'none';
+        }
     } else {
         showToast('Update failed', 'error');
     }
@@ -236,6 +235,8 @@ function showLogin() {
             title.textContent = 'Welcome';
             title.style.display = 'block';
         }
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) avatar.style.display = 'none';
     } else if (!location.pathname.endsWith('login.html')) {
         location.href = 'login.html';
     }
@@ -256,6 +257,8 @@ function showLoggedIn() {
             title.textContent = '';
             title.style.display = 'none';
         }
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) avatar.style.display = 'block';
     } else if (location.pathname.endsWith('login.html')) {
         location.href = 'index.html';
     }
@@ -320,16 +323,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmDelete) {
         confirmDelete.addEventListener('click', deleteAccount);
     }
-    const editBtn = document.getElementById('edit-name-btn');
-    const editForm = document.getElementById('edit-name-form');
-    if (editBtn && editForm) {
-        editBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            editForm.style.display = 'flex';
-            editBtn.style.display = 'none';
-            const input = document.getElementById('account-screen');
+    const avatar = document.getElementById('profile-avatar');
+    const overlay = document.getElementById('account-overlay');
+    const saveBtn = document.getElementById('account-save');
+    const input = document.getElementById('account-screen');
+    if (avatar && overlay) {
+        avatar.addEventListener('click', () => {
+            overlay.style.display = 'block';
+            overlay.classList.add('show');
             if (input) input.focus();
         });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('show');
+                overlay.style.display = 'none';
+            }
+        });
+    }
+    if (input && saveBtn) {
+        input.addEventListener('input', () => saveBtn.style.display = 'inline-block');
+        saveBtn.addEventListener('click', updateScreenName);
     }
     moveIndicator(location.hash.substring(1) || 'achievements');
 });
