@@ -23,24 +23,3 @@ jobs:
       - name: Build Docker image
         run: docker build -t $REGISTRY/${{ github.repository_owner }}/$IMAGE_NAME:pr-$GITHUB_SHA .
 
-  mobile:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            mobile/node_modules
-          key: ${{ runner.os }}-mobile-${{ hashFiles('mobile/package-lock.json') }}
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-      - name: Run tests
-        run: npm test

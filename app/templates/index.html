@@ -6,10 +6,10 @@
             <title>Origin</title>
             <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
             <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
+            <link rel='manifest' href='/static/manifest.json'>
             <style>
                 .error { color: red; font-size: small; }
-                .store-badges { display:flex; gap:0.5rem; justify-content:center; }
-                .store-badges img { width:45%; height:auto; max-width:160px; }
+                #install-btn { position:fixed;bottom:1rem;right:1rem;display:none; }
                 .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             </style>
@@ -36,10 +36,7 @@
                             <button type='submit'>Log In</button>
                             <span id='login-error' class='error'></span>
                         </form>
-                        <div class='store-badges'>
-                            <a href='#'><img src='/static/google-play-badge.png' alt='Get it on Google Play'></a>
-                            <a href='#'><img src='/static/app-store-badge.svg' alt='Download on the App Store'></a>
-                        </div>
+                        <button id='install-btn' onclick='installApp()'>Install</button>
                     </article>
                 </section>
                 <dialog id='signup-dialog'>

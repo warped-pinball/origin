@@ -6,12 +6,7 @@ venv/
 .idea/
 .DS_Store
 test.db
+node_modules/
+sdks/typescript/node_modules/
 
-# Mobile app
-mobile/node_modules/
-mobile/platforms/
-mobile/plugins/
-mobile/.cordova/
-mobile/build/
-mobile/debug.keystore
 
