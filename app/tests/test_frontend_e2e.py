@@ -172,8 +172,9 @@ def test_nav_label_trophies(server):
         page.wait_for_selector("#loggedin-section", timeout=5000)
         label = page.text_content("button[data-page='achievements'] small")
         hidden = page.is_hidden("#welcome-title")
+        has_nav = page.query_selector("nav#navbar") is not None
         browser.close()
-    assert label == "Trophies" and hidden
+    assert label == "Trophies" and hidden and not has_nav
 
 
 def _trigger_install_prompt(page):
