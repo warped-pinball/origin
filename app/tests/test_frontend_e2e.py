@@ -170,7 +170,7 @@ def test_nav_label_trophies(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        label = page.text_content("li[data-page='achievements'] small")
+        label = page.text_content("button[data-page='achievements'] small")
         hidden = page.is_hidden("#welcome-title")
         browser.close()
     assert label == "Trophies" and hidden
