@@ -8,7 +8,7 @@
   "icons": [
     {
       "src": "/static/google-play-badge.png",
-      "sizes": "512x512",
+      "sizes": "270x80",
       "type": "image/png"
     }
   ]

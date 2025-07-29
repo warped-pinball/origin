@@ -12,6 +12,8 @@
                 #install-btn { position:fixed;bottom:1rem;right:1rem;display:none; }
                 .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                #signup-dialog { top:10vh; }
+                #signup-dialog h3 { margin:0.5rem 0; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/api.js"></script>
@@ -48,11 +50,11 @@
                             <input id='signup-screen' type='text' placeholder='Screen name' required />
                             <input id='signup-password' type='password' placeholder='Password' required />
                             <footer class='grid'>
-                                <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
                                 <button id='signup-submit' type='submit'>
                                     <span id='signup-spinner' class='spinner' style='display:none'></span>
                                     <span id='signup-btn-text'>Create Account</span>
                                 </button>
+                                <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
                             </footer>
                             <span id='signup-error' class='error'></span>
                         </form>
