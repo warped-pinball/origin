@@ -58,8 +58,9 @@
                     height:var(--nav-icon-size);
                 }
                 #profile-avatar {
-                    max-height:calc(var(--nav-icon-size) * 2.5);
+                    height:calc(var(--nav-icon-size)*2);
                     width:auto;
+                    min-height:calc(var(--nav-icon-size)*2);
                 }
                 #account-overlay {
                     --clip-x:100%;
@@ -135,8 +136,12 @@
                     display:flex;
                     align-items:center;
                     justify-content:center;
+                    transition:background 0.3s;
                     cursor:pointer;
-                }
+                  }
+                  #account-save.saved {
+                      background:#15803d;
+                  }
                 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
                 main.container { padding-bottom:3.5rem; }
             </style>
@@ -275,7 +280,7 @@
                         <p style='text-align:center;margin-top:1rem;font-size:0.9rem;'>Version {{ version }}</p>
                     </section>
                 </section>
-                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
+                <div id='toast' class='toast' style='display:none;position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:2000;max-width:75vw;width:max-content;text-align:center;'></div>
                 <div id='account-overlay'>
                     <button id='account-close' aria-label='Close'><span class='material-icons'>close</span></button>
                     <div id='account-actions'>

@@ -23,6 +23,7 @@ function showToast(msg, type = 'info') {
     if (toast) {
         toast.textContent = `${icon} ${msg}`;
         toast.style.background = type === 'error' ? '#b91c1c' : type === 'success' ? '#15803d' : '#333';
+        toast.style.zIndex = '2000';
         toast.style.display = 'block';
         setTimeout(() => toast.style.display = 'none', 3000);
     } else {
@@ -174,18 +175,25 @@ async function updateScreenName(e) {
     const screen_name = document.getElementById('account-screen').value;
     const token = localStorage.getItem('token');
     const res = await OriginApi.updateScreenName(token, screen_name);
+    const input = document.getElementById('account-screen');
+    const actions = document.getElementById('account-actions');
+    const btn = document.getElementById('account-save');
     if (res.ok) {
         showToast('Screen name updated', 'success');
-        const input = document.getElementById('account-screen');
-        const overlay = document.getElementById('account-overlay');
-        const actions = document.getElementById('account-actions');
         if (input) {
             input.value = screen_name;
             input.dataset.original = screen_name;
         }
         if (actions) actions.classList.remove('visible');
-        if (overlay) {
-            overlay.classList.remove('show');
+        if (btn) {
+            const icon = btn.querySelector('.material-icons');
+            const prev = icon ? icon.textContent : '';
+            btn.classList.add('saved');
+            if (icon) icon.textContent = 'check';
+            setTimeout(() => {
+                if (icon) icon.textContent = prev;
+                btn.classList.remove('saved');
+            }, 1000);
         }
     } else {
         showToast('Update failed', 'error');
@@ -384,12 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (input) {
                 input.dataset.original = input.value;
                 if (actions) actions.classList.remove('visible');
-                input.focus();
-            }
-        });
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                closeOverlay();
             }
         });
     }
