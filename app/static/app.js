@@ -165,7 +165,10 @@ async function updateScreenName(e) {
         const avatarInput = document.getElementById('account-screen');
         if (avatarInput) avatarInput.value = screen_name;
         const overlay = document.getElementById('account-overlay');
-        if (overlay) overlay.classList.remove('show');
+        if (overlay) {
+            overlay.classList.remove('show');
+            overlay.style.display = 'none';
+        }
     } else {
         showToast('Update failed', 'error');
     }
@@ -326,11 +329,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('account-screen');
     if (avatar && overlay) {
         avatar.addEventListener('click', () => {
+            overlay.style.display = 'block';
             overlay.classList.add('show');
             if (input) input.focus();
         });
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.classList.remove('show');
+            if (e.target === overlay) {
+                overlay.classList.remove('show');
+                overlay.style.display = 'none';
+            }
         });
     }
     if (input && saveBtn) {
