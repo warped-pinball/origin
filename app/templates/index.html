@@ -14,6 +14,7 @@
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 #signup-dialog { top:10vh; }
                 #signup-dialog h3 { margin:0.5rem 0; }
+                button { text-align:center; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/api.js"></script>
@@ -60,19 +61,19 @@
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar'>
                         <ul class='grid' style='grid-template-columns:repeat(4,1fr);text-align:center;'>
-                            <li><a href='#' onclick="showPage('achievements')" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li><a href='#' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>emoji_events</span>
                                 <small>Achievements</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('map')" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li><a href='#' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>map</span>
                                 <small>Map</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('account')" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li><a href='#' onclick="showPage('account', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>account_circle</span>
                                 <small>Profile</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('machines')" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li><a href='#' onclick="showPage('machines', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>sports_esports</span>
                                 <small>My Games</small>
                             </a></li>
@@ -116,10 +117,11 @@
                     </section>
                     <section id='settings' class='page' style='display:none;'>
                         <h2>Settings</h2>
-                        <button onclick='toggleTheme()' aria-label='Toggle theme' style='width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;'>
-                            <span id='theme-icon' class='material-icons'>light_mode</span>
-                        </button>
-                        <button onclick='logout()' aria-label='Logout' class='secondary' style='display:flex;align-items:center;gap:0.25rem;'>
+                        <label class='switch' style='margin-bottom:1rem;'>
+                            <input id='theme-toggle' type='checkbox' role='switch' onchange='toggleTheme()' checked>
+                            Dark Mode
+                        </label>
+                        <button onclick='logout()' aria-label='Logout' class='secondary' style='display:flex;align-items:center;gap:0.25rem;width:fit-content;margin:0 auto;background-color:#fecaca;color:#000;'>
                             <span class='material-icons'>logout</span><span>Logout</span>
                         </button>
                     </section>

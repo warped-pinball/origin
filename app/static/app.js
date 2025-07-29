@@ -4,9 +4,9 @@ function toggleTheme() {
     const html = document.documentElement;
     const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
     html.dataset.theme = newTheme;
-    const icon = document.getElementById('theme-icon');
-    if (icon) {
-        icon.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+    const toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+        toggle.checked = newTheme === 'dark';
     }
 }
 
@@ -136,7 +136,8 @@ function displayPage(id) {
     if (el) el.style.display = 'block';
 }
 
-function showPage(id) {
+function showPage(id, e) {
+    if (e) e.preventDefault();
     if (location.hash !== '#' + id) {
         location.hash = id;
     } else {
@@ -280,6 +281,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (loginPassword) {
         loginPassword.addEventListener('input', () => loginPassword.setCustomValidity(''));
+    }
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.checked = document.documentElement.dataset.theme === 'dark';
     }
 });
 
