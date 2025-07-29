@@ -1,13 +1,49 @@
 name: CI
+
 on:
   push:
     branches: [main]
+  release:
+    types: [published]
+
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v3
       - name: Load workflow variables
         run: cat .github/workflows/vars.env >> $GITHUB_ENV
       - name: Build Docker image
         run: docker build -t $REGISTRY/${{ github.repository_owner }}/$IMAGE_NAME:sha-$GITHUB_SHA .
+      - name: Load version
+        if: github.event_name == 'push'
+        run: echo "VERSION=$(python -c 'from app.version import __version__; print(__version__)')" >> $GITHUB_ENV
+      - name: Push beta image
+        if: github.event_name == 'push'
+        uses: ./.github/actions/docker-build
+        with:
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-beta
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:beta
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trigger Portainer beta deployment
+        if: github.event_name == 'push'
+        uses: ./.github/actions/portainer-deploy
+        with:
+          webhook: ${{ secrets.PORTAINER_WEBHOOK_BETA }}
+      - name: Push release image
+        if: github.event_name == 'release'
+        uses: ./.github/actions/docker-build
+        with:
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trigger Portainer release deployment
+        if: github.event_name == 'release'
+        uses: ./.github/actions/portainer-deploy
+        with:
+          webhook: ${{ secrets.PORTAINER_WEBHOOK_RELEASE }}
