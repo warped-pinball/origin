@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = path.resolve(__dirname, '../../sdks/typescript');
+const src = path.resolve(__dirname, '../../sdks/typescript/dist');
 const distFile = path.join(src, 'index.js');
 const dist = path.resolve(__dirname, '../dist/api.js');
 fs.mkdirSync(path.dirname(dist), { recursive: true });

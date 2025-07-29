@@ -27,9 +27,9 @@ The web host serves a minimal PWA that implements the same login and signup flow
 ## SDK Generation
 
 API clients are generated from `openapi.json` using
-[Fern](https://buildwithfern.com). Running
+[OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator). Running
 `./scripts/generate-sdks.sh` produces a TypeScript SDK in
-`sdks/typescript`. The web host consumes this build. The API base URL
+`sdks/typescript/dist`. The web host consumes this build. The API base URL
 comes from the `PUBLIC_API_URL` environment variable.
 See `docs/SDKS.md` for details.
 

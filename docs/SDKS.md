@@ -1,7 +1,7 @@
 # SDK Generation
 
-This repository uses [Fern](https://buildwithfern.com) to generate client SDKs
-from `openapi.json`.
+This repository uses [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator)
+to generate client SDKs from `openapi.json`.
 
 ## Building locally
 
@@ -11,8 +11,8 @@ Install Node.js and run:
 ./scripts/generate-sdks.sh
 ```
 
-This downloads the Fern CLI and produces a TypeScript package under
-`sdks/typescript`. The build is bundled with the web host at build time.
+This downloads the OpenAPI Generator CLI and produces a TypeScript package under
+`sdks/typescript/dist`. The build is bundled with the web host at build time.
 
 ## Continuous Integration
 

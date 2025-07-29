@@ -4,13 +4,13 @@ This repository contains a FastAPI backend and a Progressive Web App. Both clien
 
 ## API Client
 
-The TypeScript SDK is generated with [Fern](https://buildwithfern.com) by running:
+The TypeScript SDK is generated with [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) by running:
 
 ```bash
 ./scripts/generate-sdks.sh
 ```
 
-The resulting `sdks/typescript/index.js` file is bundled with the web host when you run `npm --prefix shared build`. The build script copies the file to `app/static/api.js`.
+The resulting `sdks/typescript/dist/index.js` file is bundled with the web host when you run `npm --prefix shared build`. The build script copies the file to `app/static/api.js`.
 
 ## API Base URL
 
