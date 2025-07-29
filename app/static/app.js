@@ -126,14 +126,26 @@ async function loadUserInfo() {
             const user = await res.json();
             const title = document.getElementById('welcome-title');
             if (title) title.textContent = `Welcome, ${user.screen_name || user.email}`;
+            const screenInput = document.getElementById('account-screen');
+            if (screenInput) screenInput.value = user.screen_name || '';
         }
     } catch {}
+}
+
+function moveIndicator(id) {
+    const indicator = document.getElementById('nav-indicator');
+    const item = document.querySelector(`#navbar li[data-page="${id}"]`);
+    if (indicator && item) {
+        const offset = item.offsetLeft + item.offsetWidth / 2 - indicator.offsetWidth / 2;
+        indicator.style.transform = `translateX(${offset}px)`;
+    }
 }
 
 function displayPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
+    moveIndicator(id);
 }
 
 function showPage(id, e) {
@@ -152,6 +164,8 @@ async function updateScreenName(e) {
     const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
+        const title = document.getElementById('welcome-title');
+        if (title) title.textContent = `Welcome, ${screen_name}`;
     } else {
         showToast('Update failed', 'error');
     }
@@ -169,8 +183,12 @@ async function updatePassword(e) {
     }
 }
 
+function openDeleteConfirm() {
+    const dialog = document.getElementById('delete-dialog');
+    if (dialog) dialog.showModal();
+}
+
 async function deleteAccount() {
-    if(!confirm('Are you sure you want to delete your account?')) return;
     const token = localStorage.getItem('token');
     const res = await OriginApi.deleteAccount(token);
     if (res.ok) {
@@ -179,6 +197,8 @@ async function deleteAccount() {
     } else {
         showToast('Delete failed', 'error');
     }
+    const dialog = document.getElementById('delete-dialog');
+    if (dialog) dialog.close();
 }
 
 function openSignup(e) {
@@ -205,8 +225,6 @@ function showLogin() {
         if (err) err.textContent = '';
         displayPage('');
         if (location.hash) history.replaceState(null, '', ' ');
-        const btn = document.getElementById('settings-btn');
-        if (btn) btn.style.display = 'none';
         const title = document.getElementById('welcome-title');
         if (title) title.textContent = 'Welcome';
     } else if (!location.pathname.endsWith('login.html')) {
@@ -223,8 +241,6 @@ function showLoggedIn() {
         const page = location.hash.substring(1) || 'achievements';
         displayPage(page);
         if (!location.hash) location.hash = page;
-        const btn = document.getElementById('settings-btn');
-        if (btn) btn.style.display = 'flex';
         loadUserInfo();
     } else if (location.pathname.endsWith('login.html')) {
         location.href = 'index.html';
@@ -286,5 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeToggle) {
         themeToggle.checked = document.documentElement.dataset.theme === 'dark';
     }
+    const confirmDelete = document.getElementById('confirm-delete-btn');
+    if (confirmDelete) {
+        confirmDelete.addEventListener('click', deleteAccount);
+    }
+    moveIndicator(location.hash.substring(1) || 'achievements');
 });
 
