@@ -1,6 +1,6 @@
 # Origin
 
-This repository contains the Origin backend API built with FastAPI and a simple Progressive Web App (PWA).
+This repository contains the Origin backend API built with FastAPI and a simple Progressive Web App (PWA). Additional documentation lives in the [docs](docs/) folder. Start with the [Developer Guide](docs/DEVELOPER_GUIDE.md) and the [API specification](docs/API_SPEC.md).
 
 ## Backend
 
@@ -23,6 +23,8 @@ Schema changes live in `app/migrations` as numbered SQL files. On startup the se
 ## Progressive Web App
 
 The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser.
+The JavaScript client used by the PWA lives in the `web` directory and is
+copied to `app/static/api.js` when you run `npm --prefix web build`.
 
 ## SDK Generation
 
@@ -46,6 +48,6 @@ Install dependencies and run the backend and SDK test suites:
 
 ```bash
 pip install -r requirements.txt -r requirements-test.txt
-npm --prefix shared ci && npm --prefix shared test --silent
+npm --prefix web ci && npm --prefix web test --silent
 pytest -q
 ```

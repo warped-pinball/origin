@@ -1,6 +1,8 @@
 # API Roadmap and Specification
 
 This document outlines a high-level plan for the Origin API. It covers core features, suggested endpoints, database structure and authentication considerations.
+For project structure details see the [Developer Guide](DEVELOPER_GUIDE.md) and
+the [SDK documentation](SDKS.md).
 
 ## 1. Overview
 
