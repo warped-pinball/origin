@@ -117,6 +117,19 @@ function logout() {
     showLogin();
 }
 
+async function loadUserInfo() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await OriginApi.getMe(token);
+        if (res.ok) {
+            const user = await res.json();
+            const title = document.getElementById('welcome-title');
+            if (title) title.textContent = `Welcome, ${user.screen_name || user.email}`;
+        }
+    } catch {}
+}
+
 function displayPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
@@ -191,8 +204,10 @@ function showLogin() {
         if (err) err.textContent = '';
         displayPage('');
         if (location.hash) history.replaceState(null, '', ' ');
-        const btn = document.getElementById('logout-btn');
+        const btn = document.getElementById('settings-btn');
         if (btn) btn.style.display = 'none';
+        const title = document.getElementById('welcome-title');
+        if (title) title.textContent = 'Welcome';
     } else if (!location.pathname.endsWith('login.html')) {
         location.href = 'login.html';
     }
@@ -207,8 +222,9 @@ function showLoggedIn() {
         const page = location.hash.substring(1) || 'achievements';
         displayPage(page);
         if (!location.hash) location.hash = page;
-        const btn = document.getElementById('logout-btn');
+        const btn = document.getElementById('settings-btn');
         if (btn) btn.style.display = 'flex';
+        loadUserInfo();
     } else if (location.pathname.endsWith('login.html')) {
         location.href = 'index.html';
     }
