@@ -343,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatar = document.getElementById('profile-avatar');
     const overlay = document.getElementById('account-overlay');
     const saveBtn = document.getElementById('account-save');
-    const cancelBtn = document.getElementById('account-cancel');
     const closeBtn = document.getElementById('account-close');
     const actions = document.getElementById('account-actions');
     const input = document.getElementById('account-screen');
@@ -374,10 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
-    if (cancelBtn) cancelBtn.addEventListener('click', () => {
-        if (input) input.value = input.dataset.original || '';
-        if (actions) actions.classList.remove('visible');
-    });
     if (input) {
         input.addEventListener('input', () => {
             if (actions) {
