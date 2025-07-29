@@ -124,8 +124,8 @@ async function loadUserInfo() {
         const res = await OriginApi.getMe(token);
         if (res.ok) {
             const user = await res.json();
-            const title = document.getElementById('welcome-title');
-            if (title) title.textContent = `Welcome, ${user.screen_name || user.email}`;
+            const nameEl = document.getElementById('profile-name-text');
+            if (nameEl) nameEl.textContent = user.screen_name || user.email;
             const screenInput = document.getElementById('account-screen');
             if (screenInput) screenInput.value = user.screen_name || '';
         }
@@ -164,8 +164,12 @@ async function updateScreenName(e) {
     const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
-        const title = document.getElementById('welcome-title');
-        if (title) title.textContent = `Welcome, ${screen_name}`;
+        const nameEl = document.getElementById('profile-name-text');
+        if (nameEl) nameEl.textContent = screen_name;
+        const form = document.getElementById('edit-name-form');
+        const btn = document.getElementById('edit-name-btn');
+        if (form) form.style.display = 'none';
+        if (btn) btn.style.display = 'inline-flex';
     } else {
         showToast('Update failed', 'error');
     }
@@ -178,6 +182,8 @@ async function updatePassword(e) {
     const res = await OriginApi.updatePassword(token, password);
     if (res.ok) {
         showToast('Password changed', 'success');
+        const dialog = document.getElementById('password-dialog');
+        if (dialog) dialog.close();
     } else {
         showToast('Password change failed', 'error');
     }
@@ -226,7 +232,10 @@ function showLogin() {
         displayPage('');
         if (location.hash) history.replaceState(null, '', ' ');
         const title = document.getElementById('welcome-title');
-        if (title) title.textContent = 'Welcome';
+        if (title) {
+            title.textContent = 'Welcome';
+            title.style.display = 'block';
+        }
     } else if (!location.pathname.endsWith('login.html')) {
         location.href = 'login.html';
     }
@@ -242,6 +251,11 @@ function showLoggedIn() {
         displayPage(page);
         if (!location.hash) location.hash = page;
         loadUserInfo();
+        const title = document.getElementById('welcome-title');
+        if (title) {
+            title.textContent = '';
+            title.style.display = 'none';
+        }
     } else if (location.pathname.endsWith('login.html')) {
         location.href = 'index.html';
     }
@@ -305,6 +319,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmDelete = document.getElementById('confirm-delete-btn');
     if (confirmDelete) {
         confirmDelete.addEventListener('click', deleteAccount);
+    }
+    const editBtn = document.getElementById('edit-name-btn');
+    const editForm = document.getElementById('edit-name-form');
+    if (editBtn && editForm) {
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            editForm.style.display = 'flex';
+            editBtn.style.display = 'none';
+            const input = document.getElementById('account-screen');
+            if (input) input.focus();
+        });
     }
     moveIndicator(location.hash.substring(1) || 'achievements');
 });
