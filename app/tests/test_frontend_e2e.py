@@ -130,13 +130,14 @@ def test_edit_profile_name(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        page.click("li[data-page='account'] a")
-        page.wait_for_selector("#edit-name-btn")
-        page.click("#edit-name-btn")
+        page.click("#profile-avatar")
+        page.wait_for_selector("#account-overlay.show")
         page.fill("#account-screen", "new")
-        page.click("#edit-name-form button[type='submit']")
-        page.wait_for_function("document.querySelector('#profile-name-text').textContent === 'new'")
-        updated = page.text_content("#profile-name-text")
+        page.click("#account-save")
+        page.wait_for_function(
+            "!document.getElementById('account-overlay').classList.contains('show')"
+        )
+        updated = page.get_attribute("#account-screen", "value")
         browser.close()
     assert updated == "new"
 
