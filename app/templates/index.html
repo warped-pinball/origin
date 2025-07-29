@@ -15,6 +15,11 @@
                 #signup-dialog { top:10vh; }
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
+                #navbar { position:fixed;bottom:0;left:0;width:100%;background:var(--pico-surface, #222); }
+                #navbar ul { margin:0; }
+                #navbar li { position:relative; }
+                #nav-indicator { position:absolute;top:0;left:0;width:2.5rem;height:2.5rem;border-radius:50%;background:var(--pico-primary, #4f46e5);transition:transform 0.3s;pointer-events:none;transform:translateX(0); }
+                main.container { padding-bottom:4rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/api.js"></script>
@@ -23,9 +28,6 @@
         <body>
             <main class='container'>
                 <h1 id='welcome-title'>Welcome</h1>
-                <button id='settings-btn' onclick="showPage('settings')" aria-label='Settings' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:none;align-items:center;justify-content:center;'>
-                    <span class='material-icons'>settings</span>
-                </button>
                 <section id='login-section'>
                     <article>
                         <h2>Login</h2>
@@ -58,24 +60,35 @@
                         </form>
                     </article>
                 </dialog>
+                <dialog id='delete-dialog'>
+                    <article>
+                        <h3>Delete Account</h3>
+                        <p>Are you sure you want to delete your account?</p>
+                        <footer class='grid'>
+                            <button id='confirm-delete-btn' class='contrast'>Delete</button>
+                            <button type='button' onclick="document.getElementById('delete-dialog').close()" class='secondary'>Cancel</button>
+                        </footer>
+                    </article>
+                </dialog>
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar'>
-                        <ul class='grid' style='grid-template-columns:repeat(4,1fr);text-align:center;'>
-                            <li><a href='#' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                        <ul class='grid' style='grid-template-columns:repeat(4,1fr);text-align:center;position:relative;'>
+                            <div id='nav-indicator'></div>
+                            <li data-page='achievements'><a href='#' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>emoji_events</span>
                                 <small>Achievements</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li data-page='map'><a href='#' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>map</span>
                                 <small>Map</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('account', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                            <li data-page='account'><a href='#' onclick="showPage('account', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>account_circle</span>
                                 <small>Profile</small>
                             </a></li>
-                            <li><a href='#' onclick="showPage('machines', event)" style='display:flex;flex-direction:column;align-items:center;'>
-                                <span class='material-icons'>sports_esports</span>
-                                <small>My Games</small>
+                            <li data-page='settings'><a href='#' onclick="showPage('settings', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                                <span class='material-icons'>settings</span>
+                                <small>Settings</small>
                             </a></li>
                         </ul>
                     </nav>
@@ -95,28 +108,26 @@
                         <h2>Inventory / Avatar Builder</h2>
                         <p>Coming soon...</p>
                     </section>
-                    <section id='machines' class='page' style='display:none;'>
-                        <h2>Manage My Machines</h2>
-                        <p>Coming soon...</p>
-                    </section>
                     <section id='play' class='page' style='display:none;'>
                         <h2>Play a Game</h2>
                         <p>Coming soon...</p>
                     </section>
                     <section id='account' class='page' style='display:none;'>
-                        <h2>Manage Account</h2>
-                        <form onsubmit='updateScreenName(event)'>
-                            <input id='account-screen' type='text' placeholder='New screen name' required />
-                            <button type='submit'>Change Screen Name</button>
+                        <h2>Profile</h2>
+                        <form onsubmit='updateScreenName(event)' style='display:flex;align-items:center;gap:0.5rem;'>
+                            <input id='account-screen' type='text' required />
+                            <button type='submit' aria-label='Change Screen Name' style='display:flex;align-items:center;'>
+                                <span class='material-icons'>edit</span>
+                            </button>
                         </form>
+                    </section>
+                    <section id='settings' class='page' style='display:none;'>
+                        <h2>Settings</h2>
                         <form onsubmit='updatePassword(event)'>
                             <input id='account-password' type='password' placeholder='New password' required />
                             <button type='submit'>Change Password</button>
                         </form>
-                        <button onclick='deleteAccount()' class='secondary'>Delete Account</button>
-                    </section>
-                    <section id='settings' class='page' style='display:none;'>
-                        <h2>Settings</h2>
+                        <button onclick='openDeleteConfirm()' class='secondary'>Delete Account</button>
                         <label class='switch' style='margin-bottom:1rem;'>
                             <input id='theme-toggle' type='checkbox' role='switch' onchange='toggleTheme()' checked>
                             Dark Mode
@@ -124,10 +135,10 @@
                         <button onclick='logout()' aria-label='Logout' class='secondary' style='display:flex;align-items:center;gap:0.25rem;width:fit-content;margin:0 auto;background-color:#fecaca;color:#000;'>
                             <span class='material-icons'>logout</span><span>Logout</span>
                         </button>
+                        <p style='text-align:center;margin-top:1rem;font-size:0.9rem;'>Version {{ version }}</p>
                     </section>
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
             </main>
-            <footer style='margin-top:20px;text-align:center;'>Version {{ version }}</footer>
         </body>
     </html>
