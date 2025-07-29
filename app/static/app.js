@@ -176,10 +176,9 @@ async function updateScreenName(e) {
             input.value = screen_name;
             input.dataset.original = screen_name;
         }
-        if (actions) actions.style.display = 'none';
+        if (actions) actions.classList.remove('visible');
         if (overlay) {
             overlay.classList.remove('show');
-            overlay.style.display = 'none';
         }
     } else {
         showToast('Update failed', 'error');
@@ -352,21 +351,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeOverlay() {
         if (overlay) {
             overlay.classList.remove('show');
-            overlay.style.display = 'none';
         }
         if (input) {
             input.value = input.dataset.original || '';
         }
-        if (actions) actions.style.display = 'none';
+        if (actions) actions.classList.remove('visible');
     }
 
     if (avatar && overlay) {
         avatar.addEventListener('click', () => {
-            overlay.style.display = 'block';
             overlay.classList.add('show');
             if (input) {
                 input.dataset.original = input.value;
-                if (actions) actions.style.display = 'none';
+                if (actions) actions.classList.remove('visible');
                 input.focus();
             }
         });
@@ -379,12 +376,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
     if (cancelBtn) cancelBtn.addEventListener('click', () => {
         if (input) input.value = input.dataset.original || '';
-        if (actions) actions.style.display = 'none';
+        if (actions) actions.classList.remove('visible');
     });
     if (input) {
         input.addEventListener('input', () => {
             if (actions) {
-                actions.style.display = input.value !== (input.dataset.original || '') ? 'flex' : 'none';
+                if (input.value !== (input.dataset.original || '')) {
+                    actions.classList.add('visible');
+                } else {
+                    actions.classList.remove('visible');
+                }
             }
         });
     }
