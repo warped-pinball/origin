@@ -27,6 +27,10 @@ function logToFile(msg) {
     console.log(msg);
 }
 
+function isMobile() {
+    return /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+}
+
 async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value.trim();
@@ -130,12 +134,15 @@ async function loadUserInfo() {
     } catch {}
 }
 
-function moveIndicator(id) {
-    const indicator = document.getElementById('nav-indicator');
-    const item = document.querySelector(`#navbar li[data-page="${id}"]`);
-    if (indicator && item) {
-        const offset = item.offsetLeft + item.offsetWidth / 2 - indicator.offsetWidth / 2;
-        indicator.style.transform = `translateX(${offset}px)`;
+function highlightNav(id) {
+    document.querySelectorAll('#navbar button').forEach(btn => {
+        btn.classList.add('secondary');
+        btn.classList.remove('primary');
+    });
+    const btn = document.querySelector(`#navbar button[data-page="${id}"]`);
+    if (btn) {
+        btn.classList.add('primary');
+        btn.classList.remove('secondary');
     }
 }
 
@@ -143,7 +150,7 @@ function displayPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
-    moveIndicator(id);
+    highlightNav(id);
 }
 
 function showPage(id, e) {
@@ -282,10 +289,11 @@ function checkAuth() {
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
+    if (!isMobile()) return;
     e.preventDefault();
     deferredPrompt = e;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'block';
+    const dialog = document.getElementById('install-dialog');
+    if (dialog && !dialog.open) dialog.showModal();
 });
 
 function installApp() {
@@ -293,10 +301,15 @@ function installApp() {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => {
             deferredPrompt = null;
-            const btn = document.getElementById('install-btn');
-            if (btn) btn.style.display = 'none';
+            const dialog = document.getElementById('install-dialog');
+            if (dialog) dialog.close();
         });
     }
+}
+
+function closeInstall() {
+    const dialog = document.getElementById('install-dialog');
+    if (dialog) dialog.close();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -376,6 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     if (saveBtn) saveBtn.addEventListener('click', updateScreenName);
-    moveIndicator(location.hash.substring(1) || 'achievements');
+    highlightNav(location.hash.substring(1) || 'achievements');
 });
 

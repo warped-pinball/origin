@@ -9,28 +9,14 @@
             <link rel='manifest' href='/static/manifest.json'>
             <style>
                 .error { color: red; font-size: small; }
-                #install-btn { position:fixed;bottom:1rem;right:1rem;display:none; }
+                #install-dialog { top:10vh; }
                 .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 #signup-dialog { top:10vh; }
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
                 #navbar { position:fixed;bottom:0;left:0;width:100%;background:var(--pico-surface, #222); }
-                #navbar ul { margin:0; }
-                #navbar li { position:relative; }
-                #nav-indicator {
-                    position:absolute;
-                    top:50%;
-                    margin-top:-2.25rem;
-                    left:0;
-                    width:4.5rem;
-                    height:4.5rem;
-                    border-radius:50%;
-                    background:var(--muted-color);
-                    transition:transform 0.3s;
-                    pointer-events:none;
-                    transform:translateX(0);
-                }
+                #navbar .button-group { width:100%; }
                 #account-overlay { top:-100vh; }
                 #account-overlay.show { display:block; top:0; }
                 #account-avatar { transform: scale(0.5); transition: transform 0.3s; }
@@ -55,9 +41,19 @@
                             <button type='submit'>Log In</button>
                             <span id='login-error' class='error'></span>
                         </form>
-                        <button id='install-btn' onclick='installApp()'>Install</button>
+                        
                     </article>
                 </section>
+                <dialog id='install-dialog'>
+                    <article>
+                        <h3>Install App</h3>
+                        <p>Install this app for a better experience.</p>
+                        <footer class='grid'>
+                            <button id='install-confirm-btn' onclick='installApp()'>Install</button>
+                            <button type='button' onclick='closeInstall()' class='secondary'>Not now</button>
+                        </footer>
+                    </article>
+                </dialog>
                 <dialog id='signup-dialog'>
                     <article>
                         <h3>Create Account</h3>
@@ -101,21 +97,20 @@
                 </dialog>
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar'>
-                        <ul class='grid' style='grid-template-columns:repeat(3,1fr);text-align:center;position:relative;width:100%;'>
-                            <div id='nav-indicator'></div>
-                            <li data-page='achievements'><a href='#' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                        <div class='button-group' role='group' style='width:100%'>
+                            <button data-page='achievements' class='secondary' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
                                 <span class='material-icons'>emoji_events</span>
                                 <small>Trophies</small>
-                            </a></li>
-                            <li data-page='map'><a href='#' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                            </button>
+                            <button data-page='map' class='secondary' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
                                 <span class='material-icons'>map</span>
                                 <small>Map</small>
-                            </a></li>
-                            <li data-page='settings'><a href='#' onclick="showPage('settings', event)" style='display:flex;flex-direction:column;align-items:center;'>
+                            </button>
+                            <button data-page='settings' class='secondary' onclick="showPage('settings', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
                                 <span class='material-icons'>settings</span>
                                 <small>Settings</small>
-                            </a></li>
-                        </ul>
+                            </button>
+                        </div>
                     </nav>
                     <section id='achievements' class='page' style='display:none;'>
                         <h2>Trophies</h2>

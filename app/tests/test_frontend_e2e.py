@@ -170,7 +170,48 @@ def test_nav_label_trophies(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        label = page.text_content("li[data-page='achievements'] small")
+        label = page.text_content("button[data-page='achievements'] small")
         hidden = page.is_hidden("#welcome-title")
         browser.close()
     assert label == "Trophies" and hidden
+
+
+def _trigger_install_prompt(page):
+    page.evaluate(
+        """
+        () => {
+            const e = new Event('beforeinstallprompt');
+            e.preventDefault = () => {};
+            e.prompt = () => Promise.resolve();
+            e.userChoice = Promise.resolve({ outcome: 'accepted' });
+            window.dispatchEvent(e);
+        }
+        """
+    )
+
+
+def test_install_dialog_not_shown_on_desktop(server):
+    base_url, _ = server
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(base_url)
+        _trigger_install_prompt(page)
+        visible = page.is_visible("#install-dialog")
+        browser.close()
+    assert not visible
+
+
+def test_install_dialog_shown_on_mobile(server):
+    base_url, _ = server
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        iphone = p.devices["iPhone 12"]
+        context = browser.new_context(**iphone)
+        page = context.new_page()
+        page.goto(base_url)
+        _trigger_install_prompt(page)
+        visible = page.is_visible("#install-dialog")
+        context.close()
+        browser.close()
+    assert visible
