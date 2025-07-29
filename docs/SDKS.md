@@ -12,8 +12,7 @@ Install Node.js and run:
 ```
 
 This downloads the Fern CLI and produces TypeScript and Python packages under
-`sdks/`. The TypeScript build is bundled with both the web host and Cordova app
-at build time.
+`sdks/`. The TypeScript build is bundled with the web host at build time.
 
 ## Continuous Integration
 

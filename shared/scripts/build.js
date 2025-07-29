@@ -8,9 +8,6 @@ fs.mkdirSync(path.dirname(dist), { recursive: true });
 fs.copyFileSync(distFile, dist);
 
 const serverDest = path.resolve(__dirname, '../../app/static/api.js');
-const mobileDest = path.resolve(__dirname, '../../mobile/www/api.js');
-
 fs.copyFileSync(dist, serverDest);
-fs.copyFileSync(dist, mobileDest);
 
-console.log('API client built to', serverDest, 'and', mobileDest);
+console.log('API client built to', serverDest);

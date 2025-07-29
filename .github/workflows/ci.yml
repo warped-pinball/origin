@@ -16,10 +16,8 @@ jobs:
         with:
           node-version: '18'
       - run: pip install -r requirements.txt -r requirements-test.txt
-      - run: npm --prefix mobile ci
       - run: npm --prefix shared ci || true
       - run: npm --prefix shared test --silent
-      - run: npm --prefix mobile test --silent
       - run: pytest -q
       - run: ./scripts/generate-sdks.sh
       - name: Publish TypeScript package

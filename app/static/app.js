@@ -24,17 +24,6 @@ function showToast(msg, type = 'info') {
 }
 
 function logToFile(msg) {
-    if (window.resolveLocalFileSystemURL && window.cordova && cordova.file) {
-        const dir = cordova.file.externalRootDirectory + 'Download/';
-        window.resolveLocalFileSystemURL(dir, function (d) {
-            d.getFile('origin-log.txt', { create: true }, function (file) {
-                file.createWriter(function (w) {
-                    w.seek(w.length);
-                    w.write(msg + '\n');
-                });
-            });
-        }, function () {});
-    }
     console.log(msg);
 }
 
@@ -236,8 +225,30 @@ function checkAuth() {
     }
 }
 
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'block';
+});
+
+function installApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+            const btn = document.getElementById('install-btn');
+            if (btn) btn.style.display = 'none';
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/service-worker.js');
+    }
     window.addEventListener('hashchange', () => {
         const page = location.hash.substring(1);
         if (page) displayPage(page);
