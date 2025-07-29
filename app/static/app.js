@@ -169,9 +169,14 @@ async function updateScreenName(e) {
     const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
-        const avatarInput = document.getElementById('account-screen');
-        if (avatarInput) avatarInput.value = screen_name;
+        const input = document.getElementById('account-screen');
         const overlay = document.getElementById('account-overlay');
+        const actions = document.getElementById('account-actions');
+        if (input) {
+            input.value = screen_name;
+            input.dataset.original = screen_name;
+        }
+        if (actions) actions.style.display = 'none';
         if (overlay) {
             overlay.classList.remove('show');
             overlay.style.display = 'none';
@@ -339,24 +344,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatar = document.getElementById('profile-avatar');
     const overlay = document.getElementById('account-overlay');
     const saveBtn = document.getElementById('account-save');
+    const cancelBtn = document.getElementById('account-cancel');
+    const closeBtn = document.getElementById('account-close');
+    const actions = document.getElementById('account-actions');
     const input = document.getElementById('account-screen');
+
+    function closeOverlay() {
+        if (overlay) {
+            overlay.classList.remove('show');
+            overlay.style.display = 'none';
+        }
+        if (input) {
+            input.value = input.dataset.original || '';
+        }
+        if (actions) actions.style.display = 'none';
+    }
+
     if (avatar && overlay) {
         avatar.addEventListener('click', () => {
             overlay.style.display = 'block';
             overlay.classList.add('show');
-            if (input) input.focus();
+            if (input) {
+                input.dataset.original = input.value;
+                if (actions) actions.style.display = 'none';
+                input.focus();
+            }
         });
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
-                overlay.classList.remove('show');
-                overlay.style.display = 'none';
+                closeOverlay();
             }
         });
     }
-    if (input && saveBtn) {
-        input.addEventListener('input', () => saveBtn.style.display = 'inline-block');
-        saveBtn.addEventListener('click', updateScreenName);
+    if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
+    if (cancelBtn) cancelBtn.addEventListener('click', () => {
+        if (input) input.value = input.dataset.original || '';
+        if (actions) actions.style.display = 'none';
+    });
+    if (input) {
+        input.addEventListener('input', () => {
+            if (actions) {
+                actions.style.display = input.value !== (input.dataset.original || '') ? 'flex' : 'none';
+            }
+        });
     }
+    if (saveBtn) saveBtn.addEventListener('click', updateScreenName);
     highlightNav(location.hash.substring(1) || 'achievements');
 });
 
