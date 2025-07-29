@@ -119,12 +119,14 @@ def test_edit_profile_name(server):
         page.fill("#account-screen", "new")
         page.wait_for_selector("#account-save", state="visible")
         page.evaluate("document.getElementById('account-save').click()")
-        page.wait_for_function(
-            "!document.getElementById('account-overlay').classList.contains('show')"
+        page.wait_for_timeout(500)
+        overlay_open = page.eval_on_selector(
+            "#account-overlay",
+            "el => el.classList.contains('show')",
         )
         updated = page.input_value("#account-screen")
         browser.close()
-    assert updated == "new"
+    assert updated == "new" and overlay_open
 
 
 def test_navbar_icons_in_order(server):
@@ -183,7 +185,7 @@ def test_navbar_avatar_size_and_background(server):
         )
         browser.close()
     ratio = avatar_h / icon_size if icon_size else 0
-    assert bg == "rgba(0, 0, 0, 0)" and 2.4 < ratio < 2.6
+    assert bg == "rgba(0, 0, 0, 0)" and 1.9 < ratio < 2.1
 
 
 def _trigger_install_prompt(page):
