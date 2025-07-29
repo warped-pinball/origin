@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements.txt -r requirements-test.txt
       - run: npm --prefix mobile ci
       - run: npm --prefix shared ci || true
       - run: npm --prefix shared test --silent

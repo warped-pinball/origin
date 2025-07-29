@@ -71,3 +71,14 @@ also executes `scripts/generate-sdks.sh` and publishes the resulting
 packages to npm and PyPI using repository secrets for authentication.
 Docker images and Android APKs are still built for releases and attached as
 artifacts.
+
+## Testing
+
+Install dependencies and run the backend, mobile and SDK test suites:
+
+```bash
+pip install -r requirements.txt -r requirements-test.txt
+npm --prefix shared ci && npm --prefix shared test --silent
+npm --prefix mobile ci && npm --prefix mobile test --silent
+pytest -q
+```
