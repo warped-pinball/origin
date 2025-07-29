@@ -27,6 +27,10 @@ function logToFile(msg) {
     console.log(msg);
 }
 
+function isMobile() {
+    return /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+}
+
 async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value.trim();
@@ -277,10 +281,11 @@ function checkAuth() {
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
+    if (!isMobile()) return;
     e.preventDefault();
     deferredPrompt = e;
-    const btn = document.getElementById('install-btn');
-    if (btn) btn.style.display = 'block';
+    const dialog = document.getElementById('install-dialog');
+    if (dialog && !dialog.open) dialog.showModal();
 });
 
 function installApp() {
@@ -288,10 +293,15 @@ function installApp() {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => {
             deferredPrompt = null;
-            const btn = document.getElementById('install-btn');
-            if (btn) btn.style.display = 'none';
+            const dialog = document.getElementById('install-dialog');
+            if (dialog) dialog.close();
         });
     }
+}
+
+function closeInstall() {
+    const dialog = document.getElementById('install-dialog');
+    if (dialog) dialog.close();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
