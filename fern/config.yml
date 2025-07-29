@@ -8,8 +8,3 @@ sdks:
     output:
       location: local-file-system
       path: ../sdks/typescript
-  - name: fernapi/fern-python-sdk
-    version: 0.7.0
-    output:
-      location: local-file-system
-      path: ../sdks/python

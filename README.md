@@ -28,17 +28,16 @@ The web host serves a minimal PWA that implements the same login and signup flow
 
 API clients are generated from `openapi.json` using
 [Fern](https://buildwithfern.com). Running
-`./scripts/generate-sdks.sh` produces TypeScript and Python SDKs in
-`sdks/typescript` and `sdks/python` respectively. The web host consumes the
-TypeScript build. The API base URL comes from the `PUBLIC_API_URL` environment
-variable.
+`./scripts/generate-sdks.sh` produces a TypeScript SDK in
+`sdks/typescript`. The web host consumes this build. The API base URL
+comes from the `PUBLIC_API_URL` environment variable.
 See `docs/SDKS.md` for details.
 
 ## Continuous Integration
 
 Pull requests run backend and SDK tests. On `main` the workflow
 also executes `scripts/generate-sdks.sh` and publishes the resulting
-packages to npm and PyPI using repository secrets for authentication. Docker
+package to npm using repository secrets for authentication. Docker
 images are built for releases and attached as artifacts.
 
 ## Testing
