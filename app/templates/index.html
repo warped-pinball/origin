@@ -33,6 +33,8 @@
                 }
                 #account-overlay { top:-100vh; }
                 #account-overlay.show { display:block; top:0; }
+                #account-avatar { transform: scale(0.5); transition: transform 0.3s; }
+                #account-overlay.show #account-avatar { transform: scale(1); }
                 main.container { padding-bottom:4rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
@@ -153,11 +155,18 @@
                         <p style='text-align:center;margin-top:1rem;font-size:0.9rem;'>Version {{ version }}</p>
                     </section>
                 </section>
-                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
+                <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
                 <div id='account-overlay' style='display:none;position:fixed;left:0;width:100%;height:100vh;overflow:auto;background:var(--pico-surface,#222);transition:top 0.3s;text-align:center;padding-top:2rem;z-index:1000;'>
-                    <img src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin-bottom:0.5rem;'>
-                    <input id='account-screen' type='text' style='margin-bottom:0.5rem;'>
-                    <button id='account-save' style='display:none;margin-bottom:0.5rem;'>Save</button>
+                    <button id='account-close' aria-label='Close' style='position:absolute;top:0.5rem;right:0.5rem;background:none;border:none;font-size:1.5rem;color:inherit;cursor:pointer;'>✕</button>
+                    <div id='account-actions' style='display:none;margin-bottom:1rem;gap:0.5rem;justify-content:center;'>
+                        <button id='account-save'>Save</button>
+                        <button id='account-cancel' class='secondary'>Cancel</button>
+                    </div>
+                    <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin-bottom:0.5rem;transition:transform 0.3s;'>
+                    <label for='account-screen' style='display:flex;align-items:center;gap:0.5rem;justify-content:center;margin-bottom:0.5rem;'>
+                        <span>Screen name</span>
+                        <input id='account-screen' type='text'>
+                    </label>
                 </div>
             </main>
         </body>
