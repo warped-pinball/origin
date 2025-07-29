@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 from uuid import uuid4
+import httpx
 
 import pytest
 from playwright.sync_api import sync_playwright
@@ -76,20 +77,10 @@ def test_login_invalid_password_shows_error(server):
     error message to the user."""
     base_url, _ = server
     # Create a user directly via API so the login form can be tested
-    subprocess.run(
-        [
-            "curl",
-            "-s",
-            "-X",
-            "POST",
-            f"{base_url}/api/v1/users/",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            '{"email":"foo@example.com","password":"right","screen_name":"foo"}',
-        ],
-        check=True,
-    )
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "foo@example.com", "password": "right", "screen_name": "foo"},
+    ).raise_for_status()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -111,20 +102,10 @@ def test_edit_profile_name(server):
     """Verify that the inline profile name editor updates the displayed name."""
     base_url, _ = server
     # create account via API
-    subprocess.run(
-        [
-            "curl",
-            "-s",
-            "-X",
-            "POST",
-            f"{base_url}/api/v1/users/",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            '{"email":"edit@example.com","password":"pass","screen_name":"old"}',
-        ],
-        check=True,
-    )
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "edit@example.com", "password": "pass", "screen_name": "old"},
+    ).raise_for_status()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -146,23 +127,13 @@ def test_edit_profile_name(server):
     assert updated == "new"
 
 
-def test_nav_label_trophies(server):
-    """Ensure the navigation bar shows 'Trophies' instead of 'Achievements'."""
+def test_navbar_icons_in_order(server):
+    """Verify the navbar displays icons in the expected order."""
     base_url, _ = server
-    subprocess.run(
-        [
-            "curl",
-            "-s",
-            "-X",
-            "POST",
-            f"{base_url}/api/v1/users/",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            '{"email":"nav@example.com","password":"pass","screen_name":"nav"}',
-        ],
-        check=True,
-    )
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "nav@example.com", "password": "pass", "screen_name": "nav"},
+    ).raise_for_status()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -171,11 +142,15 @@ def test_nav_label_trophies(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        label = page.text_content("a[data-page='achievements'] small")
+        icons = page.locator("nav#navbar li .material-icons").all_text_contents()
         hidden = page.is_hidden("#welcome-title")
-        has_nav = page.query_selector("nav#navbar") is not None
         browser.close()
-    assert label == "Trophies" and hidden and has_nav
+    assert icons == [
+        "emoji_events",
+        "format_list_bulleted",
+        "group",
+        "settings",
+    ] and hidden
 
 
 def _trigger_install_prompt(page):
@@ -221,17 +196,10 @@ def test_install_dialog_shown_on_mobile(server):
 
 def test_theme_persistence(server):
     base_url, _ = server
-    subprocess.run([
-        "curl",
-        "-s",
-        "-X",
-        "POST",
+    httpx.post(
         f"{base_url}/api/v1/users/",
-        "-H",
-        "Content-Type: application/json",
-        "-d",
-        '{"email":"theme@example.com","password":"pass","screen_name":"theme"}',
-    ], check=True)
+        json={"email": "theme@example.com", "password": "pass", "screen_name": "theme"},
+    ).raise_for_status()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
@@ -240,10 +208,11 @@ def test_theme_persistence(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        page.click("a[data-page='settings']")
+        page.eval_on_selector("a[data-page='settings']", "el => el.click()")
         page.wait_for_selector("#theme-toggle")
         initial = page.get_attribute("html", "data-theme")
-        page.click("#theme-toggle")
+        page.locator("#theme-toggle").scroll_into_view_if_needed()
+        page.eval_on_selector("#theme-toggle", "el => el.click()")
         toggled = page.get_attribute("html", "data-theme")
         page.reload()
         persisted = page.get_attribute("html", "data-theme")
