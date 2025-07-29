@@ -21,12 +21,9 @@
         </head>
         <body>
             <main class='container'>
-                <h1>Origin</h1>
-                <button onclick='toggleTheme()' aria-label='Toggle theme' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;'>
-                    <span id='theme-icon' class='material-icons'>light_mode</span>
-                </button>
-                <button id='logout-btn' onclick='logout()' aria-label='Logout' style='position:fixed;top:1rem;right:4rem;width:2rem;height:2rem;display:none;align-items:center;justify-content:center;'>
-                    <span class='material-icons'>logout</span>
+                <h1 id='welcome-title'>Welcome</h1>
+                <button id='settings-btn' onclick="showPage('settings')" aria-label='Settings' style='position:fixed;top:1rem;right:1rem;width:2rem;height:2rem;display:none;align-items:center;justify-content:center;'>
+                    <span class='material-icons'>settings</span>
                 </button>
                 <section id='login-section'>
                     <article>
@@ -116,6 +113,15 @@
                             <button type='submit'>Change Password</button>
                         </form>
                         <button onclick='deleteAccount()' class='secondary'>Delete Account</button>
+                    </section>
+                    <section id='settings' class='page' style='display:none;'>
+                        <h2>Settings</h2>
+                        <button onclick='toggleTheme()' aria-label='Toggle theme' style='width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;'>
+                            <span id='theme-icon' class='material-icons'>light_mode</span>
+                        </button>
+                        <button onclick='logout()' aria-label='Logout' class='secondary' style='display:flex;align-items:center;gap:0.25rem;'>
+                            <span class='material-icons'>logout</span><span>Logout</span>
+                        </button>
                     </section>
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;right:1rem;background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>

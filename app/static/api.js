@@ -18,6 +18,12 @@
       });
     }
 
+    async function getMe(token) {
+      return fetch(API_BASE + '/api/v1/users/me', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+    }
+
     async function updateScreenName(token, screenName) {
       return fetch(API_BASE + '/api/v1/users/me', {
         method: 'PATCH',
@@ -50,6 +56,7 @@
     return {
       signup,
       login,
+      getMe,
       updateScreenName,
       updatePassword,
       deleteAccount
