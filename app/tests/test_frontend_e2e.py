@@ -215,3 +215,35 @@ def test_install_dialog_shown_on_mobile(server):
         context.close()
         browser.close()
     assert visible
+
+
+def test_theme_persistence(server):
+    base_url, _ = server
+    subprocess.run([
+        "curl",
+        "-s",
+        "-X",
+        "POST",
+        f"{base_url}/api/v1/users/",
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        '{"email":"theme@example.com","password":"pass","screen_name":"theme"}',
+    ], check=True)
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(base_url)
+        page.fill("#login-email", "theme@example.com")
+        page.fill("#login-password", "pass")
+        page.click("text=Log In")
+        page.wait_for_selector("#loggedin-section", timeout=5000)
+        page.click("button[data-page='settings']")
+        page.wait_for_selector("#theme-toggle")
+        initial = page.get_attribute("html", "data-theme")
+        page.click("#theme-toggle")
+        toggled = page.get_attribute("html", "data-theme")
+        page.reload()
+        persisted = page.get_attribute("html", "data-theme")
+        browser.close()
+    assert initial != toggled and toggled == persisted

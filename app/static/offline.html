@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Server Down</title>
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
+    <script>
+        try {
+            const t = localStorage.getItem('theme');
+            if (t === 'light' || t === 'dark') {
+                document.documentElement.dataset.theme = t;
+            }
+        } catch {}
+    </script>
 </head>
 <body>
     <main class="container">
