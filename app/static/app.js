@@ -130,12 +130,15 @@ async function loadUserInfo() {
     } catch {}
 }
 
-function moveIndicator(id) {
-    const indicator = document.getElementById('nav-indicator');
-    const item = document.querySelector(`#navbar li[data-page="${id}"]`);
-    if (indicator && item) {
-        const offset = item.offsetLeft + item.offsetWidth / 2 - indicator.offsetWidth / 2;
-        indicator.style.transform = `translateX(${offset}px)`;
+function highlightNav(id) {
+    document.querySelectorAll('#navbar button').forEach(btn => {
+        btn.classList.add('secondary');
+        btn.classList.remove('primary');
+    });
+    const btn = document.querySelector(`#navbar button[data-page="${id}"]`);
+    if (btn) {
+        btn.classList.add('primary');
+        btn.classList.remove('secondary');
     }
 }
 
@@ -143,7 +146,7 @@ function displayPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const el = document.getElementById(id);
     if (el) el.style.display = 'block';
-    moveIndicator(id);
+    highlightNav(id);
 }
 
 function showPage(id, e) {
@@ -344,6 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', () => saveBtn.style.display = 'inline-block');
         saveBtn.addEventListener('click', updateScreenName);
     }
-    moveIndicator(location.hash.substring(1) || 'achievements');
+    highlightNav(location.hash.substring(1) || 'achievements');
 });
 
