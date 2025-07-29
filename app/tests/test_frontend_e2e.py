@@ -60,10 +60,11 @@ def test_signup_and_login_workflow(server):
         # open profile overlay to verify login succeeded
         page.click("#profile-avatar")
         page.wait_for_selector("#account-overlay.show", timeout=2000)
+        page.wait_for_timeout(1000)
         page.wait_for_function("document.getElementById('account-screen').value !== ''")
         profile = page.input_value("#account-screen")
         welcome_hidden = page.is_hidden("#welcome-title")
-        page.click("#account-overlay")
+        page.evaluate("document.getElementById('account-close').click()")
         browser.close()
     assert profile == "tester" and welcome_hidden, (
         "Signup flow did not complete correctly or the profile name was not " "loaded."
@@ -170,11 +171,11 @@ def test_nav_label_trophies(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        label = page.text_content("button[data-page='achievements'] small")
+        label = page.text_content("a[data-page='achievements'] small")
         hidden = page.is_hidden("#welcome-title")
         has_nav = page.query_selector("nav#navbar") is not None
         browser.close()
-    assert label == "Trophies" and hidden and not has_nav
+    assert label == "Trophies" and hidden and has_nav
 
 
 def _trigger_install_prompt(page):
@@ -239,7 +240,7 @@ def test_theme_persistence(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        page.click("button[data-page='settings']")
+        page.click("a[data-page='settings']")
         page.wait_for_selector("#theme-toggle")
         initial = page.get_attribute("html", "data-theme")
         page.click("#theme-toggle")

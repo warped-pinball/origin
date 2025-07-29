@@ -142,14 +142,14 @@ async function loadUserInfo() {
 }
 
 function highlightNav(id) {
-    document.querySelectorAll('#navbar button').forEach(btn => {
-        btn.classList.add('secondary');
-        btn.classList.remove('primary');
+    document.querySelectorAll('#navbar a[data-page]').forEach(link => {
+        link.classList.add('secondary');
+        link.classList.remove('primary');
     });
-    const btn = document.querySelector(`#navbar button[data-page="${id}"]`);
-    if (btn) {
-        btn.classList.add('primary');
-        btn.classList.remove('secondary');
+    const link = document.querySelector(`#navbar a[data-page="${id}"]`);
+    if (link) {
+        link.classList.add('primary');
+        link.classList.remove('secondary');
     }
 }
 
@@ -355,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const avatar = document.getElementById('profile-avatar');
     const overlay = document.getElementById('account-overlay');
+    const navbar = document.getElementById('navbar');
     const saveBtn = document.getElementById('account-save');
     const closeBtn = document.getElementById('account-close');
     const actions = document.getElementById('account-actions');
@@ -368,10 +369,17 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = input.dataset.original || '';
         }
         if (actions) actions.classList.remove('visible');
+        if (avatar) avatar.style.visibility = '';
+        if (navbar) navbar.style.pointerEvents = '';
     }
 
     if (avatar && overlay) {
         avatar.addEventListener('click', () => {
+            const r = avatar.getBoundingClientRect();
+            overlay.style.setProperty('--clip-x', `${r.left + r.width / 2}px`);
+            overlay.style.setProperty('--clip-y', `${r.top + r.height / 2}px`);
+            if (navbar) navbar.style.pointerEvents = 'none';
+            avatar.style.visibility = 'hidden';
             overlay.classList.add('show');
             if (input) {
                 input.dataset.original = input.value;
