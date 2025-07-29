@@ -15,9 +15,8 @@
                 #signup-dialog { top:10vh; }
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
-                #navbar { position:fixed;bottom:0;left:0;width:100%;background:var(--pico-surface, #222); }
-                #navbar .button-group { display:flex;width:100%; }
-                #navbar .button-group button { flex:1; }
+                #navbar { position:fixed;bottom:0;left:0;width:100%;background:var(--pico-surface, #222); display:flex; }
+                #navbar button { flex: 1; }
                 #account-overlay { position:fixed;left:0;top:0;width:100%;height:100vh;overflow:auto;background:var(--pico-surface,#222);text-align:center;padding-top:2rem;z-index:1000;transform:translateY(-100%);opacity:0;pointer-events:none;transition:transform 0.3s ease,opacity 0.3s ease; }
                 #account-overlay.show { transform:translateY(0);opacity:1;pointer-events:auto; }
                 #account-avatar { transform: scale(0.5); transition: transform 0.3s; }
@@ -101,8 +100,7 @@
                     </article>
                 </dialog>
                 <section id='loggedin-section' style='display:none;'>
-                    <nav id='navbar'>
-                        <div class='button-group' role='group' style='width:100%'>
+                    <div id='navbar' class='button-group' role='group' style='width:100%'>
                             <button data-page='achievements' class='secondary' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>emoji_events</span>
                                 <small>Trophies</small>
@@ -115,8 +113,7 @@
                                 <span class='material-icons'>settings</span>
                                 <small>Settings</small>
                             </button>
-                        </div>
-                    </nav>
+                    </div>
                     <section id='achievements' class='page' style='display:none;'>
                         <h2>Trophies</h2>
                         <p>Coming soon...</p>
