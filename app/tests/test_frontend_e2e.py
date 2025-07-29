@@ -153,6 +153,39 @@ def test_navbar_icons_in_order(server):
     ] and hidden
 
 
+def test_navbar_avatar_size_and_background(server):
+    """Ensure the navbar background is transparent and avatar height is
+    proportional to icons."""
+    base_url, _ = server
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "avatar@example.com", "password": "pass", "screen_name": "av"},
+    ).raise_for_status()
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(base_url)
+        page.fill("#login-email", "avatar@example.com")
+        page.fill("#login-password", "pass")
+        page.click("text=Log In")
+        page.wait_for_selector("#loggedin-section", timeout=5000)
+        icon_size = page.eval_on_selector(
+            "nav#navbar .material-icons",
+            "el => parseFloat(getComputedStyle(el).fontSize)",
+        )
+        avatar_h = page.eval_on_selector(
+            "#profile-avatar",
+            "el => el.getBoundingClientRect().height",
+        )
+        bg = page.eval_on_selector(
+            "#navbar",
+            "el => getComputedStyle(el).backgroundColor",
+        )
+        browser.close()
+    ratio = avatar_h / icon_size if icon_size else 0
+    assert bg == "rgba(0, 0, 0, 0)" and 2.4 < ratio < 2.6
+
+
 def _trigger_install_prompt(page):
     page.evaluate(
         """

@@ -23,6 +23,11 @@
                 #signup-dialog { top:10vh; }
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
+                :root {
+                    --nav-icon-size: 2rem;
+                    --nav-gap: 2rem;
+                    --nav-max-width: 30rem;
+                }
                 #navbar {
                     position:fixed;
                     bottom:0;
@@ -30,21 +35,31 @@
                     width:100%;
                     display:flex;
                     justify-content:center;
-                    background:var(--pico-surface,#222);
+                    background:transparent;
                     padding:0.5rem 0;
                 }
                 #navbar ul {
                     display:flex;
-                    gap:2rem;
+                    gap:var(--nav-gap);
                     list-style:none;
-                    margin:0;
-                    padding:0;
+                    margin:0 auto;
+                    padding:0 var(--nav-gap);
                     align-items:center;
+                    max-width:var(--nav-max-width);
                 }
                 #navbar a[data-page] {
                     display:flex;
                     align-items:center;
                     justify-content:center;
+                }
+                #navbar .material-icons {
+                    font-size:var(--nav-icon-size);
+                    width:var(--nav-icon-size);
+                    height:var(--nav-icon-size);
+                }
+                #profile-avatar {
+                    max-height:calc(var(--nav-icon-size) * 2.5);
+                    width:auto;
                 }
                 #account-overlay {
                     --clip-x:100%;
