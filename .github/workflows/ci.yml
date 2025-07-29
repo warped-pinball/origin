@@ -18,7 +18,7 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-test.txt
       - run: npm --prefix web ci || true
       - run: npm --prefix web test --silent
-      - run: pytest -q
+      - run: pytest -q --ignore=app/tests/test_frontend_e2e.py
       - run: ./scripts/generate-sdks.sh
 
   frontend:

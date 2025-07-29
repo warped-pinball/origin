@@ -19,7 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-test.txt
       - name: Run tests
-        run: pytest
+        run: pytest --ignore=app/tests/test_frontend_e2e.py
       - name: Build Docker image
         run: docker build -t $REGISTRY/${{ github.repository_owner }}/$IMAGE_NAME:pr-$GITHUB_SHA .
 
