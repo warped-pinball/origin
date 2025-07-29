@@ -1,13 +1,20 @@
 const API_BASE = window.API_BASE || '';
 
-function toggleTheme() {
+function setTheme(theme) {
     const html = document.documentElement;
-    const newTheme = html.dataset.theme === 'dark' ? 'light' : 'dark';
-    html.dataset.theme = newTheme;
+    html.dataset.theme = theme;
     const toggle = document.getElementById('theme-toggle');
     if (toggle) {
-        toggle.checked = newTheme === 'dark';
+        toggle.checked = theme === 'dark';
     }
+}
+
+function toggleTheme() {
+    const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    try {
+        localStorage.setItem('theme', newTheme);
+    } catch {}
 }
 
 function showToast(msg, type = 'info') {
@@ -313,6 +320,12 @@ function closeInstall() {
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
+    try {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+            setTheme(storedTheme);
+        }
+    } catch {}
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/static/service-worker.js');
     }
