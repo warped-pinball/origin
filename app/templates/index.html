@@ -24,14 +24,18 @@
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
                 #navbar {
+                    position:fixed;
+                    bottom:0;
+                    left:0;
+                    width:100%;
                     display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    padding:0.5rem 1rem;
+                    justify-content:center;
+                    background:var(--pico-surface,#222);
+                    padding:0.5rem 0;
                 }
                 #navbar ul {
                     display:flex;
-                    gap:0.5rem;
+                    gap:2rem;
                     list-style:none;
                     margin:0;
                     padding:0;
@@ -39,7 +43,6 @@
                 }
                 #navbar a[data-page] {
                     display:flex;
-                    flex-direction:column;
                     align-items:center;
                     justify-content:center;
                 }
@@ -120,7 +123,7 @@
                     cursor:pointer;
                 }
                 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
-                main.container { padding-top:3.5rem; }
+                main.container { padding-bottom:3.5rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/api.js"></script>
@@ -196,26 +199,31 @@
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar' class='container-fluid'>
                         <ul>
-                            <li><strong>Origin</strong></li>
-                        </ul>
-                        <ul>
                             <li><a href='#' data-page='achievements' class='secondary' onclick="showPage('achievements', event)">
                                 <span class='material-icons'>emoji_events</span>
-                                <small>Trophies</small>
                             </a></li>
-                            <li><a href='#' data-page='map' class='secondary' onclick="showPage('map', event)">
-                                <span class='material-icons'>map</span>
-                                <small>Map</small>
+                            <li><a href='#' data-page='tournaments' class='secondary' onclick="showPage('tournaments', event)">
+                                <span class='material-icons'>format_list_bulleted</span>
+                            </a></li>
+                            <li><img id='profile-avatar' src='/static/logo.png' alt='Profile picture' style='display:none;'></li>
+                            <li><a href='#' data-page='friends' class='secondary' onclick="showPage('friends', event)">
+                                <span class='material-icons'>group</span>
                             </a></li>
                             <li><a href='#' data-page='settings' class='secondary' onclick="showPage('settings', event)">
                                 <span class='material-icons'>settings</span>
-                                <small>Settings</small>
                             </a></li>
-                            <li><img id='profile-avatar' src='/static/logo.png' alt='Profile picture' style='display:none;'></li>
                         </ul>
                     </nav>
                     <section id='achievements' class='page' style='display:none;'>
                         <h2>Trophies</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='tournaments' class='page' style='display:none;'>
+                        <h2>Tournaments</h2>
+                        <p>Coming soon...</p>
+                    </section>
+                    <section id='friends' class='page' style='display:none;'>
+                        <h2>Friends</h2>
                         <p>Coming soon...</p>
                     </section>
                     <section id='map' class='page' style='display:none;'>
