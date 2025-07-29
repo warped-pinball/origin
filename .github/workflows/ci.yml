@@ -1,0 +1,40 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: pip install -r requirements.txt -r requirements-test.txt
+      - run: npm --prefix mobile ci
+      - run: npm --prefix shared ci || true
+      - run: npm --prefix shared test --silent
+      - run: npm --prefix mobile test --silent
+      - run: pytest -q
+      - run: ./scripts/generate-sdks.sh
+      - name: Publish TypeScript package
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd sdks/typescript
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish Python package
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd sdks/python
+          python setup.py sdist
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

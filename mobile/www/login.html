@@ -15,13 +15,12 @@
 })();
 </script>
 <script>
-if (location.protocol === 'file:') {
-  window.API_BASE = 'https://origin-beta.doze.dev';
-}
+window.API_BASE = 'https://origin-beta.doze.dev';
 </script>
 <link rel="stylesheet" href="pico.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="styles.css">
+<script src="api.js"></script>
 <script src="app.js"></script>
 
   <title>Login - Origin</title>
@@ -54,8 +53,12 @@ if (location.protocol === 'file:') {
           <input id="signup-password" type="password" placeholder="Password" required />
           <footer class="grid">
             <button type="button" onclick="closeSignup()" class="secondary">Cancel</button>
-            <button type="submit">Create Account</button>
+            <button id="signup-submit" type="submit">
+              <span id="signup-spinner" class="spinner" style="display:none"></span>
+              <span id="signup-btn-text">Create Account</span>
+            </button>
           </footer>
+          <span id="signup-error" class="error"></span>
         </form>
       </article>
     </dialog>

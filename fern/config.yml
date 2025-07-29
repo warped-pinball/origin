@@ -1,0 +1,15 @@
+organization: origin
+version: 0
+api: ../openapi.json
+
+sdks:
+  - name: fernapi/fern-typescript-sdk
+    version: 0.7.0
+    output:
+      location: local-file-system
+      path: ../sdks/typescript
+  - name: fernapi/fern-python-sdk
+    version: 0.7.0
+    output:
+      location: local-file-system
+      path: ../sdks/python

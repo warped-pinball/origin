@@ -32,8 +32,12 @@
           <input id="signup-password" type="password" placeholder="Password" required />
           <footer class="grid">
             <button type="button" onclick="closeSignup()" class="secondary">Cancel</button>
-            <button type="submit">Create Account</button>
+            <button id="signup-submit" type="submit">
+              <span id="signup-spinner" class="spinner" style="display:none"></span>
+              <span id="signup-btn-text">Create Account</span>
+            </button>
           </footer>
+          <span id="signup-error" class="error"></span>
         </form>
       </article>
     </dialog>

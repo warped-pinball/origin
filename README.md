@@ -43,6 +43,9 @@ cordova emulate android   # or ios
 
 Tag an NFC tag, scan a QR code or open a deep link to see the URL logged on the page.
 
+When running on a real device the app writes a log to `Download/origin-log.txt` which
+records signup and login attempts.
+
 ### Signing
 
 The workflow generates a debug keystore for Android so the APK is installable without secrets. Edit `build.json` if you wish to use your own signing credentials. For iOS create a `build.json` with your Apple developer team ID and provisioning profile as shown in the comments of the file.
@@ -51,6 +54,31 @@ The workflow generates a debug keystore for Android so the APK is installable wi
 
 Screenshots are produced automatically by the **Update Mobile Screenshots** workflow and uploaded as artifacts. They are not committed to the repository.
 
+## SDK Generation
+
+API clients are generated from `openapi.json` using
+[Fern](https://buildwithfern.com). Running
+`./scripts/generate-sdks.sh` produces TypeScript and Python SDKs in
+`sdks/typescript` and `sdks/python` respectively. The web host and Cordova
+app consume the TypeScript build. The API base URL continues to come from the
+`PUBLIC_API_URL` environment variable or `mobile/api-base.js`.
+See `docs/SDKS.md` for details.
+
 ## Continuous Integration
 
-Pull requests run both backend and mobile tests. Building the backend Docker image and Android APK happens when changes land on `main` or a release is published. Check the workflow runs for downloadable artifacts.
+Pull requests run backend, mobile and SDK tests. On `main` the workflow
+also executes `scripts/generate-sdks.sh` and publishes the resulting
+packages to npm and PyPI using repository secrets for authentication.
+Docker images and Android APKs are still built for releases and attached as
+artifacts.
+
+## Testing
+
+Install dependencies and run the backend, mobile and SDK test suites:
+
+```bash
+pip install -r requirements.txt -r requirements-test.txt
+npm --prefix shared ci && npm --prefix shared test --silent
+npm --prefix mobile ci && npm --prefix mobile test --silent
+pytest -q
+```

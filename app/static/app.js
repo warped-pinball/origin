@@ -23,22 +23,51 @@ function showToast(msg, type = 'info') {
     }
 }
 
+function logToFile(msg) {
+    if (window.resolveLocalFileSystemURL && window.cordova && cordova.file) {
+        const dir = cordova.file.externalRootDirectory + 'Download/';
+        window.resolveLocalFileSystemURL(dir, function (d) {
+            d.getFile('origin-log.txt', { create: true }, function (file) {
+                file.createWriter(function (w) {
+                    w.seek(w.length);
+                    w.write(msg + '\n');
+                });
+            });
+        }, function () {});
+    }
+    console.log(msg);
+}
+
 async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
-    const res = await fetch(API_BASE + '/api/v1/users/', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, password, screen_name})
-    });
+    const btn = document.getElementById('signup-submit');
+    const spinner = document.getElementById('signup-spinner');
+    const errEl = document.getElementById('signup-error');
+    if (errEl) errEl.textContent = '';
+    if (spinner) spinner.style.display = 'inline-block';
+    if (btn) btn.disabled = true;
+    logToFile('Signup attempt: ' + email);
+    let res;
+    try {
+        res = await OriginApi.signup(email, password, screen_name);
+    } catch (err) {
+        if (errEl) errEl.textContent = 'Network error';
+        logToFile('Signup network error: ' + err);
+        if (spinner) spinner.style.display = 'none';
+        if (btn) btn.disabled = false;
+        return;
+    }
     if (res.ok) {
-        const loginRes = await fetch(API_BASE + '/api/v1/auth/token', {
-method: 'POST',
-headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-body: new URLSearchParams({username: email, password})
-        });
+        let loginRes;
+        try {
+            loginRes = await OriginApi.login(email, password);
+        } catch (err) {
+            logToFile('Auto-login error: ' + err);
+            loginRes = { ok: false };
+        }
         closeSignup();
         if (loginRes.ok) {
 const data = await loginRes.json();
@@ -56,6 +85,8 @@ showLogin();
     } else {
         showToast('Signup failed', 'error');
     }
+    if (spinner) spinner.style.display = 'none';
+    if (btn) btn.disabled = false;
 }
 
 async function login(e) {
@@ -72,12 +103,7 @@ async function login(e) {
         emailInput.reportValidity();
         return;
     }
-    const body = new URLSearchParams({username: email, password});
-    const res = await fetch(API_BASE + '/api/v1/auth/token', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body
-    });
+    const res = await OriginApi.login(email, password);
     if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
@@ -120,14 +146,7 @@ async function updateScreenName(e) {
     e.preventDefault();
     const screen_name = document.getElementById('account-screen').value;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me', {
-        method: 'PATCH',
-        headers: {
-'Content-Type': 'application/json',
-'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({screen_name})
-    });
+    const res = await OriginApi.updateScreenName(token, screen_name);
     if (res.ok) {
         showToast('Screen name updated', 'success');
     } else {
@@ -139,14 +158,7 @@ async function updatePassword(e) {
     e.preventDefault();
     const password = document.getElementById('account-password').value;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me/password', {
-        method: 'POST',
-        headers: {
-'Content-Type': 'application/json',
-'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({password})
-    });
+    const res = await OriginApi.updatePassword(token, password);
     if (res.ok) {
         showToast('Password changed', 'success');
     } else {
@@ -157,10 +169,7 @@ async function updatePassword(e) {
 async function deleteAccount() {
     if(!confirm('Are you sure you want to delete your account?')) return;
     const token = localStorage.getItem('token');
-    const res = await fetch(API_BASE + '/api/v1/users/me', {
-        method: 'DELETE',
-        headers: {'Authorization': 'Bearer ' + token}
-    });
+    const res = await OriginApi.deleteAccount(token);
     if (res.ok) {
         logout();
         showToast('Account deleted', 'success');

@@ -8,6 +8,7 @@ const partials = {
 partials.nav = fs.readFileSync(path.join(__dirname, '../www/partials/nav.html'), 'utf8');
 
 const pkg = require('../package.json');
+const apiBase = process.env.PUBLIC_API_URL || require('../api-base');
 
 const templateDir = path.join(__dirname, '../www/templates');
 for (const file of fs.readdirSync(templateDir)) {
@@ -16,7 +17,8 @@ for (const file of fs.readdirSync(templateDir)) {
   content = content
     .replace('{{head}}', partials.head)
     .replace('{{nav}}', partials.nav)
-    .replace(/{{version}}/g, pkg.version);
+    .replace(/{{version}}/g, pkg.version)
+    .replace(/{{apiBase}}/g, apiBase);
   fs.writeFileSync(path.join(__dirname, '../www', file), content, 'utf8');
   console.log(`Built ${file}`);
 }
