@@ -22,9 +22,39 @@
                 #account-overlay.show { transform:translateY(0);opacity:1;pointer-events:auto; }
                 #account-avatar { transform: scale(0.5); transition: transform 0.3s; }
                 #account-overlay.show #account-avatar { transform: scale(1); }
-                #account-close { position:absolute;top:0.5rem;right:0.5rem;background:none;border:1px solid currentColor;border-radius:50%;font-size:1.5rem;color:inherit;cursor:pointer;padding:0.25rem; }
-                #account-actions { display:none;margin-bottom:1rem;gap:0.5rem;justify-content:center; }
-                #account-actions.visible { display:flex;animation:fadeIn 0.2s ease forwards; }
+                #account-close {
+                    position:absolute;
+                    top:0.5rem;
+                    right:0.5rem;
+                    width:2rem;
+                    height:2rem;
+                    background:none;
+                    border:1px solid currentColor;
+                    border-radius:50%;
+                    font-size:1.25rem;
+                    color:inherit;
+                    cursor:pointer;
+                    padding:0;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                }
+                #account-actions {
+                    position:absolute;
+                    top:0.5rem;
+                    right:3rem;
+                    display:flex;
+                    gap:0.5rem;
+                    opacity:0;
+                    pointer-events:none;
+                    transform:translateX(0.5rem);
+                    transition:opacity 0.2s ease, transform 0.2s ease;
+                }
+                #account-actions.visible {
+                    opacity:1;
+                    pointer-events:auto;
+                    transform:translateX(0);
+                }
                 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
                 main.container { padding-bottom:4rem; }
             </style>
@@ -160,9 +190,8 @@
                     <button id='account-close' aria-label='Close'>✕</button>
                     <div id='account-actions'>
                         <button id='account-save'>Save</button>
-                        <button id='account-cancel' class='secondary'>Cancel</button>
                     </div>
-                    <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin-bottom:0.5rem;transition:transform 0.3s;'>
+                    <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin:1rem auto 0.5rem;transition:transform 0.3s;'>
                     <label for='account-screen' style='display:block;margin:0 auto 0.5rem;width:90%;text-align:left;'>
                         <span style='display:block;margin-bottom:0.25rem;'>Screen name</span>
                         <input id='account-screen' type='text' style='width:100%;'>
