@@ -16,11 +16,16 @@
                 #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
                 #navbar { position:fixed;bottom:0;left:0;width:100%;background:var(--pico-surface, #222); }
-                #navbar .button-group { width:100%; }
-                #account-overlay { top:-100vh; }
-                #account-overlay.show { display:block; top:0; }
+                #navbar .button-group { display:flex;width:100%; }
+                #navbar .button-group button { flex:1; }
+                #account-overlay { position:fixed;left:0;top:0;width:100%;height:100vh;overflow:auto;background:var(--pico-surface,#222);text-align:center;padding-top:2rem;z-index:1000;transform:translateY(-100%);opacity:0;pointer-events:none;transition:transform 0.3s ease,opacity 0.3s ease; }
+                #account-overlay.show { transform:translateY(0);opacity:1;pointer-events:auto; }
                 #account-avatar { transform: scale(0.5); transition: transform 0.3s; }
                 #account-overlay.show #account-avatar { transform: scale(1); }
+                #account-close { position:absolute;top:0.5rem;right:0.5rem;background:none;border:1px solid currentColor;border-radius:50%;font-size:1.5rem;color:inherit;cursor:pointer;padding:0.25rem; }
+                #account-actions { display:none;margin-bottom:1rem;gap:0.5rem;justify-content:center; }
+                #account-actions.visible { display:flex;animation:fadeIn 0.2s ease forwards; }
+                @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
                 main.container { padding-bottom:4rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
@@ -98,15 +103,15 @@
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar'>
                         <div class='button-group' role='group' style='width:100%'>
-                            <button data-page='achievements' class='secondary' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
+                            <button data-page='achievements' class='secondary' onclick="showPage('achievements', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>emoji_events</span>
                                 <small>Trophies</small>
                             </button>
-                            <button data-page='map' class='secondary' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
+                            <button data-page='map' class='secondary' onclick="showPage('map', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>map</span>
                                 <small>Map</small>
                             </button>
-                            <button data-page='settings' class='secondary' onclick="showPage('settings', event)" style='display:flex;flex-direction:column;align-items:center;width:100%'>
+                            <button data-page='settings' class='secondary' onclick="showPage('settings', event)" style='display:flex;flex-direction:column;align-items:center;'>
                                 <span class='material-icons'>settings</span>
                                 <small>Settings</small>
                             </button>
@@ -151,16 +156,16 @@
                     </section>
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:1000;'></div>
-                <div id='account-overlay' style='display:none;position:fixed;left:0;width:100%;height:100vh;overflow:auto;background:var(--pico-surface,#222);transition:top 0.3s;text-align:center;padding-top:2rem;z-index:1000;'>
-                    <button id='account-close' aria-label='Close' style='position:absolute;top:0.5rem;right:0.5rem;background:none;border:none;font-size:1.5rem;color:inherit;cursor:pointer;'>✕</button>
-                    <div id='account-actions' style='display:none;margin-bottom:1rem;gap:0.5rem;justify-content:center;'>
+                <div id='account-overlay'>
+                    <button id='account-close' aria-label='Close'>✕</button>
+                    <div id='account-actions'>
                         <button id='account-save'>Save</button>
                         <button id='account-cancel' class='secondary'>Cancel</button>
                     </div>
                     <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin-bottom:0.5rem;transition:transform 0.3s;'>
-                    <label for='account-screen' style='display:flex;align-items:center;gap:0.5rem;justify-content:center;margin-bottom:0.5rem;'>
-                        <span>Screen name</span>
-                        <input id='account-screen' type='text'>
+                    <label for='account-screen' style='display:block;margin:0 auto 0.5rem;width:90%;text-align:left;'>
+                        <span style='display:block;margin-bottom:0.25rem;'>Screen name</span>
+                        <input id='account-screen' type='text' style='width:100%;'>
                     </label>
                 </div>
             </main>
