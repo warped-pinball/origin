@@ -19,7 +19,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-test.txt
       - name: Run tests
-        run: pytest
+        run: pytest --ignore=app/tests/test_frontend_e2e.py
       - name: Build Docker image
         run: docker build -t $REGISTRY/${{ github.repository_owner }}/$IMAGE_NAME:pr-$GITHUB_SHA .
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-test.txt
+          playwright install --with-deps
+      - name: Run end-to-end tests
+        run: pytest app/tests/test_frontend_e2e.py
 
