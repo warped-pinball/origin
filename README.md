@@ -38,9 +38,9 @@ See `docs/SDKS.md` for details.
 ## Continuous Integration
 
 Pull requests run backend and SDK tests. On `main` the workflow
-also executes `scripts/generate-sdks.sh` and publishes the resulting
-package to npm using repository secrets for authentication. Docker
-images are built for releases and attached as artifacts.
+also executes `scripts/generate-sdks.sh` and bundles the resulting
+client with the web host. Docker images are built for releases and
+attached as artifacts.
 
 ## Testing
 
