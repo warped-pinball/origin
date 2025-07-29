@@ -2,6 +2,9 @@
 
 This repository uses [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator)
 to generate client SDKs from `openapi.json`.
+The generated JavaScript client is copied to `app/static/api.js` via the
+[`web` build script](../web/scripts/build.js) discussed in the
+[Developer Guide](DEVELOPER_GUIDE.md).
 
 ## Building locally
 
@@ -23,3 +26,5 @@ packages:
 
 Authentication tokens for both registries are provided through repository
 secrets.
+
+For a list of planned endpoints see the [API specification](API_SPEC.md).
