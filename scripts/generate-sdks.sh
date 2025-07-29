@@ -1,3 +1,3 @@
 #!/bin/sh
 set -e
-npx --yes fern-api/fern generate --config fern/config.yml
+npx --yes --package=fern-api/fern fern generate --config fern/config.yml
