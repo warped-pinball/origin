@@ -19,12 +19,8 @@ This downloads the OpenAPI Generator CLI and produces a TypeScript package under
 
 ## Continuous Integration
 
-The CI workflow runs the same script on `main` and publishes the generated
-packages:
-
-- The TypeScript package is published to npm as `origin-api-client`.
-
-Authentication tokens for both registries are provided through repository
-secrets.
+The CI workflow runs the same script on `main` and bundles the generated
+clients with the web host. The TypeScript package is no longer published
+to npm.
 
 For a list of planned endpoints see the [API specification](API_SPEC.md).

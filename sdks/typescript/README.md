@@ -25,22 +25,7 @@ npm install
 npm run build
 ```
 
-### Publishing
+### Using the SDK
 
-First build the package then run `npm publish`
-
-### Consuming
-
-navigate to the folder of your consuming project and run one of the following commands.
-
-_published:_
-
-```
-npm install origin-sdk@0.1.0 --save
-```
-
-_unPublished (not recommended):_
-
-```
-npm install PATH_TO_GENERATED_PACKAGE --save
-```
+After building you can import the files from `dist/` directly into your
+project. The package is not published to npm.
