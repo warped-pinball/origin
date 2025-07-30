@@ -144,12 +144,12 @@ def test_navbar_icons_in_order(server):
         page.fill("#login-password", "pass")
         page.click("text=Log In")
         page.wait_for_selector("#loggedin-section", timeout=5000)
-        icons = page.locator("nav#navbar li .material-icons").all_text_contents()
+        icons = page.locator("nav#navbar li span").all_text_contents()
         hidden = page.is_hidden("#welcome-title")
         browser.close()
     assert icons == [
+        "beenhere",
         "emoji_events",
-        "format_list_bulleted",
         "group",
         "settings",
     ] and hidden
