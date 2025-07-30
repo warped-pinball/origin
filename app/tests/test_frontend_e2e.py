@@ -197,7 +197,7 @@ def test_navbar_avatar_preserves_aspect_ratio(server):
     ).raise_for_status()
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page()
+        page = browser.new_page(viewport={"width": 320, "height": 720})
         page.goto(base_url)
         page.fill("#login-email", "ratio@example.com")
         page.fill("#login-password", "pass")
