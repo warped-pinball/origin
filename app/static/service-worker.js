@@ -1,21 +1,2 @@
-const CACHE_NAME = 'origin-pwa';
-const OFFLINE_URL = '/static/offline.html';
-const urlsToCache = ['/', '/static/app.js', '/static/api.js', OFFLINE_URL];
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
-});
-self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((res) => (res.ok ? res : caches.match(OFFLINE_URL)))
-        .catch(() => caches.match(OFFLINE_URL))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((response) => response || fetch(event.request))
-    );
-  }
-});
+if(!self.define){let e,i={};const s=(s,t)=>(s=new URL(s+".js",t).href,i[s]||new Promise(i=>{if("document"in self){const e=document.createElement("script");e.src=s,e.onload=i,document.head.appendChild(e)}else e=s,importScripts(s),i()}).then(()=>{let e=i[s];if(!e)throw new Error(`Module ${s} didn’t register its module`);return e}));self.define=(t,n)=>{const r=e||("document"in self?document.currentScript.src:"")||location.href;if(i[r])return;let o={};const c=e=>s(e,r),a={module:{uri:r},exports:o,require:c};i[r]=Promise.all(t.map(e=>a[e]||c(e))).then(e=>(n(...e),o))}}define(["./workbox-2d7045a9"],function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"api.js",revision:"6069db44600a436a73e8fa813a85127a"},{url:"app.js",revision:"5d27175e0df753ba9fa1b2e1d4ddb4c3"},{url:"logo.png",revision:"21172b577872fc5e0c2b755d279fbbd0"},{url:"manifest.json",revision:"573e7573960fa6bb5b18403b6c66f232"},{url:"offline.html",revision:"c345d13b9aa4475e55cce071aba092c2"}],{}),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("/static/offline.html"))),e.registerRoute(({request:e})=>["script","style","image"].includes(e.destination),new e.StaleWhileRevalidate({cacheName:"static-resources",plugins:[]}),"GET"),e.registerRoute(({request:e})=>"navigate"===e.mode,new e.NetworkFirst({cacheName:"pages",plugins:[]}),"GET")});
+//# sourceMappingURL=service-worker.js.map

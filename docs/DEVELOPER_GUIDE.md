@@ -11,7 +11,7 @@ The TypeScript SDK is generated with [OpenAPI Generator](https://github.com/Open
 ./scripts/generate-sdks.sh
 ```
 
-The resulting `sdks/typescript/dist/index.js` file is bundled with the web host when you run `npm --prefix web build`. The build script copies the file to `app/static/api.js`.
+The resulting `sdks/typescript/dist/index.js` file is bundled with the web host when you run `npm --prefix web build`. The build script copies the file to `app/static/api.js` and produces a Workbox-based service worker.
 
 ## API Base URL
 
