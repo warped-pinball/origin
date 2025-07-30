@@ -185,7 +185,7 @@ def test_navbar_avatar_size_and_background(server):
         )
         browser.close()
     ratio = avatar_h / icon_size if icon_size else 0
-    assert bg == "rgba(0, 0, 0, 0)" and 1.9 < ratio < 2.1
+    assert bg == "rgba(0, 0, 0, 0)" and 3.9 < ratio < 4.1
 
 
 def test_navbar_avatar_preserves_aspect_ratio(server):
