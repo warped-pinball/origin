@@ -29,6 +29,18 @@
                     --nav-gap: 2rem;
                     --nav-max-width: 30rem;
                 }
+                @media (max-width: 400px) {
+                    :root {
+                        --nav-icon-size: 1.5rem;
+                        --nav-gap: 1rem;
+                    }
+                }
+                @media (max-width: 340px) {
+                    :root {
+                        --nav-icon-size: 1.2rem;
+                        --nav-gap: 0.5rem;
+                    }
+                }
                 #navbar {
                     position:fixed;
                     bottom:0;
@@ -60,7 +72,8 @@
                 }
                 #profile-avatar {
                     width:calc(var(--nav-icon-size)*4);
-                    height:calc(var(--nav-icon-size)*4);
+                    height:auto;
+                    aspect-ratio:1;
                     object-fit:contain;
                 }
                 #account-overlay {
