@@ -188,6 +188,29 @@ def test_navbar_avatar_size_and_background(server):
     assert bg == "rgba(0, 0, 0, 0)" and 1.9 < ratio < 2.1
 
 
+def test_navbar_avatar_preserves_aspect_ratio(server):
+    """Ensure the navbar avatar keeps its original aspect ratio."""
+    base_url, _ = server
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "ratio@example.com", "password": "pass", "screen_name": "ra"},
+    ).raise_for_status()
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(base_url)
+        page.fill("#login-email", "ratio@example.com")
+        page.fill("#login-password", "pass")
+        page.click("text=Log In")
+        page.wait_for_selector("#loggedin-section", timeout=5000)
+        ratio_val = page.eval_on_selector(
+            "#profile-avatar",
+            "el => el.clientWidth / el.clientHeight"
+        )
+        browser.close()
+    assert 0.95 < ratio_val < 1.05
+
+
 def _trigger_install_prompt(page):
     page.evaluate(
         """
