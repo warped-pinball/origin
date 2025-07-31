@@ -13,6 +13,9 @@ class User(Base):
     name = Column(String)
     initials = Column(String(3))
     profile_picture = Column(String)
+    is_verified = Column(Boolean, default=False)
+    verification_token = Column(String, unique=True, index=True)
+    reset_token = Column(String, unique=True, index=True)
     scores = relationship('Score', back_populates='user')
 
 class Machine(Base):

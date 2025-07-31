@@ -49,7 +49,17 @@ def test_run_all_migrations(tmp_path):
 
     insp = inspect(db.engine)
     cols = {c["name"] for c in insp.get_columns("users")}
-    for col in ["screen_name", "first_name", "last_name", "name", "initials", "profile_picture"]:
+    for col in [
+        "screen_name",
+        "first_name",
+        "last_name",
+        "name",
+        "initials",
+        "profile_picture",
+        "is_verified",
+        "verification_token",
+        "reset_token",
+    ]:
         assert col in cols
     if db.engine.dialect.name != 'sqlite':
         # verify users.id column autoincrements via sequence
