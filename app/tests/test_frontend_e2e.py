@@ -17,7 +17,12 @@ def _start_server(db_path, port):
         stderr=subprocess.STDOUT,
         text=True,
     )
-    time.sleep(2)
+    for _ in range(50):
+        try:
+            httpx.get(f"http://localhost:{port}/", timeout=0.1)
+            break
+        except Exception:
+            time.sleep(0.1)
     return proc
 
 
@@ -33,7 +38,11 @@ def _stop_server(proc):
 
 @pytest.fixture
 def server(tmp_path):
-    port = 8001
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("localhost", 0))
+        port = s.getsockname()[1]
     db_path = tmp_path / "e2e.db"
     proc = _start_server(db_path, port)
     yield f"http://localhost:{port}", proc
