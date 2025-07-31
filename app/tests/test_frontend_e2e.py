@@ -3,6 +3,9 @@ import time
 import subprocess
 from uuid import uuid4
 import pytest
+from playwright.sync_api import sync_playwright
+import httpx
+
 
 def _start_server(db_path, port):
     env = os.environ.copy()
