@@ -31,3 +31,5 @@ runs:
         context: ${{ inputs.context }}
         push: ${{ inputs.push }}
         tags: ${{ inputs.tags }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
