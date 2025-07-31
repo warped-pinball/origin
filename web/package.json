@@ -3,10 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.js && node scripts/build-sw.js",
+    "build": "node scripts/build.js",
     "test": "node --test"
-  },
-  "devDependencies": {
-    "workbox-build": "^6.6.0"
   }
 }
