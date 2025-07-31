@@ -188,6 +188,30 @@ def test_navbar_avatar_preserves_aspect_ratio(server):
     assert 0.95 < ratio_val < 1.05
 
 
+def test_profile_avatar_uses_webp_with_png_fallback(server):
+    """Ensure the profile avatar loads a WebP image with a PNG fallback."""
+    base_url, _ = server
+    httpx.post(
+        f"{base_url}/api/v1/users/",
+        json={"email": "webp@example.com", "password": "pass", "screen_name": "webp"},
+    ).raise_for_status()
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(base_url)
+        page.fill("#login-email", "webp@example.com")
+        page.fill("#login-password", "pass")
+        page.click("text=Log In")
+        page.wait_for_selector("#loggedin-section", timeout=5000)
+        current_src = page.eval_on_selector(
+            "#profile-avatar",
+            "img => img.currentSrc",
+        )
+        fallback_src = page.get_attribute("#profile-avatar", "src")
+        browser.close()
+    assert "logo.webp" in current_src and fallback_src.endswith("/static/logo.png")
+
+
 def _trigger_install_prompt(page):
     page.evaluate(
         """
