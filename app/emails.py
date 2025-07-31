@@ -1,5 +1,5 @@
 import os
-import requests
+import httpx
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "no-reply@example.com")
@@ -23,7 +23,9 @@ def send_email(to: str, subject: str, html: str) -> None:
         "accept": "application/json",
     }
     try:
-        requests.post("https://api.brevo.com/v3/smtp/email", json=data, headers=headers, timeout=10)
+        httpx.post(
+            "https://api.brevo.com/v3/smtp/email", json=data, headers=headers, timeout=10
+        )
     except Exception:
         pass
 
