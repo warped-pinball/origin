@@ -2,7 +2,7 @@ import os
 import base64
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, NoEncryption, PrivateFormat
-from .test_api import client, TestingSessionLocal
+from .test_api import client, ws_client, TestingSessionLocal
 from app import models
 
 
@@ -19,7 +19,7 @@ def test_machine_claim_flow():
         client_pub.public_bytes(Encoding.Raw, PublicFormat.Raw)
     ).decode()
 
-    with client.websocket_connect("/ws/claim") as ws:
+    with ws_client.websocket_connect("/ws/claim") as ws:
         ws.send_json({"client_key": client_key})
         data = ws.receive_json()
 

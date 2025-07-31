@@ -11,6 +11,7 @@ if os.path.exists("test.db"):
     os.remove("test.db")
 
 from ..main import app
+from ..websocket_app import app as ws_app
 from ..database import Base, get_db
 from .. import models
 from ..version import __version__
@@ -29,7 +30,9 @@ def override_get_db():
         db.close()
 
 app.dependency_overrides[get_db] = override_get_db
+ws_app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
+ws_client = TestClient(ws_app)
 
 
 def test_create_user_and_login():

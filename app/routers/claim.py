@@ -16,6 +16,7 @@ from ..database import get_db
 from .. import models, schemas
 
 router = APIRouter(tags=["claim"])
+ws_router = APIRouter()
 
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "..", "templates"))
 
@@ -33,7 +34,8 @@ def generate_code(length: int = 8) -> str:
     return "".join(random.choice(alphabet) for _ in range(length))
 
 
-@router.websocket("/ws/claim")
+# WebSocket endpoint served by a dedicated application
+@ws_router.websocket("/ws/claim")
 async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
     try:

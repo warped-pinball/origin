@@ -10,7 +10,8 @@ services:
     image: ghcr.io/youruser/pinball-score-tracker:latest
     restart: unless-stopped
     ports:
-      - "8000:8000"  # HTTP and WebSocket
+      - "8000:8000"  # HTTP
+      - "8001:8001"  # WebSocket
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

@@ -2,14 +2,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from .database import Base, engine, run_migrations
+from .database import init_db
 from .routers import auth, users, machines, scores, claim
 from .version import __version__
 import os
 
-# Run migrations before ensuring all tables exist
-run_migrations()
-Base.metadata.create_all(bind=engine)
+# Initialize database (migrations + tables)
+init_db()
 
 app = FastAPI(title="Origin")
 

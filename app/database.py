@@ -65,6 +65,12 @@ def run_migrations() -> None:
             mod.upgrade(engine)
         set_db_version(target_version)
 
+
+def init_db() -> None:
+    """Run migrations and ensure all tables exist."""
+    run_migrations()
+    Base.metadata.create_all(bind=engine)
+
 def get_db():
     db = SessionLocal()
     try:
