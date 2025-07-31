@@ -73,3 +73,5 @@ def test_run_all_migrations(tmp_path):
             default = res.scalar()
             assert default and 'nextval' in default
 
+    assert "machine_claims" in insp.get_table_names()
+
