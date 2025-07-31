@@ -10,3 +10,5 @@ python-multipart
 pydantic
 jinja2
 httpx
+cryptography
+websockets
