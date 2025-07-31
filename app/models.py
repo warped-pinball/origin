@@ -25,6 +25,15 @@ class Machine(Base):
     secret = Column(String, nullable=False)
     scores = relationship('Score', back_populates='machine')
 
+
+class MachineClaim(Base):
+    __tablename__ = 'machine_claims'
+    machine_id = Column(String, primary_key=True, index=True)
+    claim_code = Column(String, unique=True, index=True, nullable=False)
+    shared_secret = Column(String, nullable=False)
+    claimed = Column(Boolean, default=False, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
+
 class Score(Base):
     __tablename__ = 'scores'
     id = Column(Integer, primary_key=True, index=True)
