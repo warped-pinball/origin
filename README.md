@@ -14,7 +14,22 @@ The API will be available at `http://localhost:8000`.
 
 ### Configuration
 
-By default the application connects to the Postgres instance defined in `docker-compose.yml`. The connection URL can be overridden with the `DATABASE_URL` environment variable or by setting `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
+By default the application connects to the Postgres instance defined in
+`docker-compose.yml`. The connection URL can be overridden with the
+`DATABASE_URL` environment variable or by setting `POSTGRES_USER`,
+`POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
+
+Additional settings control email delivery and machine claims:
+
+- `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
+- `BREVO_API_KEY`: enables transactional email when set to a Brevo API key.
+- `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`: optional email sender overrides.
+
+The service listens on port `8000` for both HTTP and WebSocket traffic. Ensure
+this port is reachable or forwarded by your reverse proxy.
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
+RSA key pair and obtaining an email API key.
 
 ### Database Migrations
 
