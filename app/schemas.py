@@ -25,8 +25,18 @@ class PasswordUpdate(BaseModel):
 
 class User(UserBase):
     id: int
+    is_verified: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordReset(BaseModel):
+    token: str
+    password: str
 
 class MachineBase(BaseModel):
     name: str
