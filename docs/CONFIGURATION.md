@@ -32,6 +32,6 @@ If `BREVO_API_KEY` is not set, email sending is disabled.
 
 ## Ports and WebSockets
 
-The API listens on port `8000` for both HTTP and WebSocket traffic. When
-running behind a reverse proxy, ensure that WebSocket connections are forwarded
-to the same port.
+The API listens on port `8000` for HTTP and on `8001` for WebSocket traffic.
+When running behind a reverse proxy, forward WebSocket connections to port
+`8001`.

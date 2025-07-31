@@ -10,7 +10,7 @@ This repository contains the Origin backend API built with FastAPI and a simple 
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000`.
+The API will be available at `http://localhost:8000` and the WebSocket at `ws://localhost:8001`.
 
 ### Configuration
 
@@ -25,8 +25,8 @@ Additional settings control email delivery and machine claims:
 - `BREVO_API_KEY`: enables transactional email when set to a Brevo API key.
 - `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`: optional email sender overrides.
 
-The service listens on port `8000` for both HTTP and WebSocket traffic. Ensure
-this port is reachable or forwarded by your reverse proxy.
+The service listens on port `8000` for HTTP and `8001` for WebSocket traffic.
+Ensure both ports are reachable or forwarded by your reverse proxy.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
 RSA key pair and obtaining an email API key.
