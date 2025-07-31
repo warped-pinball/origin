@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import subprocess
 from uuid import uuid4
@@ -10,6 +11,7 @@ import httpx
 def _start_server(db_path, port):
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
+    subprocess.run([sys.executable, "scripts/minify_js.py", "app/static/app.js"], check=True)
     proc = subprocess.Popen(
         ["uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
         env=env,
