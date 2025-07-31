@@ -2,6 +2,7 @@ import os
 import time
 import subprocess
 from uuid import uuid4
+import pytest
 
 def _start_server(db_path, port):
     env = os.environ.copy()
