@@ -8,5 +8,6 @@ venv/
 test.db
 node_modules/
 sdks/typescript/node_modules/
+app/static/*.min.js
 
 

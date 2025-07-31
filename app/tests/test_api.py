@@ -1,4 +1,5 @@
 import os
+import subprocess
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -119,6 +120,22 @@ def test_root_page():
     assert response.status_code == 200
     assert "Sign Up" in response.text
     assert __version__ in response.text
+    assert '<meta name="description" content="Origin web application">' in response.text
+    assert '<html lang="en"' in response.text
+
+
+def test_gzip_enabled():
+    response = client.get("/", headers={"Accept-Encoding": "gzip"})
+    assert response.status_code == 200
+    assert response.headers.get("content-encoding") == "gzip"
+
+
+def test_static_cache_control():
+    subprocess.run(["python", "scripts/minify_js.py", "app/static/app.js"], check=True)
+    response = client.get("/static/app.min.js")
+    assert response.status_code == 200
+    assert "cache-control" in response.headers
+    assert "max-age" in response.headers["cache-control"].lower()
 
 def test_version_endpoint():
     response = client.get("/api/v1/version")
