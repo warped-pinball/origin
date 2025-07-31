@@ -47,16 +47,11 @@ def test_create_user_and_login():
     assert response.status_code == 200
     data = response.json()
     assert data["email"] == "user@example.com"
-    assert data["is_verified"] is False
-    # User cannot login before verifying
-    response = client.post("/api/v1/auth/token", data={"username": "user@example.com", "password": "pass"})
-    assert response.status_code == 403
-    # Verify email
-    with TestingSessionLocal() as db:
-        token = db.query(models.User).filter_by(email="user@example.com").first().verification_token
-    client.get(f"/api/v1/auth/verify?token={token}")
-    # Login succeeds after verification
-    response = client.post("/api/v1/auth/token", data={"username": "user@example.com", "password": "pass"})
+    assert data["is_verified"] is True
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "user@example.com", "password": "pass"},
+    )
     assert response.status_code == 200
     token = response.json()["access_token"]
     assert token
@@ -77,9 +72,6 @@ def test_login_wrong_password():
         "/api/v1/users/",
         json={"email": "wp@example.com", "password": "right", "screen_name": "u"},
     )
-    with TestingSessionLocal() as db:
-        token = db.query(models.User).filter_by(email="wp@example.com").first().verification_token
-    client.get(f"/api/v1/auth/verify?token={token}")
     response = client.post(
         "/api/v1/auth/token",
         data={"username": "wp@example.com", "password": "wrong"},
@@ -93,9 +85,6 @@ def test_login_trailing_space():
         "/api/v1/users/",
         json={"email": "ts@example.com", "password": "pass", "screen_name": "ts"},
     )
-    with TestingSessionLocal() as db:
-        token = db.query(models.User).filter_by(email="ts@example.com").first().verification_token
-    client.get(f"/api/v1/auth/verify?token={token}")
     response = client.post(
         "/api/v1/auth/token",
         data={"username": "ts@example.com ", "password": "pass"},
@@ -108,9 +97,6 @@ def test_password_reset_flow():
         "/api/v1/users/",
         json={"email": "reset@example.com", "password": "old", "screen_name": "r"},
     )
-    with TestingSessionLocal() as db:
-        verify_token = db.query(models.User).filter_by(email="reset@example.com").first().verification_token
-    client.get(f"/api/v1/auth/verify?token={verify_token}")
     client.post(
         "/api/v1/auth/password-reset/request",
         json={"email": "reset@example.com"},

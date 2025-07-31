@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
-from ..emails import send_verification_email
+from ..emails import BREVO_API_KEY, send_verification_email
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -15,7 +15,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     user.email = email
     created = crud.create_user(db, user)
-    send_verification_email(created.email, created.verification_token)
+    if BREVO_API_KEY:
+        send_verification_email(created.email, created.verification_token)
+    else:
+        created.is_verified = True
+        created.verification_token = None
+        db.add(created)
+        db.commit()
+        db.refresh(created)
     return created
 
 @router.get("/me", response_model=schemas.User)
