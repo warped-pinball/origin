@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.gzip import GZipMiddleware
+from .cache_static import CacheStaticFiles
 from .database import init_db
 from .routers import auth, users, machines, scores, claim
 from .version import __version__
@@ -11,6 +13,7 @@ import os
 init_db()
 
 app = FastAPI(title="Origin")
+app.add_middleware(GZipMiddleware, minimum_size=100)
 
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
@@ -25,7 +28,7 @@ static_root = os.path.join(os.path.dirname(__file__), 'static')
 well_known_dir = os.path.join(static_root, '.well-known')
 if not os.path.exists(well_known_dir):
     os.makedirs(well_known_dir, exist_ok=True)
-app.mount('/static', StaticFiles(directory=static_root), name='static')
+app.mount('/static', CacheStaticFiles(directory=static_root), name='static')
 app.mount('/.well-known', StaticFiles(directory=well_known_dir), name='well-known')
 
 app.include_router(auth.router, prefix="/api/v1")
