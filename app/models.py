@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -21,6 +21,15 @@ class Machine(Base):
     name = Column(String, unique=True, index=True)
     secret = Column(String, nullable=False)
     scores = relationship('Score', back_populates='machine')
+
+
+class MachineClaim(Base):
+    __tablename__ = 'machine_claims'
+    machine_id = Column(String, primary_key=True, index=True)
+    claim_code = Column(String, unique=True, index=True, nullable=False)
+    shared_secret = Column(String, nullable=False)
+    claimed = Column(Boolean, default=False, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
 
 class Score(Base):
     __tablename__ = 'scores'
