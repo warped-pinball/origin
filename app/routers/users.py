@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
+from ..emails import send_verification_email
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -13,7 +14,9 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     user.email = email
-    return crud.create_user(db, user)
+    created = crud.create_user(db, user)
+    send_verification_email(created.email, created.verification_token)
+    return created
 
 @router.get("/me", response_model=schemas.User)
 def read_users_me(current_user: crud.models.User = Depends(get_current_user)):
