@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from .database import Base, engine, run_migrations
-from .routers import auth, users, machines, scores
+from .routers import auth, users, machines, scores, claim
 from .version import __version__
 import os
 
@@ -33,6 +33,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(machines.router, prefix="/api/v1")
 app.include_router(scores.router, prefix="/api/v1")
+app.include_router(claim.router)
 
 @app.get("/api/v1/version")
 def get_version():
