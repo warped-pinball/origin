@@ -11,8 +11,7 @@ import httpx
 def _start_server(db_path, port):
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
-    subprocess.run([sys.executable, "scripts/minify_js.py", "app/static/js/app.js"], check=True)
-    subprocess.run([sys.executable, "scripts/gzip_static.py"], check=True)
+    subprocess.run([sys.executable, "scripts/build_static.py"], check=True)
     proc = subprocess.Popen(
         ["uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
         env=env,
