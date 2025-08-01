@@ -8,7 +8,7 @@
             <link rel='stylesheet' href='/static/css/pico.min.css'>
             <link rel='stylesheet' href='/static/css/material-icons.css'>
             <link rel='stylesheet' href='/static/css/material-symbols.css'>
-            <link rel='manifest' href='/static/manifest.json.gz'>
+            <link rel='manifest' href='/static/manifest.json'>
             <script>
                 try {
                     const t = localStorage.getItem('theme');
@@ -162,7 +162,7 @@
                 main.container { padding-bottom:3.5rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
-            <script src="/static/js/api.js" defer></script>
+            <script src="/static/js/api.min.js" defer></script>
             <script src="/static/js/app.min.js" defer></script>
         </head>
         <body>

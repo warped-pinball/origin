@@ -7,7 +7,4 @@ venv/
 .DS_Store
 test.db
 node_modules/
-app/static/*.min.js
-app/static/**/*.min.js
-app/static/**/*.gz
 build/
