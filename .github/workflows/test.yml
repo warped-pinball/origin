@@ -3,13 +3,15 @@ name: Test
 on:
   pull_request:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: origin
+
 jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Load workflow variables
-        run: cat .github/workflows/vars.env >> $GITHUB_ENV
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -24,15 +26,11 @@ jobs:
           pip install -r requirements.txt -r requirements-test.txt
       - name: Run tests
         run: pytest -q
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Build static assets
+        run: python scripts/build_static.py
       - name: Build Docker image
-        uses: docker/build-push-action@v4
+        uses: ./.github/actions/docker-build
         with:
-          context: .
+          push: 'false'
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:pr-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          load: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
