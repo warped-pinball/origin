@@ -1,55 +1,57 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const path = require('node:path');
-const fs = require('node:fs');
-const vm = require('node:vm');
 
-const SRC = path.join(__dirname, '../dist/api.js');
+const createOriginApi = require('../dist/api.js');
+const openapi = require('../../openapi.json');
 
-function loadApi(fetchImpl, apiBase) {
-  const code = fs.readFileSync(SRC, 'utf8');
-  const sandbox = { fetch: fetchImpl };
-  Object.setPrototypeOf(sandbox, global);
-  vm.runInNewContext(code, sandbox, { filename: SRC });
-  return sandbox.createOriginApi(apiBase);
+function loadApi(base, calls) {
+  return createOriginApi(base, {
+    definition: openapi,
+    axiosConfig: {
+      adapter: config => {
+        calls.push(config);
+        return Promise.resolve({ data: {} });
+      }
+    }
+  });
 }
 
 test('signup posts to /users/', async () => {
   const calls = [];
-  const api = loadApi((url, opts) => { calls.push({ url, opts }); return Promise.resolve({}); }, 'http://x');
+  const api = await loadApi('http://x', calls);
   await api.signup('a@b.c', 'p', 'n');
   assert.strictEqual(calls.length, 1);
-  assert.strictEqual(calls[0].url, 'http://x/api/v1/users/');
-  assert.strictEqual(calls[0].opts.method, 'POST');
+  assert.strictEqual(calls[0].method, 'post');
+  assert.strictEqual(new URL(calls[0].url, calls[0].baseURL).href, 'http://x/api/v1/users/');
 });
 
 test('login posts form data', async () => {
   const calls = [];
-  const api = loadApi((url, opts) => { calls.push({ url, opts }); return Promise.resolve({}); }, 'http://x');
+  const api = await loadApi('http://x', calls);
   await api.login('a@b.c', 'p');
-  assert.strictEqual(calls[0].url, 'http://x/api/v1/auth/token');
-  assert.strictEqual(calls[0].opts.method, 'POST');
-  assert(/username=a%40b.c/.test(calls[0].opts.body.toString()));
+  assert.strictEqual(calls[0].method, 'post');
+  assert.strictEqual(new URL(calls[0].url, calls[0].baseURL).href, 'http://x/api/v1/auth/token');
+  assert(/username=a%40b.c/.test(calls[0].data));
 });
 
 test('updateScreenName uses token', async () => {
   const calls = [];
-  const api = loadApi((url, opts) => { calls.push({ url, opts }); return Promise.resolve({}); }, '');
+  const api = await loadApi('http://x', calls);
   await api.updateScreenName('t', 'name');
-  assert.strictEqual(calls[0].opts.headers.Authorization, 'Bearer t');
+  assert.strictEqual(calls[0].headers.Authorization, 'Bearer t');
 });
 
 test('updatePassword uses token', async () => {
   const calls = [];
-  const api = loadApi((url, opts) => { calls.push({ url, opts }); return Promise.resolve({}); }, '');
+  const api = await loadApi('http://x', calls);
   await api.updatePassword('tok', 'p');
-  assert.strictEqual(calls[0].opts.headers.Authorization, 'Bearer tok');
+  assert.strictEqual(calls[0].headers.Authorization, 'Bearer tok');
 });
 
 test('deleteAccount sends DELETE', async () => {
   const calls = [];
-  const api = loadApi((url, opts) => { calls.push({ url, opts }); return Promise.resolve({}); }, 'base');
+  const api = await loadApi('http://x', calls);
   await api.deleteAccount('t');
-  assert.strictEqual(calls[0].opts.method, 'DELETE');
-  assert.strictEqual(calls[0].url, 'base/api/v1/users/me');
+  assert.strictEqual(calls[0].method, 'delete');
+  assert.strictEqual(new URL(calls[0].url, calls[0].baseURL).href, 'http://x/api/v1/users/me');
 });
