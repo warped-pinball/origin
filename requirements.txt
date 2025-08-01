@@ -12,3 +12,5 @@ jinja2
 httpx
 cryptography
 websockets
+htmlmin
+rcssmin
