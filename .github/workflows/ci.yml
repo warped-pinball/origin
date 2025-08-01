@@ -6,6 +6,10 @@ on:
   release:
     types: [published]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: origin
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -14,20 +18,18 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v3
-      - name: Load workflow variables
-        run: cat .github/workflows/vars.env >> $GITHUB_ENV
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build Docker image
-        uses: docker/build-push-action@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          context: .
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          load: true
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Build static assets
+        run: python scripts/build_static.py
       - name: Load version
         if: github.event_name == 'push'
         run: echo "VERSION=$(python -c 'from app.version import __version__; print(__version__)')" >> $GITHUB_ENV
