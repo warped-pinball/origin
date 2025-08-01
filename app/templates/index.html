@@ -243,7 +243,12 @@
                             <li><a href='#' data-page='tournaments' class='secondary' onclick="showPage('tournaments', event)">
                                 <span class='material-icons'>emoji_events</span>
                             </a></li>
-                            <li><img id='profile-avatar' src='/static/logo.png' alt='Profile picture' style='display:none;'></li>
+                            <li>
+                                <picture>
+                                    <source srcset='/static/logo.webp' type='image/webp'>
+                                    <img id='profile-avatar' src='/static/logo.png' alt='Profile picture' style='display:none;'>
+                                </picture>
+                            </li>
                             <li><a href='#' data-page='friends' class='secondary' onclick="showPage('friends', event)">
                                 <span class='material-icons'>group</span>
                             </a></li>
@@ -304,7 +309,10 @@
                     <div id='account-actions'>
                         <button id='account-save' aria-label='Save'><span class='material-icons'>save</span></button>
                     </div>
-                    <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin:1rem auto 0.5rem;transition:transform 0.3s;'>
+                    <picture>
+                        <source srcset='/static/logo.webp' type='image/webp'>
+                        <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin:1rem auto 0.5rem;transition:transform 0.3s;'>
+                    </picture>
                     <label for='account-screen' style='display:block;margin:0 auto 0.5rem;width:90%;text-align:left;'>
                         <span style='display:block;margin-bottom:0.25rem;'>Screen name</span>
                         <input id='account-screen' type='text' style='width:100%;'>
