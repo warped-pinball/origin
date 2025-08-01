@@ -1,42 +1,9 @@
-import os
 import subprocess
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
-# ensure a clean database for each test run
-if os.path.exists("test.db"):
-    os.remove("test.db")
-
-from ..main import app
-from ..websocket_app import app as ws_app
-from ..database import Base, get_db
 from .. import models
 from ..version import __version__
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base.metadata.create_all(bind=engine)
-
-# Dependency override
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-ws_app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
-ws_client = TestClient(ws_app)
 
 
-def test_create_user_and_login():
+def test_create_user_and_login(client):
     response = client.post(
         "/api/v1/users/",
         json={
@@ -58,7 +25,7 @@ def test_create_user_and_login():
     assert token
 
 
-def test_login_user_not_found():
+def test_login_user_not_found(client):
     response = client.post(
         "/api/v1/auth/token",
         data={"username": "missing@example.com", "password": "pass"},
@@ -67,8 +34,7 @@ def test_login_user_not_found():
     assert response.json()["detail"] == "Invalid email or password"
 
 
-def test_login_wrong_password():
-    # create user
+def test_login_wrong_password(client):
     client.post(
         "/api/v1/users/",
         json={"email": "wp@example.com", "password": "right", "screen_name": "u"},
@@ -81,7 +47,7 @@ def test_login_wrong_password():
     assert response.json()["detail"] == "Invalid email or password"
 
 
-def test_login_trailing_space():
+def test_login_trailing_space(client):
     client.post(
         "/api/v1/users/",
         json={"email": "ts@example.com", "password": "pass", "screen_name": "ts"},
@@ -93,7 +59,7 @@ def test_login_trailing_space():
     assert response.status_code == 200
 
 
-def test_password_reset_flow():
+def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
         json={"email": "reset@example.com", "password": "old", "screen_name": "r"},
@@ -102,8 +68,7 @@ def test_password_reset_flow():
         "/api/v1/auth/password-reset/request",
         json={"email": "reset@example.com"},
     )
-    with TestingSessionLocal() as db:
-        reset_token = db.query(models.User).filter_by(email="reset@example.com").first().reset_token
+    reset_token = db_session.query(models.User).filter_by(email="reset@example.com").first().reset_token
     client.post(
         "/api/v1/auth/password-reset/confirm",
         json={"token": reset_token, "password": "new"},
@@ -115,7 +80,7 @@ def test_password_reset_flow():
     assert response.status_code == 200
 
 
-def test_root_page():
+def test_root_page(client):
     response = client.get("/")
     assert response.status_code == 200
     assert "Sign Up" in response.text
@@ -124,13 +89,13 @@ def test_root_page():
     assert '<html lang="en"' in response.text
 
 
-def test_gzip_enabled():
+def test_gzip_enabled(client):
     response = client.get("/", headers={"Accept-Encoding": "gzip"})
     assert response.status_code == 200
     assert response.headers.get("content-encoding") == "gzip"
 
 
-def test_static_cache_control():
+def test_static_cache_control(client):
     subprocess.run(["python", "scripts/build_static.py"], check=True)
     response = client.get("/static/js/app.min.js", headers={"Accept-Encoding": "gzip"})
     assert response.status_code == 200
@@ -138,7 +103,8 @@ def test_static_cache_control():
     assert "cache-control" in response.headers
     assert "max-age" in response.headers["cache-control"].lower()
 
-def test_version_endpoint():
+
+def test_version_endpoint(client):
     response = client.get("/api/v1/version")
     assert response.status_code == 200
     assert response.json() == {"version": __version__}

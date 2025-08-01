@@ -37,31 +37,25 @@ Schema changes live in `app/migrations` as numbered SQL files. On startup the se
 
 ## Progressive Web App
 
-The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser.
-The JavaScript client used by the PWA lives in the `web` directory and is
-copied to `app/static/js/api.js` when you run `npm --prefix web build`. A minimal
-hand-written service worker handles installation without any caching yet.
+The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser. A minimal hand-written service worker handles installation without any caching yet.
 
 ## API Client
 
-The web host now generates an API client on the fly from `openapi.json` using
+Clients can generate an API client on the fly using
 [openapi-client-axios](https://github.com/anttiviljami/openapi-client-axios).
-The thin wrapper in `web/dist/api.js` is copied to `app/static/js/api.js`. The
-API base URL comes from the `PUBLIC_API_URL` environment variable. See
-`docs/SDKS.md` for details.
+The OpenAPI specification is served dynamically at `/openapi.json` and the
+API base URL comes from the `PUBLIC_API_URL` environment variable.
 
 ## Continuous Integration
 
-Pull requests run backend and web tests. On `main` the workflow bundles
-the API client with the web host. Docker images are built for releases and
+Pull requests run backend tests. Docker images are built for releases and
 attached as artifacts.
 
 ## Testing
 
-Install dependencies and run the backend and SDK test suites:
+Install dependencies and run the backend test suite:
 
 ```bash
 pip install -r requirements.txt -r requirements-test.txt
-npm --prefix web ci && npm --prefix web test --silent
 pytest -q
 ```

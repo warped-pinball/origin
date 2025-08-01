@@ -2,11 +2,10 @@ import os
 import base64
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, NoEncryption, PrivateFormat
-from .test_api import client, ws_client, TestingSessionLocal
 from app import models
 
 
-def test_machine_claim_flow():
+def test_machine_claim_flow(client, ws_client, db_session):
     # setup RSA key
     priv = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     pem = priv.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
@@ -26,12 +25,8 @@ def test_machine_claim_flow():
     assert {"server_key", "claim_code", "machine_id", "signature"} <= data.keys()
 
     # ensure record stored
-    db = TestingSessionLocal()
-    try:
-        claim = db.query(models.MachineClaim).filter_by(machine_id=data["machine_id"]).first()
-        assert claim is not None
-    finally:
-        db.close()
+    claim = db_session.query(models.MachineClaim).filter_by(machine_id=data["machine_id"]).first()
+    assert claim is not None
 
     # create user
     client.post(
