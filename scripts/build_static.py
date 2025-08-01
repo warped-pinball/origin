@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build static assets into an isolated output directory."""
+"""Build static assets and mirror the app directory into an isolated output directory."""
 import gzip
 import json
 import pathlib
@@ -10,10 +10,10 @@ import htmlmin
 import rcssmin
 import rjsmin
 
-STATIC_DIR = pathlib.Path("app/static")
+APP_DIR = pathlib.Path("app")
 BUILD_DIR = pathlib.Path("build")
 
-def copy_static(source: pathlib.Path, target: pathlib.Path) -> None:
+def copy_app(source: pathlib.Path, target: pathlib.Path) -> None:
     if target.exists():
         shutil.rmtree(target)
     shutil.copytree(
@@ -79,10 +79,10 @@ def gzip_all(build_dir: pathlib.Path) -> None:
         print(f"Gzipped {path} → {gz}")
 
 def build_static(
-    source_dir: pathlib.Path = STATIC_DIR,
+    source_dir: pathlib.Path = APP_DIR,
     build_dir: pathlib.Path = BUILD_DIR,
 ) -> None:
-    copy_static(source_dir, build_dir)
+    copy_app(source_dir, build_dir)
     minify_all(build_dir)
     gzip_all(build_dir)
 
