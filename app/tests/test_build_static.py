@@ -1,6 +1,8 @@
 from pathlib import Path
 import gzip
 
+import rjsmin
+
 from scripts import build_static
 
 
@@ -50,3 +52,25 @@ def test_minify_js_app_creates_min_file(tmp_path: Path):
     assert min_js.name == "app.min.js"
     assert min_js.exists()
     assert len(min_js.read_text()) < len("function add(a, b) { return a + b; }")
+
+
+def test_build_outputs_only_to_build_dir(tmp_path: Path):
+    src = tmp_path / "static"
+    js_dir = src / "js"
+    js_dir.mkdir(parents=True)
+    original = "function add(a, b) { return a + b; }"
+    (js_dir / "app.js").write_text(original)
+    build_dir = tmp_path / "build"
+
+    build_static.build_static(src, build_dir)
+
+    # Source directory should remain unchanged
+    assert sorted(p.name for p in js_dir.iterdir()) == ["app.js"]
+    assert (js_dir / "app.js").read_text() == original
+
+    # Build directory should contain minified and gzipped assets
+    built_js_dir = build_dir / "js"
+    min_path = built_js_dir / "app.min.js"
+    assert min_path.read_text() == rjsmin.jsmin(original)
+    with gzip.open(min_path.with_suffix(".js.gz"), "rt") as f:
+        assert f.read() == min_path.read_text()

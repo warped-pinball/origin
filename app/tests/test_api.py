@@ -1,6 +1,9 @@
 import subprocess
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from .. import models
 from ..version import __version__
+from ..cache_static import CacheStaticFiles
 
 
 def test_create_user_and_login(client):
@@ -95,8 +98,11 @@ def test_gzip_enabled(client):
     assert response.headers.get("content-encoding") == "gzip"
 
 
-def test_static_cache_control(client):
+def test_static_cache_control():
     subprocess.run(["python", "scripts/build_static.py"], check=True)
+    tmp_app = FastAPI()
+    tmp_app.mount("/static", CacheStaticFiles(directory="build"), name="static")
+    client = TestClient(tmp_app)
     response = client.get("/static/js/app.min.js", headers={"Accept-Encoding": "gzip"})
     assert response.status_code == 200
     assert response.headers.get("content-encoding") == "gzip"

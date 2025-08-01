@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minify and gzip static assets in app/static."""
+"""Build static assets into an isolated output directory."""
 import gzip
 import json
 import pathlib
@@ -11,6 +11,7 @@ import rcssmin
 import rjsmin
 
 STATIC_DIR = pathlib.Path("app/static")
+BUILD_DIR = pathlib.Path("build")
 
 
 def minify_js(path: pathlib.Path) -> pathlib.Path:
@@ -68,10 +69,23 @@ def process_file(path: pathlib.Path) -> None:
         print(f"Compressed {path}")
 
 
-def main() -> None:
-    for path in STATIC_DIR.rglob("*"):
+def build_static(
+    source_dir: pathlib.Path = STATIC_DIR, build_dir: pathlib.Path = BUILD_DIR
+) -> None:
+    """Build assets from ``source_dir`` into ``build_dir`` without altering ``source_dir``."""
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+    shutil.copytree(
+        source_dir, build_dir, ignore=shutil.ignore_patterns("*.min.js", "*.gz")
+    )
+
+    for path in build_dir.rglob("*"):
         if path.is_file() and path.suffix != ".gz":
             process_file(path)
+
+
+def main() -> None:
+    build_static()
 
 
 if __name__ == "__main__":
