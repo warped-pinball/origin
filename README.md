@@ -39,23 +39,21 @@ Schema changes live in `app/migrations` as numbered SQL files. On startup the se
 
 The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser.
 The JavaScript client used by the PWA lives in the `web` directory and is
-copied to `app/static/api.js` when you run `npm --prefix web build`. A minimal
+copied to `app/static/js/api.js` when you run `npm --prefix web build`. A minimal
 hand-written service worker handles installation without any caching yet.
 
-## SDK Generation
+## API Client
 
-API clients are generated from `openapi.json` using
-[OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator). Running
-`./scripts/generate-sdks.sh` produces a TypeScript SDK in
-`sdks/typescript/dist`. The web host consumes this build. The API base URL
-comes from the `PUBLIC_API_URL` environment variable.
-See `docs/SDKS.md` for details.
+The web host now generates an API client on the fly from `openapi.json` using
+[openapi-client-axios](https://github.com/anttiviljami/openapi-client-axios).
+The thin wrapper in `web/dist/api.js` is copied to `app/static/js/api.js`. The
+API base URL comes from the `PUBLIC_API_URL` environment variable. See
+`docs/SDKS.md` for details.
 
 ## Continuous Integration
 
-Pull requests run backend and SDK tests. On `main` the workflow
-also executes `scripts/generate-sdks.sh` and bundles the resulting
-client with the web host. Docker images are built for releases and
+Pull requests run backend and web tests. On `main` the workflow bundles
+the API client with the web host. Docker images are built for releases and
 attached as artifacts.
 
 ## Testing

@@ -11,7 +11,7 @@ import httpx
 def _start_server(db_path, port):
     env = os.environ.copy()
     env["DATABASE_URL"] = f"sqlite:///{db_path}"
-    subprocess.run([sys.executable, "scripts/minify_js.py", "app/static/app.js"], check=True)
+    subprocess.run([sys.executable, "scripts/build_static.py"], check=True)
     proc = subprocess.Popen(
         ["uvicorn", "app.main:app", "--port", str(port), "--log-level", "warning"],
         env=env,
@@ -209,7 +209,7 @@ def test_profile_avatar_uses_webp_with_png_fallback(server):
         )
         fallback_src = page.get_attribute("#profile-avatar", "src")
         browser.close()
-    assert "logo.webp" in current_src and fallback_src.endswith("/static/logo.png")
+    assert "logo.webp" in current_src and fallback_src.endswith("/static/img/logo.png")
 
 
 def _trigger_install_prompt(page):

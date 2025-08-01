@@ -1,17 +1,11 @@
 # Developer Guide
 
-This repository contains a FastAPI backend and a Progressive Web App. Both clients share the same JavaScript API package, which is generated from `openapi.json`.
+This repository contains a FastAPI backend and a Progressive Web App. Both clients share the same JavaScript API package generated from `openapi.json`.
 For an overview of upcoming features see the [API specification](API_SPEC.md).
 
 ## API Client
 
-The TypeScript SDK is generated with [OpenAPI Generator](https://github.com/OpenAPITools/openapi-generator) by running (see [SDKs](SDKS.md) for details):
-
-```bash
-./scripts/generate-sdks.sh
-```
-
-The resulting `sdks/typescript/dist/index.js` file is bundled with the web host when you run `npm --prefix web build`. The build script copies the file to `app/static/api.js`. The service worker is a simple static file located in `app/static`.
+The web client builds its SDK at runtime using [openapi-client-axios](https://github.com/anttiviljami/openapi-client-axios). The wrapper in `web/dist/api.js` is copied to `app/static/js/api.js` when you run `npm --prefix web build`. The service worker is a simple static file located in `app/static/js`.
 
 ## API Base URL
 

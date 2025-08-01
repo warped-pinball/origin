@@ -5,11 +5,9 @@
             <meta name='viewport' content='width=device-width,initial-scale=1'>
             <meta name="description" content="Origin web application">
             <title>Origin</title>
-            <link rel='preconnect' href='https://fonts.googleapis.com'>
-            <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-            <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
-            <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons&display=swap'>
-            <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap'>
+            <link rel='stylesheet' href='/static/css/pico.min.css'>
+            <link rel='stylesheet' href='/static/css/material-icons.css'>
+            <link rel='stylesheet' href='/static/css/material-symbols.css'>
             <link rel='manifest' href='/static/manifest.json'>
             <script>
                 try {
@@ -164,8 +162,8 @@
                 main.container { padding-bottom:3.5rem; }
             </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
-            <script src="/static/api.js" defer></script>
-            <script src="/static/app.min.js" defer></script>
+            <script src="/static/js/api.js" defer></script>
+            <script src="/static/js/app.min.js" defer></script>
         </head>
         <body>
             <main class='container'>
@@ -245,8 +243,8 @@
                             </a></li>
                             <li>
                                 <picture>
-                                    <source srcset='/static/logo.webp' type='image/webp'>
-                                    <img id='profile-avatar' src='/static/logo.png' alt='Profile picture' style='display:none;'>
+                                    <source srcset='/static/img/logo.webp' type='image/webp'>
+                                    <img id='profile-avatar' src='/static/img/logo.png' alt='Profile picture' style='display:none;'>
                                 </picture>
                             </li>
                             <li><a href='#' data-page='friends' class='secondary' onclick="showPage('friends', event)">
@@ -310,8 +308,8 @@
                         <button id='account-save' aria-label='Save'><span class='material-icons'>save</span></button>
                     </div>
                     <picture>
-                        <source srcset='/static/logo.webp' type='image/webp'>
-                        <img id='account-avatar' src='/static/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin:1rem auto 0.5rem;transition:transform 0.3s;'>
+                        <source srcset='/static/img/logo.webp' type='image/webp'>
+                        <img id='account-avatar' src='/static/img/logo.png' alt='Profile picture' style='width:8rem;height:8rem;border-radius:50%;margin:1rem auto 0.5rem;transition:transform 0.3s;'>
                     </picture>
                     <label for='account-screen' style='display:block;margin:0 auto 0.5rem;width:90%;text-align:left;'>
                         <span style='display:block;margin-bottom:0.25rem;'>Screen name</span>

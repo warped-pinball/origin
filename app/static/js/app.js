@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch {}
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/service-worker.js');
+        navigator.serviceWorker.register('/static/js/service-worker.js');
     }
     window.addEventListener('hashchange', () => {
         const page = location.hash.substring(1);
