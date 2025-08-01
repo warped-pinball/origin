@@ -14,3 +14,4 @@ cryptography
 websockets
 htmlmin
 rcssmin
+rjsmin
