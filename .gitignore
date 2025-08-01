@@ -10,3 +10,4 @@ node_modules/
 app/static/*.min.js
 app/static/**/*.min.js
 app/static/**/*.gz
+build/
