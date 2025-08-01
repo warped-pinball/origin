@@ -12,6 +12,7 @@ def upgrade(engine):
         Column('machine_id', String, primary_key=True),
         Column('claim_code', String, unique=True, index=True),
         Column('shared_secret', String, nullable=False),
+        Column('game_title', String, nullable=False),
         Column('claimed', Boolean, nullable=False, default=False),
         Column('user_id', Integer, ForeignKey('users.id')),
     )
