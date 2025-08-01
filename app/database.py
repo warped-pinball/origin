@@ -4,6 +4,7 @@ import os
 import re
 import importlib.util
 from pathlib import Path
+import time
 
 # Migrations live in app/migrations as numbered Python files. The highest
 # numbered file represents the latest schema version.
@@ -66,8 +67,21 @@ def run_migrations() -> None:
         set_db_version(target_version)
 
 
+def wait_for_db(max_attempts: int = 10, delay: float = 1.0) -> None:
+    """Attempt to connect to the database until successful or out of retries."""
+    for attempt in range(1, max_attempts + 1):
+        try:
+            with engine.connect():
+                return
+        except exc.OperationalError:
+            if attempt == max_attempts:
+                raise
+            time.sleep(delay)
+
+
 def init_db() -> None:
-    """Run migrations and ensure all tables exist."""
+    """Wait for DB, run migrations and ensure all tables exist."""
+    wait_for_db()
     run_migrations()
     Base.metadata.create_all(bind=engine)
 
