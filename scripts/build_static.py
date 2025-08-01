@@ -21,7 +21,6 @@ def copy_app(source: pathlib.Path, target: pathlib.Path) -> None:
         target,
         ignore=shutil.ignore_patterns("*.min.js", "*.gz"),
     )
-    print(f"Copied {source} → {target}")
 
 def minify_js(path: pathlib.Path) -> pathlib.Path:
     dest = path.with_suffix(".min.js")
@@ -69,14 +68,12 @@ def minify_all(build_dir: pathlib.Path) -> None:
             continue
         if path.suffix in MINIFIERS and not path.name.endswith(".min.js"):
             new_path = MINIFIERS[path.suffix](path)
-            print(f"Minified {path} → {new_path}")
 
 def gzip_all(build_dir: pathlib.Path) -> None:
     for path in build_dir.rglob("*"):
         if not path.is_file() or path.name.endswith(".gz"):
             continue
         gz = gzip_file(path)
-        print(f"Gzipped {path} → {gz}")
 
 def build_static(
     source_dir: pathlib.Path = APP_DIR,
