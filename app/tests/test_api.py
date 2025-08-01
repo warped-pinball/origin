@@ -103,7 +103,7 @@ def test_static_cache_control():
     tmp_app = FastAPI()
     tmp_app.mount("/static", CacheStaticFiles(directory="build"), name="static")
     client = TestClient(tmp_app)
-    response = client.get("/static/js/app.min.js", headers={"Accept-Encoding": "gzip"})
+    response = client.get("/static/js/app.min.js.gz", headers={"Accept-Encoding": "gzip"})
     assert response.status_code == 200
     assert response.headers.get("content-encoding") == "gzip"
     assert "cache-control" in response.headers
