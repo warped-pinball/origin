@@ -39,7 +39,7 @@ Schema changes live in `app/migrations` as numbered SQL files. On startup the se
 
 The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser.
 The JavaScript client used by the PWA lives in the `web` directory and is
-copied to `app/static/api.js` when you run `npm --prefix web build`. A minimal
+copied to `app/static/js/api.js` when you run `npm --prefix web build`. A minimal
 hand-written service worker handles installation without any caching yet.
 
 ## SDK Generation

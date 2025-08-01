@@ -131,9 +131,11 @@ def test_gzip_enabled():
 
 
 def test_static_cache_control():
-    subprocess.run(["python", "scripts/minify_js.py", "app/static/app.js"], check=True)
-    response = client.get("/static/app.min.js")
+    subprocess.run(["python", "scripts/minify_js.py", "app/static/js/app.js"], check=True)
+    subprocess.run(["python", "scripts/gzip_static.py"], check=True)
+    response = client.get("/static/js/app.min.js", headers={"Accept-Encoding": "gzip"})
     assert response.status_code == 200
+    assert response.headers.get("content-encoding") == "gzip"
     assert "cache-control" in response.headers
     assert "max-age" in response.headers["cache-control"].lower()
 
