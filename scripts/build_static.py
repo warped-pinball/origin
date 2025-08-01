@@ -4,34 +4,22 @@ import gzip
 import json
 import pathlib
 import shutil
-import subprocess
 from typing import Callable
 
 import htmlmin
 import rcssmin
+import rjsmin
 
 STATIC_DIR = pathlib.Path("app/static")
 
 
 def minify_js(path: pathlib.Path) -> pathlib.Path:
-    """Minify a JS file using terser. Returns the minified file path."""
+    """Minify a JS file using rjsmin. Returns the minified file path."""
     dest = path
     if path.stem == "app":
         dest = path.with_suffix(".min.js")
-    subprocess.run(
-        [
-            "npx",
-            "--yes",
-            "terser",
-            str(path),
-            "-o",
-            str(dest),
-            "--compress",
-            "--mangle",
-        ],
-        check=True,
-        stdout=subprocess.DEVNULL,
-    )
+    minified = rjsmin.jsmin(path.read_text())
+    dest.write_text(minified)
     return dest
 
 
