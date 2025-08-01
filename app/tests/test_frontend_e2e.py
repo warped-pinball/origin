@@ -210,7 +210,7 @@ def test_profile_avatar_uses_webp_with_png_fallback(server):
         )
         fallback_src = page.get_attribute("#profile-avatar", "src")
         browser.close()
-    assert "logo.webp" in current_src and fallback_src.endswith("/static/logo.png")
+    assert "logo.webp" in current_src and fallback_src.endswith("/static/img/logo.png")
 
 
 def _trigger_install_prompt(page):
