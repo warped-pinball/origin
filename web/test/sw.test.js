@@ -3,7 +3,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const swPath = path.resolve(__dirname, '../../app/static/service-worker.js');
+const swPath = path.resolve(__dirname, '../../app/static/js/service-worker.js');
 
 test('service worker is minimal and workbox-free', () => {
   const sw = fs.readFileSync(swPath, 'utf8');
