@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
-from .cache_static import CacheStaticFiles
 from .database import init_db
 from .routers import auth, users, machines, scores, claim
 from .version import __version__
@@ -24,12 +23,12 @@ def read_root(request: Request):
     return templates.TemplateResponse(request, "index.html", {"version": __version__, "api_base": API_BASE})
 
 # Mount static files for universal links
-static_root = os.path.join(os.path.dirname(__file__), 'static')
-well_known_dir = os.path.join(static_root, '.well-known')
-if not os.path.exists(well_known_dir):
-    os.makedirs(well_known_dir, exist_ok=True)
-app.mount('/static', CacheStaticFiles(directory=static_root), name='static')
+static_dir = os.path.join(os.path.dirname(__file__), 'static')
+app.mount("/static", StaticFiles(directory=static_dir), name='static')
+
+well_known_dir = os.path.join(static_dir, '.well-known')
 app.mount('/.well-known', StaticFiles(directory=well_known_dir), name='well-known')
+
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
