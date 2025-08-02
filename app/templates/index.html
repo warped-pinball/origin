@@ -172,7 +172,7 @@
                     <article>
                         <h2>Login</h2>
                         <form onsubmit='login(event)'>
-                            <input id='login-phone' type='tel' placeholder='Phone number' required />
+                            <input id='login-email' type='email' placeholder='Email address' required />
                             <input id='login-password' type='password' placeholder='Password' required />
                             <p style='font-size:0.9rem;'>Don't have an account?  <a href='#' onclick='openSignup(event)'>Sign Up</a></p>
                             <button type='submit'>Log In</button>
@@ -195,8 +195,8 @@
                     <article>
                         <h3>Create Account</h3>
                         <form onsubmit='signup(event)'>
-                            <input id='signup-phone' type='tel' placeholder='Phone number' required />
-                            <span id='signup-phone-error' class='error'></span>
+                            <input id='signup-email' type='email' placeholder='Email address' required />
+                            <span id='signup-email-error' class='error'></span>
                             <input id='signup-screen' type='text' placeholder='Screen name' required />
                             <input id='signup-password' type='password' placeholder='Password' required />
                             <footer class='grid'>

@@ -41,7 +41,7 @@
 | Column | Type | Primary Key | Nullable | Default | Unique |
 | --- | --- | --- | --- | --- | --- |
 | id | INTEGER | True | False |  | False |
-| phone | VARCHAR | False | False |  | True |
+| email | VARCHAR | False | False |  | True |
 | hashed_password | VARCHAR | False | False |  | False |
 | screen_name | VARCHAR | False | True |  | False |
 | first_name | VARCHAR | False | True |  | False |
