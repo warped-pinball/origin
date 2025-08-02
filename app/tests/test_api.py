@@ -10,18 +10,18 @@ def test_create_user_and_login(client):
     response = client.post(
         "/api/v1/users/",
         json={
-            "phone": "+10000000001",
+            "email": "user1@example.com",
             "password": "pass",
             "screen_name": "user1",
         },
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["phone"] == "+10000000001"
+    assert data["email"] == "user1@example.com"
     assert data["is_verified"] is True
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+10000000001", "password": "pass"},
+        data={"username": "user1@example.com", "password": "pass"},
     )
     assert response.status_code == 200
     token = response.json()["access_token"]
@@ -31,66 +31,66 @@ def test_create_user_and_login(client):
 def test_login_user_not_found(client):
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+19999999999", "password": "pass"},
+        data={"username": "missing@example.com", "password": "pass"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid phone or password"
+    assert response.json()["detail"] == "Invalid email or password"
 
 
 def test_login_wrong_password(client):
     client.post(
         "/api/v1/users/",
-        json={"phone": "+10000000002", "password": "right", "screen_name": "u"},
+        json={"email": "user2@example.com", "password": "right", "screen_name": "u"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+10000000002", "password": "wrong"},
+        data={"username": "user2@example.com", "password": "wrong"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid phone or password"
+    assert response.json()["detail"] == "Invalid email or password"
 
 
 def test_login_trailing_space(client):
     client.post(
         "/api/v1/users/",
-        json={"phone": "+10000000003", "password": "pass", "screen_name": "ts"},
+        json={"email": "user3@example.com", "password": "pass", "screen_name": "ts"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+10000000003 ", "password": "pass"},
+        data={"username": "user3@example.com ", "password": "pass"},
     )
     assert response.status_code == 200
 
 
 def test_login_unverified_user(client, db_session):
     from .. import crud, schemas
-    user = schemas.UserCreate(phone="+10000000005", password="pass", screen_name="u")
+    user = schemas.UserCreate(email="user5@example.com", password="pass", screen_name="u")
     crud.create_user(db_session, user)
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+10000000005", "password": "pass"},
+        data={"username": "user5@example.com", "password": "pass"},
     )
     assert response.status_code == 403
-    assert response.json()["detail"] == "Phone not verified"
+    assert response.json()["detail"] == "Email not verified"
 
 
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
-        json={"phone": "+10000000004", "password": "old", "screen_name": "r"},
+        json={"email": "user4@example.com", "password": "old", "screen_name": "r"},
     )
     client.post(
         "/api/v1/auth/password-reset/request",
-        json={"phone": "+10000000004"},
+        json={"email": "user4@example.com"},
     )
-    reset_token = db_session.query(models.User).filter_by(phone="+10000000004").first().reset_token
+    reset_token = db_session.query(models.User).filter_by(email="user4@example.com").first().reset_token
     client.post(
         "/api/v1/auth/password-reset/confirm",
         json={"token": reset_token, "password": "new"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "+10000000004", "password": "new"},
+        data={"username": "user4@example.com", "password": "new"},
     )
     assert response.status_code == 200
 

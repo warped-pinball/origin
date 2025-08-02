@@ -7,10 +7,10 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    phone: Optional[str] = None
+    email: Optional[str] = None
 
 class UserBase(BaseModel):
-    phone: str
+    email: str
     screen_name: Optional[str] = None
 
 class UserCreate(UserBase):
@@ -31,7 +31,7 @@ class User(UserBase):
 
 
 class PasswordResetRequest(BaseModel):
-    phone: str
+    email: str
 
 
 class PasswordReset(BaseModel):

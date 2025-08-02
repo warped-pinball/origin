@@ -41,7 +41,7 @@ function isMobile() {
 
 async function signup(e) {
     e.preventDefault();
-    const phone = document.getElementById('signup-phone').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
     const btn = document.getElementById('signup-submit');
@@ -50,10 +50,10 @@ async function signup(e) {
     if (errEl) errEl.textContent = '';
     if (spinner) spinner.style.display = 'inline-block';
     if (btn) btn.disabled = true;
-    logToFile('Signup attempt: ' + phone);
+    logToFile('Signup attempt: ' + email);
     let res;
     try {
-        res = await OriginApi.signup(phone, password, screen_name);
+        res = await OriginApi.signup(email, password, screen_name);
     } catch (err) {
         if (errEl) errEl.textContent = 'Network error';
         logToFile('Signup network error: ' + err);
@@ -64,7 +64,7 @@ async function signup(e) {
     if (res.ok) {
         let loginRes;
         try {
-            loginRes = await OriginApi.login(phone, password);
+            loginRes = await OriginApi.login(email, password);
         } catch (err) {
             logToFile('Auto-login error: ' + err);
             loginRes = { ok: false };
@@ -76,16 +76,16 @@ localStorage.setItem('token', data.access_token);
 showLoggedIn();
 showToast('Account created', 'success');
         } else if (loginRes.status === 403) {
-showToast('Account created. Please verify using the SMS link before logging in.', 'info');
+showToast('Account created. Please verify using the email link before logging in.', 'info');
 showLogin();
         } else {
 showToast('Account created but login failed', 'error');
 showLogin();
         }
     } else if (res.status === 422) {
-        const phoneInput = document.getElementById('signup-phone');
-        phoneInput.setCustomValidity('Please enter a valid phone number.');
-        phoneInput.reportValidity();
+        const emailInput = document.getElementById('signup-email');
+        emailInput.setCustomValidity('Please enter a valid email address.');
+        emailInput.reportValidity();
     } else {
         showToast('Signup failed', 'error');
     }
@@ -95,28 +95,28 @@ showLogin();
 
 async function login(e) {
     e.preventDefault();
-    const phoneInput = document.getElementById('login-phone');
+    const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
-    const phone = phoneInput.value.trim();
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
-    phoneInput.setCustomValidity('');
+    emailInput.setCustomValidity('');
     passwordInput.setCustomValidity('');
     document.getElementById('login-error').textContent = '';
-    if(!/^\+?\d{10,15}$/.test(phone)) {
-        phoneInput.setCustomValidity('Please enter a valid phone number.');
-        phoneInput.reportValidity();
+    if(!/^\S+@\S+\.\S+$/.test(email)) {
+        emailInput.setCustomValidity('Please enter a valid email address.');
+        emailInput.reportValidity();
         return;
     }
-    const res = await OriginApi.login(phone, password);
+    const res = await OriginApi.login(email, password);
     if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
         document.getElementById('login-error').textContent = '';
         showLoggedIn();
     } else if (res.status === 401 || res.status === 404) {
-        document.getElementById('login-error').textContent = 'Invalid phone or password.';
+        document.getElementById('login-error').textContent = 'Invalid email or password.';
     } else if (res.status === 403) {
-        document.getElementById('login-error').textContent = 'Please verify your phone via the SMS link before logging in.';
+        document.getElementById('login-error').textContent = 'Please verify your email before logging in.';
     } else if (res.status >= 500) {
         showToast('Server error', 'error');
     } else {
@@ -244,11 +244,11 @@ function openSignup(e) {
 
 function closeSignup() {
     document.getElementById('signup-dialog').close();
-    const phoneInput = document.getElementById('signup-phone');
-    if (phoneInput) {
-        phoneInput.setCustomValidity('');
+    const emailInput = document.getElementById('signup-email');
+    if (emailInput) {
+        emailInput.setCustomValidity('');
     }
-    document.getElementById('signup-phone-error').textContent = '';
+    document.getElementById('signup-email-error').textContent = '';
 }
 
 function showLogin() {
@@ -346,14 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = location.hash.substring(1);
         if (page) displayPage(page);
     });
-    const phoneInput = document.getElementById('signup-phone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', () => phoneInput.setCustomValidity(''));
+    const emailInput = document.getElementById('signup-email');
+    if (emailInput) {
+        emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
     }
-    const loginPhone = document.getElementById('login-phone');
+    const loginEmail = document.getElementById('login-email');
     const loginPassword = document.getElementById('login-password');
-    if (loginPhone) {
-        loginPhone.addEventListener('input', () => loginPhone.setCustomValidity(''));
+    if (loginEmail) {
+        loginEmail.addEventListener('input', () => loginEmail.setCustomValidity(''));
     }
     if (loginPassword) {
         loginPassword.addEventListener('input', () => loginPassword.setCustomValidity(''));

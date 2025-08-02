@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from . import models, schemas, sms
+from . import models, schemas
 from passlib.context import CryptContext
 from typing import List, Optional
 import secrets
@@ -13,8 +13,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # Users
 
-def get_user_by_phone(db: Session, phone: str) -> Optional[models.User]:
-    return db.query(models.User).filter(models.User.phone == phone).first()
+def get_user_by_email(db: Session, email_addr: str) -> Optional[models.User]:
+    return db.query(models.User).filter(models.User.email == email_addr).first()
 
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -23,7 +23,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     hashed_password = pwd_context.hash(user.password)
     verification_token = secrets.token_urlsafe(32)
     db_user = models.User(
-        phone=user.phone,
+        email=user.email,
         hashed_password=hashed_password,
         screen_name=user.screen_name,
         verification_token=verification_token,
@@ -32,12 +32,10 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    # send verification SMS
-    sms.send_verification_sms(user.phone, verification_token)
     return db_user
 
-def authenticate_user(db: Session, phone: str, password: str) -> Optional[models.User]:
-    user = get_user_by_phone(db, phone)
+def authenticate_user(db: Session, email_addr: str, password: str) -> Optional[models.User]:
+    user = get_user_by_email(db, email_addr)
     if not user:
         return None
     if not pwd_context.verify(password, user.hashed_password):

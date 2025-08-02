@@ -4,7 +4,7 @@ import logging
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
-from ..sms import TWILIO_AUTH_TOKEN, send_verification_sms
+from ..email import BREVO_API_KEY, send_verification_email
 
 logger = logging.getLogger(__name__)
 
@@ -12,15 +12,15 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    phone = user.phone.strip()
-    db_user = crud.get_user_by_phone(db, phone)
+    email = user.email.strip()
+    db_user = crud.get_user_by_email(db, email)
     if db_user:
-        raise HTTPException(status_code=400, detail="Phone already registered")
-    user.phone = phone
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user.email = email
     created = crud.create_user(db, user)
-    logger.info("User created: %s", created.phone)
-    if TWILIO_AUTH_TOKEN:
-        send_verification_sms(created.phone, created.verification_token)
+    logger.info("User created: %s", created.email)
+    if BREVO_API_KEY:
+        send_verification_email(created.email, created.verification_token)
     else:
         created.is_verified = True
         created.verification_token = None

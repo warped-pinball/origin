@@ -31,7 +31,7 @@ def test_machine_claim_flow(client, ws_client, db_session):
     # create user
     client.post(
         "/api/v1/users/",
-        json={"phone": "+12223334444", "password": "pass", "screen_name": "claimer"},
+        json={"email": "claimer@example.com", "password": "pass", "screen_name": "claimer"},
     )
 
     # finalize claim
