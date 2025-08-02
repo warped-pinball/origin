@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import logging
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
 from ..sms import TWILIO_AUTH_TOKEN, send_verification_sms
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -15,6 +18,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Phone already registered")
     user.phone = phone
     created = crud.create_user(db, user)
+    logger.info("User created: %s", created.phone)
     if TWILIO_AUTH_TOKEN:
         send_verification_sms(created.phone, created.verification_token)
     else:

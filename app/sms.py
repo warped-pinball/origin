@@ -1,10 +1,13 @@
 import os
 import httpx
+import logging
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
 API_BASE = os.getenv("PUBLIC_API_URL", "")
+
+logger = logging.getLogger(__name__)
 
 
 def send_sms(to: str, body: str) -> None:
@@ -15,8 +18,9 @@ def send_sms(to: str, body: str) -> None:
     url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
     try:
         httpx.post(url, data=data, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN), timeout=10)
+        logger.info("Sent SMS to %s", to)
     except Exception:
-        pass
+        logger.exception("Failed to send SMS to %s", to)
 
 
 def send_verification_sms(phone: str, token: str) -> None:
