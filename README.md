@@ -23,6 +23,7 @@ Additional settings control email delivery and machine claims:
 
 - `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`: enable transactional email for account verification and password resets.
+- `PUBLIC_HOST_URL`: public base URL used for claim and email links.
 
 The service listens on port `8000` for HTTP and `8001` for WebSocket traffic.
 Ensure both ports are reachable or forwarded by your reverse proxy.

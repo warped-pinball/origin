@@ -69,6 +69,9 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
     db.add(db_claim)
     db.commit()
 
+    host = os.environ.get("PUBLIC_HOST_URL", "")
+    claim_url = f"{host}/claim?code={claim_code}"
+
     await websocket.send_json(
         {
             "server_key": b64encode(
@@ -78,6 +81,7 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
                 )
             ).decode(),
             "claim_code": claim_code,
+            "claim_url": claim_url,
             "machine_id": machine_id,
             "signature": signature.hex(),
         }

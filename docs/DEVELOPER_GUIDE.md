@@ -10,6 +10,10 @@ The web client builds its SDK at runtime using [openapi-client-axios](https://gi
 
 The clients read the API base URL from the `PUBLIC_API_URL` environment variable. If the variable is not set the PWA defaults to `https://origin-beta.doze.dev`.
 
+## Public Host URL
+
+Links in emails and machine claims use the `PUBLIC_HOST_URL` environment variable. Set this to the public base URL of your deployment, for example `https://origin-beta.doze.dev`.
+
 ## Running Tests
 
 Install the Python dependencies as shown in the main `README.md` and run the following:
