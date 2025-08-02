@@ -22,10 +22,18 @@ def copy_app(source: pathlib.Path, target: pathlib.Path) -> None:
     )
 
 def minify_js(path: pathlib.Path) -> pathlib.Path:
-    dest = path.with_suffix(".min.js")
+    """Minify JavaScript files.
+
+    Most files are written to ``<name>.min.js`` to mirror the behaviour of
+    other assets. The service worker is an exception: it must remain
+    ``service-worker.js`` so the browser can locate it at the expected path
+    after the build process. In that case the file is minified in place.
+    """
+    dest = path if path.name == "service-worker.js" else path.with_suffix(".min.js")
     content = rjsmin.jsmin(path.read_text())
     dest.write_text(content)
-    path.unlink()
+    if dest != path:
+        path.unlink()
     return dest
 
 def minify_css(path: pathlib.Path) -> pathlib.Path:

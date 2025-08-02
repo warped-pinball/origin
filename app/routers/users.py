@@ -16,6 +16,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     screen_name = user.screen_name.strip() if user.screen_name else None
 
     if crud.get_user_by_email(db, email):
+        logger.warning("Attempt to register duplicate email: %s", email)
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user.email = email
