@@ -18,11 +18,14 @@ def test_machine_claim_flow(client, ws_client, db_session):
         client_pub.public_bytes(Encoding.Raw, PublicFormat.Raw)
     ).decode()
 
+    os.environ["PUBLIC_HOST_URL"] = "https://example.com"
+
     with ws_client.websocket_connect("/ws/claim") as ws:
         ws.send_json({"client_key": client_key})
         data = ws.receive_json()
 
-    assert {"server_key", "claim_code", "machine_id", "signature"} <= data.keys()
+    assert {"server_key", "claim_code", "machine_id", "signature", "claim_url"} <= data.keys()
+    assert data["claim_url"] == f"https://example.com/claim?code={data['claim_code']}"
 
     # ensure record stored
     claim = db_session.query(models.MachineClaim).filter_by(machine_id=data["machine_id"]).first()

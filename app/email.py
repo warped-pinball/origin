@@ -4,7 +4,6 @@ import logging
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SENDER = os.getenv("BREVO_SENDER_EMAIL", "noreply@example.com")
-API_BASE = os.getenv("PUBLIC_API_URL", "")
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +27,15 @@ def send_email(to: str, subject: str, text: str) -> None:
 
 
 def send_verification_email(email: str, token: str) -> None:
-    link = f"{API_BASE}/api/v1/auth/verify?token={token}"
+    host = os.getenv("PUBLIC_HOST_URL", "")
+    link = f"{host}/api/v1/auth/verify?token={token}"
     text = f"Verify your account: {link}"
     send_email(email, "Verify your account", text)
 
 
 def send_password_reset_email(email: str, token: str) -> None:
-    link = f"{API_BASE}/reset-password?token={token}"
+    host = os.getenv("PUBLIC_HOST_URL", "")
+    link = f"{host}/reset-password?token={token}"
     text = f"Reset your password: {link}"
     send_email(email, "Reset your password", text)
 

@@ -28,6 +28,12 @@ Create an account and obtain the following environment variables:
 If `BREVO_API_KEY` is not set, email sending is disabled and new accounts are
 automatically verified.
 
+## Public host URL
+
+Set `PUBLIC_HOST_URL` to the public base URL of your deployment. It is used
+when generating links for machine claims, email verification and password
+resets.
+
 ## Ports and WebSockets
 
 The API listens on port `8000` for HTTP and on `8001` for WebSocket traffic.

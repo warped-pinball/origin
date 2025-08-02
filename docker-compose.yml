@@ -18,6 +18,7 @@ services:
       POSTGRES_HOST: origin-beta-db
       POSTGRES_DB: postgres
       SECRET_KEY: 9829uhf087w4hiou4whsdd
+      PUBLIC_HOST_URL: https://origin-beta.doze.dev
       # PEM encoded key for signing machine claim handshakes
       RSA_PRIVATE_KEY: |
         -----BEGIN PRIVATE KEY-----
