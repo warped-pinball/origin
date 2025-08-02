@@ -4,7 +4,7 @@ import logging
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
-from ..sms import TWILIO_AUTH_TOKEN, send_verification_sms
+from ..sms import is_sms_configured, send_verification_sms
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     user.phone = phone
     created = crud.create_user(db, user)
     logger.info("User created: %s", created.phone)
-    if TWILIO_AUTH_TOKEN:
+    if is_sms_configured():
         send_verification_sms(created.phone, created.verification_token)
     else:
         created.is_verified = True

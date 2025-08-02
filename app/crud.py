@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from . import models, schemas, sms
+from . import models, schemas
 from passlib.context import CryptContext
 from typing import List, Optional
 import secrets
@@ -32,8 +32,6 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    # send verification SMS
-    sms.send_verification_sms(user.phone, verification_token)
     return db_user
 
 def authenticate_user(db: Session, phone: str, password: str) -> Optional[models.User]:

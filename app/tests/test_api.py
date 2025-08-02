@@ -74,6 +74,30 @@ def test_login_unverified_user(client, db_session):
     assert response.json()["detail"] == "Phone not verified"
 
 
+def test_sms_sent_when_configured(client, monkeypatch):
+    from ..routers import users
+
+    sent = {}
+
+    monkeypatch.setattr(users, "is_sms_configured", lambda: True)
+
+    def fake_send(phone, token):
+        sent["phone"] = phone
+        sent["token"] = token
+
+    monkeypatch.setattr(users, "send_verification_sms", fake_send)
+
+    response = client.post(
+        "/api/v1/users/",
+        json={"phone": "+10000000006", "password": "pass", "screen_name": "u"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["is_verified"] is False
+    assert sent["phone"] == "+10000000006"
+    assert sent["token"]
+
+
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",

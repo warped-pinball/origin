@@ -10,9 +10,14 @@ API_BASE = os.getenv("PUBLIC_API_URL", "")
 logger = logging.getLogger(__name__)
 
 
+def is_sms_configured() -> bool:
+    """Return True if all required Twilio settings are present."""
+    return all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER])
+
+
 def send_sms(to: str, body: str) -> None:
     """Send an SMS using Twilio if credentials are configured."""
-    if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
+    if not is_sms_configured():
         return
     data = {"To": to, "From": TWILIO_FROM_NUMBER, "Body": body}
     url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
