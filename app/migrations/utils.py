@@ -1,4 +1,5 @@
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.schema import CreateTable, CreateColumn
 
 
@@ -29,11 +30,22 @@ def ensure_table(engine, table) -> None:
 
 
 def add_column(engine, table_name: str, column) -> None:
-    """Add column to table if it does not already exist."""
-    if not column_exists(engine, table_name, column.name):
-        sql = f"ALTER TABLE {table_name} ADD COLUMN {CreateColumn(column).compile(dialect=engine.dialect)}"
+    """Add column to table if it does not already exist.
+
+    This function is resilient to concurrent attempts to add the same column
+    by swallowing duplicate-column errors emitted by the database.
+    """
+    if column_exists(engine, table_name, column.name):
+        return
+    sql = f"ALTER TABLE {table_name} ADD COLUMN {CreateColumn(column).compile(dialect=engine.dialect)}"
+    try:
         with engine.begin() as conn:
             conn.execute(text(sql))
+    except SQLAlchemyError as e:  # pragma: no cover - error path tested separately
+        msg = str(getattr(e, "orig", e)).lower()
+        if "duplicate column" in msg or "already exists" in msg:
+            return
+        raise
 
 
 def drop_column(engine, table_name: str, column_name: str) -> None:

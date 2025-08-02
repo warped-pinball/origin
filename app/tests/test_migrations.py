@@ -1,7 +1,20 @@
 import os
 import importlib
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, inspect, text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+    func,
+    inspect,
+    text,
+    create_engine,
+    MetaData,
+    Table,
+)
 from sqlalchemy.orm import declarative_base
+from app.migrations import utils
 
 
 def create_v0_schema(engine):
@@ -99,3 +112,22 @@ def test_migrate_phone_to_email(tmp_path):
     with db.engine.connect() as conn:
         res = conn.execute(text("SELECT email FROM users"))
         assert res.scalar() == "old@example.com"
+
+
+def test_add_column_duplicate_is_ignored(monkeypatch):
+    engine = create_engine("sqlite:///:memory:")
+    meta = MetaData()
+    Table(
+        "users",
+        meta,
+        Column("id", Integer, primary_key=True),
+        Column("initials", String(3)),
+    )
+    meta.create_all(engine)
+
+    monkeypatch.setattr(utils, "column_exists", lambda *args, **kwargs: False)
+    utils.add_column(engine, "users", Column("initials", String(3)))
+
+    insp = inspect(engine)
+    cols = [c["name"] for c in insp.get_columns("users")]
+    assert cols.count("initials") == 1
