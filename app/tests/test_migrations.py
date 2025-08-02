@@ -75,3 +75,38 @@ def test_run_all_migrations(tmp_path):
 
     assert "machine_claims" in insp.get_table_names()
 
+
+def create_v0_schema_email(engine):
+    BaseV0 = declarative_base()
+
+    class User(BaseV0):
+        __tablename__ = 'users'
+        id = Column(Integer, primary_key=True, index=True)
+        email = Column(String, unique=True, index=True, nullable=False)
+        hashed_password = Column(String, nullable=False)
+
+    BaseV0.metadata.create_all(bind=engine)
+
+
+def test_migrate_email_to_phone(tmp_path):
+    db_file = tmp_path / "migrate_email.db"
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
+    if db_file.exists():
+        db_file.unlink()
+    import app.database as db
+    importlib.reload(db)
+
+    create_v0_schema_email(db.engine)
+    db.set_db_version(5)
+    with db.engine.begin() as conn:
+        conn.execute(text("INSERT INTO users (email, hashed_password) VALUES (:e, 'pw')"), {"e": "old@example.com"})
+
+    db.run_migrations()
+
+    insp = inspect(db.engine)
+    cols = {c["name"] for c in insp.get_columns("users")}
+    assert "phone" in cols
+    assert "email" not in cols
+    with db.engine.connect() as conn:
+        res = conn.execute(text("SELECT phone FROM users"))
+        assert res.scalar() == "old@example.com"
