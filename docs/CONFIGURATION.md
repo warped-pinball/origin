@@ -17,18 +17,17 @@ openssl rsa -in private.pem -pubout -out public.pem
 Set the `RSA_PRIVATE_KEY` environment variable to the contents of
 `private.pem`. The public key in `public.pem` is shared with the machines.
 
-## Email provider API key
+## SMS provider API key
 
-Transactional emails are sent through [Brevo](https://www.brevo.com/). Create an
-account and generate an API key from the Brevo dashboard. Configure the
-following environment variables:
+Transactional SMS messages are sent through [Twilio](https://www.twilio.com/).
+Create an account and obtain the following environment variables:
 
-- `BREVO_API_KEY`: the API key from your Brevo account.
-- `BREVO_SENDER_EMAIL`: the sender address for emails (defaults to
-  `no-reply@example.com`).
-- `BREVO_SENDER_NAME`: the friendly sender name (defaults to `Origin`).
+- `TWILIO_ACCOUNT_SID`: your Twilio account SID.
+- `TWILIO_AUTH_TOKEN`: the auth token from the Twilio console.
+- `TWILIO_FROM_NUMBER`: the Twilio phone number to send messages from.
 
-If `BREVO_API_KEY` is not set, email sending is disabled.
+If `TWILIO_AUTH_TOKEN` is not set, SMS sending is disabled and new accounts are
+automatically verified.
 
 ## Ports and WebSockets
 

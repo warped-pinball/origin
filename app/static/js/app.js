@@ -41,7 +41,7 @@ function isMobile() {
 
 async function signup(e) {
     e.preventDefault();
-    const email = document.getElementById('signup-email').value.trim();
+    const phone = document.getElementById('signup-phone').value.trim();
     const password = document.getElementById('signup-password').value;
     const screen_name = document.getElementById('signup-screen').value;
     const btn = document.getElementById('signup-submit');
@@ -50,10 +50,10 @@ async function signup(e) {
     if (errEl) errEl.textContent = '';
     if (spinner) spinner.style.display = 'inline-block';
     if (btn) btn.disabled = true;
-    logToFile('Signup attempt: ' + email);
+    logToFile('Signup attempt: ' + phone);
     let res;
     try {
-        res = await OriginApi.signup(email, password, screen_name);
+        res = await OriginApi.signup(phone, password, screen_name);
     } catch (err) {
         if (errEl) errEl.textContent = 'Network error';
         logToFile('Signup network error: ' + err);
@@ -64,7 +64,7 @@ async function signup(e) {
     if (res.ok) {
         let loginRes;
         try {
-            loginRes = await OriginApi.login(email, password);
+            loginRes = await OriginApi.login(phone, password);
         } catch (err) {
             logToFile('Auto-login error: ' + err);
             loginRes = { ok: false };
@@ -80,9 +80,9 @@ showToast('Account created but login failed', 'error');
 showLogin();
         }
     } else if (res.status === 422) {
-        const emailInput = document.getElementById('signup-email');
-        emailInput.setCustomValidity('Please enter a valid email address.');
-        emailInput.reportValidity();
+        const phoneInput = document.getElementById('signup-phone');
+        phoneInput.setCustomValidity('Please enter a valid phone number.');
+        phoneInput.reportValidity();
     } else {
         showToast('Signup failed', 'error');
     }
@@ -92,26 +92,26 @@ showLogin();
 
 async function login(e) {
     e.preventDefault();
-    const emailInput = document.getElementById('login-email');
+    const phoneInput = document.getElementById('login-phone');
     const passwordInput = document.getElementById('login-password');
-    const email = emailInput.value.trim();
+    const phone = phoneInput.value.trim();
     const password = passwordInput.value;
-    emailInput.setCustomValidity('');
+    phoneInput.setCustomValidity('');
     passwordInput.setCustomValidity('');
     document.getElementById('login-error').textContent = '';
-    if(!/^\S+@\S+\.\S+$/.test(email)) {
-        emailInput.setCustomValidity('Please enter a valid email address.');
-        emailInput.reportValidity();
+    if(!/^\+?\d{10,15}$/.test(phone)) {
+        phoneInput.setCustomValidity('Please enter a valid phone number.');
+        phoneInput.reportValidity();
         return;
     }
-    const res = await OriginApi.login(email, password);
+    const res = await OriginApi.login(phone, password);
     if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.access_token);
         document.getElementById('login-error').textContent = '';
         showLoggedIn();
     } else if (res.status === 401 || res.status === 404) {
-        document.getElementById('login-error').textContent = 'Invalid email or password.';
+        document.getElementById('login-error').textContent = 'Invalid phone or password.';
     } else if (res.status >= 500) {
         showToast('Server error', 'error');
     } else {
@@ -239,11 +239,11 @@ function openSignup(e) {
 
 function closeSignup() {
     document.getElementById('signup-dialog').close();
-    const emailInput = document.getElementById('signup-email');
-    if (emailInput) {
-        emailInput.setCustomValidity('');
+    const phoneInput = document.getElementById('signup-phone');
+    if (phoneInput) {
+        phoneInput.setCustomValidity('');
     }
-    document.getElementById('signup-email-error').textContent = '';
+    document.getElementById('signup-phone-error').textContent = '';
 }
 
 function showLogin() {
@@ -341,14 +341,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = location.hash.substring(1);
         if (page) displayPage(page);
     });
-    const emailInput = document.getElementById('signup-email');
-    if (emailInput) {
-        emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+    const phoneInput = document.getElementById('signup-phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => phoneInput.setCustomValidity(''));
     }
-    const loginEmail = document.getElementById('login-email');
+    const loginPhone = document.getElementById('login-phone');
     const loginPassword = document.getElementById('login-password');
-    if (loginEmail) {
-        loginEmail.addEventListener('input', () => loginEmail.setCustomValidity(''));
+    if (loginPhone) {
+        loginPhone.addEventListener('input', () => loginPhone.setCustomValidity(''));
     }
     if (loginPassword) {
         loginPassword.addEventListener('input', () => loginPassword.setCustomValidity(''));
