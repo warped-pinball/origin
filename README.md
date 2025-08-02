@@ -19,17 +19,17 @@ By default the application connects to the Postgres instance defined in
 `DATABASE_URL` environment variable or by setting `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
 
-Additional settings control email delivery and machine claims:
+Additional settings control SMS delivery and machine claims:
 
 - `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
-- `BREVO_API_KEY`: enables transactional email when set to a Brevo API key.
-- `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`: optional email sender overrides.
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`: enable
+  transactional SMS for account verification and password resets.
 
 The service listens on port `8000` for HTTP and `8001` for WebSocket traffic.
 Ensure both ports are reachable or forwarded by your reverse proxy.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
-RSA key pair and obtaining an email API key.
+RSA key pair and obtaining SMS API credentials.
 
 ### Database Migrations
 

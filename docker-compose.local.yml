@@ -25,10 +25,10 @@ services:
         -----BEGIN PRIVATE KEY-----
         ...
         -----END PRIVATE KEY-----
-      # Brevo API key enables email sending
-      BREVO_API_KEY: your_brevo_api_key
-      BREVO_SENDER_EMAIL: no-reply@example.com
-      BREVO_SENDER_NAME: Origin
+      # Twilio credentials enable SMS sending
+      TWILIO_ACCOUNT_SID: your_account_sid
+      TWILIO_AUTH_TOKEN: your_auth_token
+      TWILIO_FROM_NUMBER: +15555555555
     depends_on:
       - origin-db
     labels:

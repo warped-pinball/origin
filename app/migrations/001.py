@@ -8,7 +8,7 @@ def upgrade(engine):
         'users',
         meta,
         Column('id', Integer, primary_key=True),
-        Column('email', String, unique=True, nullable=False),
+        Column('phone', String, unique=True, nullable=False),
         Column('hashed_password', String, nullable=False),
     )
     ensure_table(engine, users)

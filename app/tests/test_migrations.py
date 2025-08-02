@@ -10,7 +10,7 @@ def create_v0_schema(engine):
     class User(BaseV0):
         __tablename__ = 'users'
         id = Column(Integer, primary_key=True, index=True)
-        email = Column(String, unique=True, index=True, nullable=False)
+        phone = Column(String, unique=True, index=True, nullable=False)
         hashed_password = Column(String, nullable=False)
 
     class Machine(BaseV0):
