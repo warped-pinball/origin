@@ -75,6 +75,9 @@ const data = await loginRes.json();
 localStorage.setItem('token', data.access_token);
 showLoggedIn();
 showToast('Account created', 'success');
+        } else if (loginRes.status === 403) {
+showToast('Account created. Please verify using the SMS link before logging in.', 'info');
+showLogin();
         } else {
 showToast('Account created but login failed', 'error');
 showLogin();
@@ -112,6 +115,8 @@ async function login(e) {
         showLoggedIn();
     } else if (res.status === 401 || res.status === 404) {
         document.getElementById('login-error').textContent = 'Invalid phone or password.';
+    } else if (res.status === 403) {
+        document.getElementById('login-error').textContent = 'Please verify your phone via the SMS link before logging in.';
     } else if (res.status >= 500) {
         showToast('Server error', 'error');
     } else {

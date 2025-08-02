@@ -7,17 +7,21 @@ import secrets
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Return True if the password matches the hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
+
 
 # Users
 
 def get_user_by_phone(db: Session, phone: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.phone == phone).first()
 
+
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
+
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     hashed_password = pwd_context.hash(user.password)
@@ -32,8 +36,14 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    # send verification SMS
-    sms.send_verification_sms(user.phone, verification_token)
+    if sms.sms_configured():
+        sms.send_verification_sms(user.phone, verification_token)
+    else:
+        db_user.is_verified = True
+        db_user.verification_token = None
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
     return db_user
 
 def authenticate_user(db: Session, phone: str, password: str) -> Optional[models.User]:

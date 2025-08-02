@@ -62,6 +62,30 @@ def test_login_trailing_space(client):
     assert response.status_code == 200
 
 
+def test_login_unverified_user(client, db_session, monkeypatch):
+    from .. import crud, schemas, sms
+
+    monkeypatch.setattr(sms, "sms_configured", lambda: True)
+    called: dict[str, str] = {}
+
+    def fake_send(phone: str, token: str) -> None:
+        called["phone"] = phone
+        called["token"] = token
+
+    monkeypatch.setattr(sms, "send_verification_sms", fake_send)
+
+    user = schemas.UserCreate(phone="+10000000005", password="pass", screen_name="u")
+    crud.create_user(db_session, user)
+    assert called["phone"] == "+10000000005"
+
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "+10000000005", "password": "pass"},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Phone not verified"
+
+
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
