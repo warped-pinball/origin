@@ -29,8 +29,14 @@ def send_email(to: str, subject: str, text: str) -> None:
 def send_verification_email(email: str, token: str) -> None:
     host = os.getenv("PUBLIC_HOST_URL", "")
     link = f"{host}/api/v1/auth/verify?token={token}"
-    text = f"Verify your account: {link}"
-    send_email(email, "Verify your account", text)
+    
+    # get template from email_templates directory
+    email_templates_dir = os.path.join(os.path.dirname(__file__), "email_templates")
+    with open(os.path.join(email_templates_dir, "verify_email.jinja"), "r") as file:
+        template = file.read()
+        text = template.format(link=link)
+   
+    send_email(email, "Verify your Warped Pinball account", text)
 
 
 def send_password_reset_email(email: str, token: str) -> None:
