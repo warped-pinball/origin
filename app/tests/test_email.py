@@ -12,8 +12,9 @@ def test_verification_email_link(monkeypatch):
         captured["text"] = text
 
     monkeypatch.setattr(email, "send_email", fake_send_email)
-    email.send_verification_email("user@example.com", "tok")
-    assert captured["text"] == "Verify your account: https://example.com/api/v1/auth/verify?token=tok"
+    email.send_verification_email("user@example.com", "Screen", "tok")
+    assert "Hello Screen" in captured["text"]
+    assert "Verify your account: https://example.com/api/v1/auth/verify?token=tok" in captured["text"]
 
 
 def test_password_reset_email_link(monkeypatch):
@@ -26,5 +27,6 @@ def test_password_reset_email_link(monkeypatch):
         captured["text"] = text
 
     monkeypatch.setattr(email, "send_email", fake_send_email)
-    email.send_password_reset_email("user@example.com", "tok")
-    assert captured["text"] == "Reset your password: https://example.com/reset-password?token=tok"
+    email.send_password_reset_email("user@example.com", "Screen", "tok")
+    assert "Hello Screen" in captured["text"]
+    assert "Reset your password: https://example.com/reset-password?token=tok" in captured["text"]

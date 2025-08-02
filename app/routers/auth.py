@@ -41,7 +41,7 @@ def request_password_reset(req: schemas.PasswordResetRequest, db: Session = Depe
     user = crud.get_user_by_email(db, req.email)
     if user:
         token = crud.create_reset_token(db, user)
-        send_password_reset_email(user.email, token)
+        send_password_reset_email(user.email, user.screen_name, token)
     # Always return success to avoid leaking which emails exist
     return {"detail": "If the email exists, a reset link has been sent"}
 
