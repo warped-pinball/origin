@@ -7,9 +7,11 @@ from .database import init_db
 from .routers import auth, users, machines, scores, claim
 from .version import __version__
 import os
+import logging
 
 # Initialize database (migrations + tables)
 init_db()
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Origin")
 app.add_middleware(GZipMiddleware, minimum_size=100)

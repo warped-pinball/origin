@@ -62,6 +62,18 @@ def test_login_trailing_space(client):
     assert response.status_code == 200
 
 
+def test_login_unverified_user(client, db_session):
+    from .. import crud, schemas
+    user = schemas.UserCreate(phone="+10000000005", password="pass", screen_name="u")
+    crud.create_user(db_session, user)
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "+10000000005", "password": "pass"},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Phone not verified"
+
+
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
