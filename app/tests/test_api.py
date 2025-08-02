@@ -10,18 +10,18 @@ def test_create_user_and_login(client):
     response = client.post(
         "/api/v1/users/",
         json={
-            "email": "user@example.com",
+            "phone": "+10000000001",
             "password": "pass",
             "screen_name": "user1",
         },
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "user@example.com"
+    assert data["phone"] == "+10000000001"
     assert data["is_verified"] is True
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "user@example.com", "password": "pass"},
+        data={"username": "+10000000001", "password": "pass"},
     )
     assert response.status_code == 200
     token = response.json()["access_token"]
@@ -31,33 +31,33 @@ def test_create_user_and_login(client):
 def test_login_user_not_found(client):
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "missing@example.com", "password": "pass"},
+        data={"username": "+19999999999", "password": "pass"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid email or password"
+    assert response.json()["detail"] == "Invalid phone or password"
 
 
 def test_login_wrong_password(client):
     client.post(
         "/api/v1/users/",
-        json={"email": "wp@example.com", "password": "right", "screen_name": "u"},
+        json={"phone": "+10000000002", "password": "right", "screen_name": "u"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "wp@example.com", "password": "wrong"},
+        data={"username": "+10000000002", "password": "wrong"},
     )
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid email or password"
+    assert response.json()["detail"] == "Invalid phone or password"
 
 
 def test_login_trailing_space(client):
     client.post(
         "/api/v1/users/",
-        json={"email": "ts@example.com", "password": "pass", "screen_name": "ts"},
+        json={"phone": "+10000000003", "password": "pass", "screen_name": "ts"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "ts@example.com ", "password": "pass"},
+        data={"username": "+10000000003 ", "password": "pass"},
     )
     assert response.status_code == 200
 
@@ -65,20 +65,20 @@ def test_login_trailing_space(client):
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
-        json={"email": "reset@example.com", "password": "old", "screen_name": "r"},
+        json={"phone": "+10000000004", "password": "old", "screen_name": "r"},
     )
     client.post(
         "/api/v1/auth/password-reset/request",
-        json={"email": "reset@example.com"},
+        json={"phone": "+10000000004"},
     )
-    reset_token = db_session.query(models.User).filter_by(email="reset@example.com").first().reset_token
+    reset_token = db_session.query(models.User).filter_by(phone="+10000000004").first().reset_token
     client.post(
         "/api/v1/auth/password-reset/confirm",
         json={"token": reset_token, "password": "new"},
     )
     response = client.post(
         "/api/v1/auth/token",
-        data={"username": "reset@example.com", "password": "new"},
+        data={"username": "+10000000004", "password": "new"},
     )
     assert response.status_code == 200
 

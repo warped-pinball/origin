@@ -13,15 +13,15 @@ Key goals:
 - **Flexible machine registration** so new games can be added easily.
 - **Real‑time and historical leaderboards** to power score displays.
 - **Event and tournament tools** for arcade owners.
-- **Self‑contained sign‑up and login** with optional two‑factor verification. Email is primarily used for account recovery.
+- **Self‑contained sign‑up and login** with optional two‑factor verification. SMS is used for account recovery.
 
 ## 2. Core Features
 
 1. **User Accounts**
-   - Register with email, password and optional phone number.
+   - Register with phone number and password.
    - Unique display name ("screen name") that can be changed later.
-   - Password reset via email link.
-   - Two‑factor options: email verification codes or time‑based one‑time passwords (TOTP) to avoid SMS costs.
+   - Password reset via SMS link.
+   - Two‑factor options: SMS verification codes or time‑based one‑time passwords (TOTP).
 
 2. **Machine Management**
    - Owners register machines and receive a secret token for the physical device.
@@ -62,19 +62,19 @@ When designing new tables, omit `created_at` and `updated_at` fields in the base
 ## 4. Authentication Flow
 
 1. **Sign‑Up**
-   - User provides email, password and optional phone number.
-   - Service sends a verification code to the email address (link or numeric code).
+   - User provides phone number and password.
+   - Service sends a verification link via SMS.
    - Upon verification the account becomes active.
    - Optionally allow enabling a TOTP app (e.g., Google Authenticator) for 2FA.
 
 2. **Login**
-   - Users authenticate with email and password (username not required for login).
+   - Users authenticate with phone number and password (username not required for login).
    - If 2FA is enabled, the API requests the second factor after verifying the password.
    - JWT access tokens (as implemented in `app/auth.py`) continue to secure API calls.
 
 3. **Password and Email Changes**
    - Require current password to change to a new one.
-   - When changing email, send a confirmation link to the new address.
+   - When changing phone number, send a confirmation link to the new number.
 
 ## 5. REST Endpoints (Proposed)
 
@@ -97,7 +97,7 @@ Background workers or scheduled tasks can handle leaderboard calculations, tourn
 
 ## 6. Automation and Scaling Considerations
 
-- **Queue system**: Use a message broker (e.g., RabbitMQ or Redis) for tasks like score processing, email notifications and analytics computation.
+- **Queue system**: Use a message broker (e.g., RabbitMQ or Redis) for tasks like score processing, SMS notifications and analytics computation.
 - **Caching**: Cache frequent leaderboard queries to reduce database load.
 - **Database migrations**: Schema changes are stored as numbered SQL files in
   `app/migrations`. The application executes any pending files on startup so all
@@ -105,9 +105,9 @@ Background workers or scheduled tasks can handle leaderboard calculations, tourn
 - **Sharding/Replication**: Plan for read replicas once traffic grows; keep writes centralized initially.
 - **API versioning**: Prefix routes with `/v1/` (e.g., `/v1/scores/`) so future versions can coexist.
 
-## 7. Email Delivery and Password Reset
+## 7. SMS Delivery and Password Reset
 
-To avoid running a full mail server in each environment, configure the application to use an SMTP relay service such as Mailgun or SendGrid. These services offer free tiers and allow sending from your own domain. Store the SMTP host, port, username and password in environment variables in `docker-compose.yml` so containers can send verification and password reset messages without rebuilding the image.
+Use a service such as Twilio to deliver verification and password reset messages via SMS. Store the account SID, auth token and from number in environment variables in `docker-compose.yml` so containers can send messages without rebuilding the image.
 
 ## 8. Docker Build and Deployment
 
@@ -118,7 +118,7 @@ Build the container image with `docker build -t pinball-api:$VERSION .` and publ
 
 ## 9. Next Steps
 
-1. Finalize authentication method (email codes vs TOTP) and implement verification endpoints.
+1. Finalize authentication method (SMS codes vs TOTP) and implement verification endpoints.
 2. Expand the database with tournament and arcade tables.
 3. Add endpoints for event creation and user participation.
 4. Build analytics workers for reporting to arcade owners.

@@ -2,19 +2,19 @@
   function createOriginApi(base = global.API_BASE || '') {
     const API_BASE = base;
 
-    async function signup(email, password, screenName) {
+    async function signup(phone, password, screenName) {
       return fetch(API_BASE + '/api/v1/users/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, screen_name: screenName })
+        body: JSON.stringify({ phone, password, screen_name: screenName })
       });
     }
 
-    async function login(email, password) {
+    async function login(phone, password) {
       return fetch(API_BASE + '/api/v1/auth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ username: email, password })
+        body: new URLSearchParams({ username: phone, password })
       });
     }
 

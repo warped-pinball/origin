@@ -7,6 +7,7 @@
 | machine_id | VARCHAR | True | False |  | False |
 | claim_code | VARCHAR | False | True |  | False |
 | shared_secret | VARCHAR | False | False |  | False |
+| game_title | VARCHAR | False | False |  | False |
 | claimed | BOOLEAN | False | False |  | False |
 | user_id | INTEGER | False | True |  | False |
 
@@ -40,7 +41,7 @@
 | Column | Type | Primary Key | Nullable | Default | Unique |
 | --- | --- | --- | --- | --- | --- |
 | id | INTEGER | True | False |  | False |
-| email | VARCHAR | False | False |  | True |
+| phone | VARCHAR | False | False |  | True |
 | hashed_password | VARCHAR | False | False |  | False |
 | screen_name | VARCHAR | False | True |  | False |
 | first_name | VARCHAR | False | True |  | False |

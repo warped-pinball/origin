@@ -3,20 +3,20 @@ from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..database import get_db
 from ..auth import get_current_user
-from ..emails import BREVO_API_KEY, send_verification_email
+from ..sms import TWILIO_AUTH_TOKEN, send_verification_sms
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    email = user.email.strip()
-    db_user = crud.get_user_by_email(db, email)
+    phone = user.phone.strip()
+    db_user = crud.get_user_by_phone(db, phone)
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    user.email = email
+        raise HTTPException(status_code=400, detail="Phone already registered")
+    user.phone = phone
     created = crud.create_user(db, user)
-    if BREVO_API_KEY:
-        send_verification_email(created.email, created.verification_token)
+    if TWILIO_AUTH_TOKEN:
+        send_verification_sms(created.phone, created.verification_token)
     else:
         created.is_verified = True
         created.verification_token = None

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -7,10 +7,10 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    email: Optional[str] = None
+    phone: Optional[str] = None
 
 class UserBase(BaseModel):
-    email: EmailStr
+    phone: str
     screen_name: Optional[str] = None
 
 class UserCreate(UserBase):
@@ -31,7 +31,7 @@ class User(UserBase):
 
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    phone: str
 
 
 class PasswordReset(BaseModel):

@@ -41,6 +41,7 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
     try:
         payload = await websocket.receive_json()
         client_key_b64 = payload["client_key"]
+        client_game_title = payload.get("game_title", "Unknown Game")
         client_public_bytes = b64decode(client_key_b64)
         client_public_key = x25519.X25519PublicKey.from_public_bytes(client_public_bytes)
     except Exception:
@@ -62,6 +63,7 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
         machine_id=machine_id,
         claim_code=claim_code,
         shared_secret=b64encode(shared_secret).decode(),
+        client_game_title=client_game_title,
         claimed=False,
     )
     db.add(db_claim)

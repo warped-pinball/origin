@@ -5,7 +5,7 @@ from .database import Base
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
+    phone = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     screen_name = Column(String, unique=True, index=True)
     first_name = Column(String)
@@ -31,6 +31,7 @@ class MachineClaim(Base):
     machine_id = Column(String, primary_key=True, index=True)
     claim_code = Column(String, unique=True, index=True, nullable=False)
     shared_secret = Column(String, nullable=False)
+    client_game_title = Column("game_title", String, nullable=False)
     claimed = Column(Boolean, default=False, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
 
