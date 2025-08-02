@@ -24,7 +24,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     created = crud.create_user(db, user)
     logger.info("User created: %s", created.email)
     if BREVO_API_KEY:
-        send_verification_email(created.email, created.verification_token)
+        send_verification_email(created.email, created.screen_name, created.verification_token)
     else:
         created.is_verified = True
         created.verification_token = None
