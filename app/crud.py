@@ -16,6 +16,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_user_by_email(db: Session, email_addr: str) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.email == email_addr).first()
 
+
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
 

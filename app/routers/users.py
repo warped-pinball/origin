@@ -13,10 +13,13 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     email = user.email.strip()
-    db_user = crud.get_user_by_email(db, email)
-    if db_user:
+    screen_name = user.screen_name.strip() if user.screen_name else None
+
+    if crud.get_user_by_email(db, email):
         raise HTTPException(status_code=400, detail="Email already registered")
+
     user.email = email
+    user.screen_name = screen_name
     created = crud.create_user(db, user)
     logger.info("User created: %s", created.email)
     if BREVO_API_KEY:

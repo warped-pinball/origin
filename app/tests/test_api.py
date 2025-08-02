@@ -28,6 +28,33 @@ def test_create_user_and_login(client):
     assert token
 
 
+def test_create_user_duplicate_screen_name_allowed(client):
+    """Users can share the same screen name as long as emails differ."""
+    response1 = client.post(
+        "/api/v1/users/",
+        json={"email": "dup1@example.com", "password": "pass", "screen_name": "dupe"},
+    )
+    assert response1.status_code == 200
+    response2 = client.post(
+        "/api/v1/users/",
+        json={"email": "dup2@example.com", "password": "pass", "screen_name": "dupe"},
+    )
+    assert response2.status_code == 200
+
+
+def test_create_user_duplicate_email(client):
+    client.post(
+        "/api/v1/users/",
+        json={"email": "dup@example.com", "password": "pass", "screen_name": "user1"},
+    )
+    response = client.post(
+        "/api/v1/users/",
+        json={"email": "dup@example.com", "password": "pass", "screen_name": "user2"},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Email already registered"
+
+
 def test_login_user_not_found(client):
     response = client.post(
         "/api/v1/auth/token",
