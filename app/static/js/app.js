@@ -46,7 +46,8 @@ async function createTournament(e) {
         name: document.getElementById('tournament-name').value,
         start_time: document.getElementById('tournament-start').value,
         rule_set: document.getElementById('tournament-rules').value,
-        public: document.getElementById('tournament-public').checked
+        public: document.getElementById('tournament-public').checked,
+        allow_invites: document.getElementById('tournament-invites').checked
     };
     const res = await fetch(`${API_BASE}/api/v1/tournaments/`, {
         method: 'POST',
@@ -60,6 +61,7 @@ async function createTournament(e) {
         const t = await res.json();
         addTournamentToList(t, 'owned-tournaments');
         showToast('Tournament created', 'success');
+        showTournamentManagement(t);
     } else {
         showToast('Failed to create tournament', 'error');
     }
@@ -70,11 +72,74 @@ function addTournamentToList(t, listId) {
     if (!ul) return;
     const li = document.createElement('li');
     li.textContent = `${t.name} - ${new Date(t.start_time).toLocaleString()}`;
-    const shareBtn = document.createElement('button');
-    shareBtn.textContent = 'Share';
-    shareBtn.addEventListener('click', () => shareTournament(t));
-    li.appendChild(shareBtn);
+    if (t.owner_id === 1) {
+        const manageBtn = document.createElement('button');
+        manageBtn.textContent = 'Manage';
+        manageBtn.addEventListener('click', () => showTournamentManagementById(t.id));
+        li.appendChild(manageBtn);
+    }
+    if (listId === 'joined-tournaments-list' && t.allow_invites) {
+        const shareBtn = document.createElement('button');
+        shareBtn.textContent = 'Share';
+        shareBtn.addEventListener('click', () => shareTournament(t));
+        li.appendChild(shareBtn);
+    }
     ul.appendChild(li);
+}
+
+async function showTournamentManagementById(id) {
+    const res = await fetch(`${API_BASE}/api/v1/tournaments/${id}`);
+    if (res.ok) {
+        const t = await res.json();
+        showTournamentManagement(t);
+    }
+}
+
+async function updateAllowInvites(id, allow) {
+    await fetch(`${API_BASE}/api/v1/tournaments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ allow_invites: allow })
+    });
+}
+
+function showTournamentManagement(t) {
+    const nameEl = document.getElementById('tournament-manage-name');
+    if (nameEl) nameEl.textContent = `${t.name} - ${new Date(t.start_time).toLocaleString()}`;
+    const allowInput = document.getElementById('allow-invites');
+    if (allowInput) {
+        allowInput.checked = t.allow_invites;
+        allowInput.onchange = async () => {
+            await updateAllowInvites(t.id, allowInput.checked);
+            t.allow_invites = allowInput.checked;
+            const shareBtn = document.getElementById('share-tournament');
+            if (shareBtn) shareBtn.style.display = t.allow_invites ? 'block' : 'none';
+        };
+    }
+    const regUl = document.getElementById('registered-users');
+    if (regUl) {
+        regUl.innerHTML = '';
+        t.registered_users.forEach(u => {
+            const li = document.createElement('li');
+            li.textContent = `User ${u}`;
+            regUl.appendChild(li);
+        });
+    }
+    const joinUl = document.getElementById('joined-users');
+    if (joinUl) {
+        joinUl.innerHTML = '';
+        t.joined_users.forEach(u => {
+            const li = document.createElement('li');
+            li.textContent = `User ${u}`;
+            joinUl.appendChild(li);
+        });
+    }
+    const shareBtn = document.getElementById('share-tournament');
+    if (shareBtn) {
+        shareBtn.style.display = t.allow_invites ? 'block' : 'none';
+        shareBtn.onclick = () => shareTournament(t);
+    }
+    showPage('tournament-manage');
 }
 
 function shareTournament(t) {
