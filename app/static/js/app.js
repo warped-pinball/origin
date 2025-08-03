@@ -46,7 +46,6 @@ async function createTournament(e) {
         name: document.getElementById('tournament-name').value,
         start_time: document.getElementById('tournament-start').value,
         rule_set: document.getElementById('tournament-rules').value,
-        location: document.getElementById('tournament-location').value,
         public: document.getElementById('tournament-public').checked
     };
     const res = await fetch(`${API_BASE}/api/v1/tournaments/`, {

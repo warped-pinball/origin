@@ -8,7 +8,6 @@ def test_create_and_list_tournaments(client):
             "name": "Test Tournament",
             "start_time": start_time,
             "rule_set": "single-elimination",
-            "location": "Arcade",
             "public": True,
         },
     )

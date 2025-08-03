@@ -9,7 +9,6 @@ class TournamentBase(BaseModel):
     name: str
     start_time: datetime
     rule_set: str
-    location: str
     public: bool
 
 class Tournament(TournamentBase):
