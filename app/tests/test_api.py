@@ -141,3 +141,10 @@ def test_version_endpoint(client):
     response = client.get("/api/v1/version")
     assert response.status_code == 200
     assert response.json() == {"version": __version__}
+
+
+def test_root_contains_tournament_ui(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Create Tournament" in response.text
+    assert "Location" not in response.text
