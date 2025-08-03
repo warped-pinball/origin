@@ -1,6 +1,6 @@
 from typing import List
-from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from datetime import datetime, timedelta
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/tournaments", tags=["tournaments"])
@@ -36,8 +36,20 @@ def create_tournament(tournament: TournamentBase) -> Tournament:
     return t
 
 @router.get("/", response_model=List[Tournament])
-def list_tournaments() -> List[Tournament]:
-    return _tournaments
+def list_tournaments(filter: str | None = Query(default=None)) -> List[Tournament]:
+    now = datetime.utcnow()
+    if filter == "today":
+        start = datetime(now.year, now.month, now.day)
+        end = start + timedelta(days=1)
+    elif filter == "next7":
+        start = now
+        end = now + timedelta(days=7)
+    elif filter == "next30":
+        start = now
+        end = now + timedelta(days=30)
+    else:
+        return _tournaments
+    return [t for t in _tournaments if start <= t.start_time < end]
 
 
 class UserAction(BaseModel):

@@ -39,6 +39,46 @@ function isMobile() {
     return /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
 }
 
+let tournamentFilter = 'all';
+
+function applyTournamentFilter() {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let end = null;
+    if (tournamentFilter === 'today') {
+        end = new Date(startOfToday);
+        end.setDate(end.getDate() + 1);
+    } else if (tournamentFilter === 'next7') {
+        end = new Date(now);
+        end.setDate(end.getDate() + 7);
+    } else if (tournamentFilter === 'next30') {
+        end = new Date(now);
+        end.setDate(end.getDate() + 30);
+    }
+    document.querySelectorAll('#owned-tournaments li, #joined-tournaments-list li, #public-tournaments-list li').forEach(li => {
+        const start = new Date(li.dataset.start);
+        let visible;
+        if (!end) {
+            visible = true;
+        } else if (tournamentFilter === 'today') {
+            visible = start >= startOfToday && start < end;
+        } else {
+            visible = start >= now && start < end;
+        }
+        li.style.display = visible ? '' : 'none';
+    });
+}
+
+function setTournamentFilter(filter) {
+    tournamentFilter = filter;
+    document.querySelectorAll('.tournament-filter-btn').forEach(btn => {
+        const active = btn.dataset.range === filter;
+        btn.classList.toggle('primary', active);
+        btn.classList.toggle('secondary', !active);
+    });
+    applyTournamentFilter();
+}
+
 async function createTournament(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -72,6 +112,7 @@ function addTournamentToList(t, listId) {
     if (!ul) return;
     const li = document.createElement('li');
     li.textContent = `${t.name} - ${new Date(t.start_time).toLocaleString()}`;
+    li.dataset.start = t.start_time;
     if (t.owner_id === 1) {
         const manageBtn = document.createElement('button');
         manageBtn.textContent = 'Manage';
@@ -85,6 +126,7 @@ function addTournamentToList(t, listId) {
         li.appendChild(shareBtn);
     }
     ul.appendChild(li);
+    applyTournamentFilter();
 }
 
 async function showTournamentManagementById(id) {
@@ -143,10 +185,10 @@ function showTournamentManagement(t) {
 }
 
 function shareTournament(t) {
-    const url = `${window.location.origin}/?tournament=${t.id}`;
-    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}\n${url}`;
+    const link = `${window.location.origin}/?tournament=${t.id}`;
+    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}.\nOpen this link to view and join: ${link}`;
     if (navigator.share) {
-        navigator.share({ text: msg, url });
+        navigator.share({ text: msg, url: link });
     } else if (navigator.clipboard) {
         navigator.clipboard.writeText(msg);
         showToast('Invitation copied', 'info');
@@ -503,6 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tId) {
         showTournamentViewById(tId);
     }
+    document.querySelectorAll('.tournament-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => setTournamentFilter(btn.dataset.range));
+    });
+    setTournamentFilter('all');
     window.addEventListener('hashchange', () => {
         const page = location.hash.substring(1);
         if (page) displayPage(page);
