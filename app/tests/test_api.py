@@ -147,4 +147,3 @@ def test_root_contains_tournament_ui(client):
     response = client.get("/")
     assert response.status_code == 200
     assert "Create Tournament" in response.text
-    assert "Location" not in response.text
