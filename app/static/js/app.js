@@ -186,16 +186,18 @@ function showTournamentManagement(t) {
 
 function shareTournament(t) {
     const link = `${window.location.origin}/?tournament=${t.id}`;
-    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}.\nOpen this link to view and join: ${link}`;
+    const baseText = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}.`;
     if (navigator.share) {
-        navigator.share({ text: msg, url: link });
+        navigator.share({ text: baseText, url: link });
     } else if (navigator.clipboard) {
+        const msg = `${baseText}\nOpen this link to view and join: ${link}`;
         navigator.clipboard.writeText(msg);
         showToast('Invitation copied', 'info');
     } else {
         showToast('Sharing not supported', 'error');
     }
 }
+
 
 async function joinTournament(id) {
     const res = await fetch(`${API_BASE}/api/v1/tournaments/${id}/join`, {
