@@ -61,7 +61,7 @@ async function createTournament(e) {
         const t = await res.json();
         addTournamentToList(t, 'owned-tournaments');
         showToast('Tournament created', 'success');
-        showTournamentManagement(t);
+        showTournamentView(t);
     } else {
         showToast('Failed to create tournament', 'error');
     }
@@ -80,7 +80,7 @@ function addTournamentToList(t, listId) {
     }
     if (listId === 'joined-tournaments-list' && t.allow_invites) {
         const shareBtn = document.createElement('button');
-        shareBtn.textContent = 'Share';
+        shareBtn.textContent = 'Invite Players';
         shareBtn.addEventListener('click', () => shareTournament(t));
         li.appendChild(shareBtn);
     }
@@ -143,14 +143,55 @@ function showTournamentManagement(t) {
 }
 
 function shareTournament(t) {
-    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}`;
+    const url = `${window.location.origin}/?tournament=${t.id}`;
+    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}\n${url}`;
     if (navigator.share) {
-        navigator.share({ text: msg });
+        navigator.share({ text: msg, url });
     } else if (navigator.clipboard) {
         navigator.clipboard.writeText(msg);
         showToast('Invitation copied', 'info');
     } else {
         showToast('Sharing not supported', 'error');
+    }
+}
+
+async function joinTournament(id) {
+    const res = await fetch(`${API_BASE}/api/v1/tournaments/${id}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: 1 })
+    });
+    if (res.ok) {
+        showToast('Joined tournament', 'success');
+    } else {
+        showToast('Failed to join', 'error');
+    }
+}
+
+function showTournamentView(t) {
+    const nameEl = document.getElementById('tournament-view-name');
+    if (nameEl) nameEl.textContent = `${t.name}`;
+    const startEl = document.getElementById('tournament-view-start');
+    if (startEl) startEl.textContent = new Date(t.start_time).toLocaleString();
+    const actionBtn = document.getElementById('tournament-view-action');
+    if (actionBtn) {
+        if (t.owner_id === 1) {
+            actionBtn.textContent = 'Invite Players';
+            actionBtn.onclick = () => shareTournament(t);
+        } else {
+            actionBtn.textContent = 'Join Tournament';
+            actionBtn.onclick = () => joinTournament(t.id);
+        }
+    }
+    history.replaceState(null, '', `?tournament=${t.id}`);
+    showPage('tournament-view');
+}
+
+async function showTournamentViewById(id) {
+    const res = await fetch(`${API_BASE}/api/v1/tournaments/${id}`);
+    if (res.ok) {
+        const t = await res.json();
+        showTournamentView(t);
     }
 }
 
@@ -456,6 +497,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/static/js/service-worker.js');
+    }
+    const params = new URLSearchParams(location.search);
+    const tId = params.get('tournament');
+    if (tId) {
+        showTournamentViewById(tId);
     }
     window.addEventListener('hashchange', () => {
         const page = location.hash.substring(1);
