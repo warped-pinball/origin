@@ -39,6 +39,57 @@ function isMobile() {
     return /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
 }
 
+async function createTournament(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const body = {
+        name: document.getElementById('tournament-name').value,
+        start_time: document.getElementById('tournament-start').value,
+        rule_set: document.getElementById('tournament-rules').value,
+        location: document.getElementById('tournament-location').value,
+        public: document.getElementById('tournament-public').checked
+    };
+    const res = await fetch(`${API_BASE}/api/v1/tournaments/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(body)
+    });
+    if (res.ok) {
+        const t = await res.json();
+        addTournamentToList(t, 'owned-tournaments');
+        showToast('Tournament created', 'success');
+    } else {
+        showToast('Failed to create tournament', 'error');
+    }
+}
+
+function addTournamentToList(t, listId) {
+    const ul = document.getElementById(listId);
+    if (!ul) return;
+    const li = document.createElement('li');
+    li.textContent = `${t.name} - ${new Date(t.start_time).toLocaleString()}`;
+    const shareBtn = document.createElement('button');
+    shareBtn.textContent = 'Share';
+    shareBtn.addEventListener('click', () => shareTournament(t));
+    li.appendChild(shareBtn);
+    ul.appendChild(li);
+}
+
+function shareTournament(t) {
+    const msg = `Join my tournament ${t.name} on ${new Date(t.start_time).toLocaleString()}`;
+    if (navigator.share) {
+        navigator.share({ text: msg });
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(msg);
+        showToast('Invitation copied', 'info');
+    } else {
+        showToast('Sharing not supported', 'error');
+    }
+}
+
 async function signup(e) {
     e.preventDefault();
     const email = document.getElementById('signup-email').value.trim();
@@ -365,6 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmDelete = document.getElementById('confirm-delete-btn');
     if (confirmDelete) {
         confirmDelete.addEventListener('click', deleteAccount);
+    }
+    const tournamentForm = document.getElementById('tournament-form');
+    if (tournamentForm) {
+        tournamentForm.addEventListener('submit', createTournament);
     }
     const avatar = document.getElementById('profile-avatar');
     const overlay = document.getElementById('account-overlay');

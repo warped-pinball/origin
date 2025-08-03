@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.exceptions import RequestValidationError
 from .database import init_db
-from .routers import auth, users, machines, scores, claim
+from .routers import auth, users, machines, scores, claim, tournaments
 from .version import __version__
 import os
 import logging
@@ -57,6 +57,7 @@ app.include_router(users.router, prefix="/api/v1")
 app.include_router(machines.router, prefix="/api/v1")
 app.include_router(scores.router, prefix="/api/v1")
 app.include_router(claim.router)
+app.include_router(tournaments.router, prefix="/api/v1")
 
 @app.get("/api/v1/version")
 def get_version():
