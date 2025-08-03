@@ -60,3 +60,43 @@ def test_register_join_and_manage(client):
     )
     assert update_resp.status_code == 200
     assert update_resp.json()["allow_invites"] is False
+
+
+def test_list_tournaments_with_filters(client):
+    tournaments_router._tournaments.clear()
+    now = datetime.utcnow()
+
+    def create(name: str, delta: int):
+        base = now.replace(hour=12, minute=0, second=0, microsecond=0)
+        start_time = (base + timedelta(days=delta)).isoformat()
+        client.post(
+            "/api/v1/tournaments/",
+            json={
+                "name": name,
+                "start_time": start_time,
+                "rule_set": "single-elimination",
+                "public": True,
+                "allow_invites": True,
+            },
+        )
+
+    create("Today", 0)
+    create("In5", 5)
+    create("In20", 20)
+    create("In40", 40)
+
+    resp_today = client.get("/api/v1/tournaments/?filter=today")
+    assert resp_today.status_code == 200
+    assert len(resp_today.json()) == 1
+
+    resp_week = client.get("/api/v1/tournaments/?filter=next7")
+    assert resp_week.status_code == 200
+    assert len(resp_week.json()) == 1
+
+    resp_month = client.get("/api/v1/tournaments/?filter=next30")
+    assert resp_month.status_code == 200
+    assert len(resp_month.json()) == 2
+
+    resp_all = client.get("/api/v1/tournaments/?filter=all")
+    assert resp_all.status_code == 200
+    assert len(resp_all.json()) == 4
