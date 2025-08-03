@@ -297,11 +297,28 @@
                                 <input id='tournament-public' type='checkbox'>
                                 Public Tournament
                             </label>
+                            <label class='switch'>
+                                <input id='tournament-invites' type='checkbox'>
+                                Allow Invites
+                            </label>
                             <footer class='grid'>
                                 <button type='submit'>Create Tournament</button>
                                 <button type='button' class='secondary' onclick="showPage('tournaments', event)">Cancel</button>
                             </footer>
                         </form>
+                    </section>
+                    <section id='tournament-manage' class='page' style='display:none;'>
+                        <h2>Manage Tournament</h2>
+                        <p id='tournament-manage-name'></p>
+                        <label class='switch'>
+                            <input id='allow-invites' type='checkbox'>
+                            Allow Invites
+                        </label>
+                        <button id='share-tournament' style='display:none;'>Share</button>
+                        <h3>Registered Users</h3>
+                        <ul id='registered-users'></ul>
+                        <h3>Joined Users</h3>
+                        <ul id='joined-users'></ul>
                     </section>
                     <section id='friends' class='page' style='display:none;'>
                         <h2>Friends</h2>
