@@ -261,7 +261,45 @@
                     </section>
                     <section id='tournaments' class='page' style='display:none;'>
                         <h2>Tournaments</h2>
-                        <p>Coming soon...</p>
+                        <form id='tournament-form'>
+                            <label for='tournament-name'>Name</label>
+                            <input id='tournament-name' type='text' required>
+                            <label for='tournament-start'>Start Time</label>
+                            <input id='tournament-start' type='datetime-local' required>
+                            <label for='tournament-rules'>Rule Set</label>
+                            <select id='tournament-rules'>
+                                <option value='single-elimination'>Single Elimination</option>
+                                <option value='double-elimination'>Double Elimination</option>
+                                <option value='round-robin'>Round Robin</option>
+                            </select>
+                            <label for='tournament-location'>Location</label>
+                            <input id='tournament-location' type='text' placeholder='Search for a place'>
+                            <label class='switch'>
+                                <input id='tournament-public' type='checkbox'>
+                                Public Tournament
+                            </label>
+                            <button type='submit'>Create Tournament</button>
+                        </form>
+                        <section id='tournament-filters' style='margin-top:1rem;'>
+                            <h3>Filter</h3>
+                            <label for='tournament-filter-date'>Start After</label>
+                            <input id='tournament-filter-date' type='date'>
+                            <label for='tournament-filter-radius'>Within Miles</label>
+                            <input id='tournament-filter-radius' type='number' min='0'>
+                        </section>
+                        <section id='my-tournaments'>
+                            <h3>My Tournaments</h3>
+                            <ul id='owned-tournaments'></ul>
+                        </section>
+                        <section id='joined-tournaments'>
+                            <h3>Joined Tournaments</h3>
+                            <ul id='joined-tournaments-list'></ul>
+                        </section>
+                        <section id='public-tournaments'>
+                            <h3>Public Tournaments</h3>
+                            <ul id='public-tournaments-list'></ul>
+                        </section>
+                        <script src='https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places'></script>
                     </section>
                     <section id='friends' class='page' style='display:none;'>
                         <h2>Friends</h2>
