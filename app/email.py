@@ -12,7 +12,7 @@ template_env = Environment(loader=FileSystemLoader(TEMPLATES_DIR), autoescape=Fa
 logger = logging.getLogger(__name__)
 
 
-def send_email(to: str, subject: str, text: str) -> None:
+def send_email(to: str, subject: str, text: str, html: str | None = None) -> None:
     """Send an email using Brevo if credentials are configured."""
     if not BREVO_API_KEY:
         return
@@ -21,8 +21,11 @@ def send_email(to: str, subject: str, text: str) -> None:
         "sender": {"email": BREVO_SENDER},
         "to": [{"email": to}],
         "subject": subject,
-        "textContent": text,
     }
+    if text:
+        data["textContent"] = text
+    if html:
+        data["htmlContent"] = html
     try:
         httpx.post(url, json=data, headers={"api-key": BREVO_API_KEY}, timeout=10)
         logger.info("Sent email to %s", to)
@@ -43,6 +46,8 @@ def _send_action_email(
     action_url: str,
     action_text: str,
 ) -> None:
+    host = os.getenv("PUBLIC_HOST_URL", "")
+    logo_url = f"{host}/static/img/logo.png"
     text = _render_template(
         "action_email.jinja",
         screen_name=screen_name,
@@ -50,7 +55,15 @@ def _send_action_email(
         action_url=action_url,
         action_text=action_text,
     )
-    send_email(email, subject, text)
+    html = _render_template(
+        "action_email.html.jinja",
+        screen_name=screen_name,
+        message=message,
+        action_url=action_url,
+        action_text=action_text,
+        logo_url=logo_url,
+    )
+    send_email(email, subject, text, html)
 
 
 def send_verification_email(email: str, screen_name: str, token: str) -> None:
