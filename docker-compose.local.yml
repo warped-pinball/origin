@@ -40,6 +40,18 @@ services:
       - "flame.url=https://origin.beta.doze.dev"
       - "flame.icon=mdi:gamepad-variant"
 
+  qr-service:
+    build:
+      context: ./qr_service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@origin-db/postgres
+      QR_BASE_URL: http://localhost:9000
+    depends_on:
+      - origin-db
+    ports:
+      - "9100:8000"
+
   origin-db:
     image: postgres:15
     restart: unless-stopped
