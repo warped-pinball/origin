@@ -88,6 +88,17 @@ def test_run_all_migrations(tmp_path):
             assert default and 'nextval' in default
 
     assert "machine_claims" in insp.get_table_names()
+    assert "qr_codes" in insp.get_table_names()
+    qr_cols = {c["name"] for c in insp.get_columns("qr_codes")}
+    for col in [
+        "url",
+        "created_at",
+        "generated_at",
+        "nfc_link",
+        "user_id",
+        "machine_id",
+    ]:
+        assert col in qr_cols
 
 
 def test_migrate_phone_to_email(tmp_path):
