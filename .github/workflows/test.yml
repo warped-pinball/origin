@@ -34,3 +34,10 @@ jobs:
           push: 'false'
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:pr-${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build qr service image
+        uses: ./.github/actions/docker-build
+        with:
+          context: qr_service
+          push: 'false'
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:pr-${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -41,6 +41,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-beta
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:beta
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push qr service beta image
+        if: github.event_name == 'push'
+        uses: ./.github/actions/docker-build
+        with:
+          context: qr_service
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:${{ env.VERSION }}-beta
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:beta
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Portainer beta deployment
         if: github.event_name == 'push'
         uses: ./.github/actions/portainer-deploy
@@ -53,6 +62,15 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push qr service release image
+        if: github.event_name == 'release'
+        uses: ./.github/actions/docker-build
+        with:
+          context: qr_service
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:${{ github.ref_name }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:latest
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger Portainer release deployment
         if: github.event_name == 'release'
