@@ -1,6 +1,5 @@
 import importlib
 import os
-from sqlalchemy import Table, Column, Integer
 from fastapi.testclient import TestClient
 import sys
 from pathlib import Path
@@ -13,8 +12,6 @@ def test_pending_endpoint_initializes_db(tmp_path, monkeypatch):
 
     import qr_service.database as database
     importlib.reload(database)
-    Table('users', database.Base.metadata, Column('id', Integer, primary_key=True))
-    Table('machines', database.Base.metadata, Column('id', Integer, primary_key=True))
     import qr_service.models as models
     importlib.reload(models)
     import qr_service.service.main as main
