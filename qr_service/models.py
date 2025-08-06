@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Column, DateTime, Integer, String, func
 
 try:  # pragma: no cover - fallback for running as a top-level module
     from .database import Base
@@ -14,5 +14,5 @@ class QRCode(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     generated_at = Column(DateTime(timezone=True))
     nfc_link = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    machine_id = Column(Integer, ForeignKey("machines.id"))
+    user_id = Column(Integer)
+    machine_id = Column(Integer)
