@@ -91,11 +91,11 @@ def test_list_tournaments_with_filters(client):
 
     resp_week = client.get("/api/v1/tournaments/?filter=next7")
     assert resp_week.status_code == 200
-    assert [t["name"] for t in resp_week.json()] == ["In5"]
+    assert [t["name"] for t in resp_week.json()] == ["Today", "In5"]
 
     resp_month = client.get("/api/v1/tournaments/?filter=next30")
     assert resp_month.status_code == 200
-    assert {t["name"] for t in resp_month.json()} == {"In5", "In20"}
+    assert {t["name"] for t in resp_month.json()} == {"Today", "In5", "In20"}
 
     resp_all = client.get("/api/v1/tournaments/?filter=all")
     assert resp_all.status_code == 200
