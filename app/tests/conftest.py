@@ -19,7 +19,6 @@ if os.path.exists("test.db"):
 import app.database as database
 importlib.reload(database)
 import app.models as models
-importlib.reload(models)
 
 from ..main import app
 from ..websocket_app import app as ws_app

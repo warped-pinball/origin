@@ -33,7 +33,7 @@ RSA key pair and obtaining email API credentials.
 
 ### Database Migrations
 
-Schema changes live in `app/migrations` as numbered SQL files. On startup the service runs any pending migrations automatically. Add a new numbered SQL file alongside the code that requires it.
+Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql` and a dedicated Flyway container applies them before the application services start. The container waits for Postgres to become available and updates the `schema_version` table so the app skips its internal Python migrations. Add a new numbered SQL file alongside the code that requires it.
 
 ## Progressive Web App
 
