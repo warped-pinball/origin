@@ -39,3 +39,22 @@ resets.
 The API listens on port `8000` for HTTP and on `8001` for WebSocket traffic.
 When running behind a reverse proxy, forward WebSocket connections to port
 `8001`.
+
+## QR code service
+
+The standalone QR code generator can be customised through the following
+environment variables:
+
+- `QR_CODE_COLOR` – fill colour of the QR modules (default `#000000`).
+- `QR_CODE_BACKGROUND_COLOR` – background colour behind the QR code (default
+  `#ffffff`).
+- `QR_FRAME_BACKGROUND_COLOR` – colour of the surrounding frame (default
+  `#0a0a0a`).
+- `QR_FRAME_COLOR` – colour of the dashed outer border (default `#ff0000`).
+- `QR_TEXT_COLOR` – colour of the top and bottom text (default `#ffffff`).
+- `QR_TOP_TEXT` – text displayed above the code (default "Tap or scan").
+- `QR_BOTTOM_TEXT` – text displayed below the code (default "Warped Pinball").
+- `QR_CODE_SIZE` – width and height of the generated code in pixels (default
+  `300`).
+
+Unset variables fall back to the defaults shown above.
