@@ -2,6 +2,7 @@ import importlib
 import sys
 from pathlib import Path
 
+import xml.etree.ElementTree as ET
 from fastapi.testclient import TestClient
 
 
@@ -26,10 +27,14 @@ def test_generate_endpoint(monkeypatch):
     import qr_service.service.main as main
 
     with TestClient(main.app) as client:
-        resp = client.post("/generate", json={"count": 2})
+        resp = client.post("/generate", json={"count": 2, "cols": 1})
         assert resp.status_code == 200
         data = resp.json()
         assert len(data["items"]) == 2
+        assert data["sheet"].startswith("<svg")
+        root = ET.fromstring(data["sheet"])
+        ns = "{http://www.w3.org/2000/svg}"
+        assert len(root.findall(f"{ns}svg")) == 2
         for item in data["items"]:
             assert item["url"].startswith("https://example.com/")
             assert item["svg"].startswith("<svg")
@@ -48,3 +53,4 @@ def test_index_contains_controls(monkeypatch):
         assert "Generate" in text
         assert "count" in text
         assert "cols" in text
+        assert "Download" in text
