@@ -28,7 +28,8 @@ services:
       # BREVO_API_KEY: your_api_key
       # BREVO_SENDER_EMAIL: noreply@example.com
     depends_on:
-      - origin-beta-db
+      flyway:
+        condition: service_completed_successfully
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.http.routers.origin-beta.rule=Host(`origin-beta.doze.dev`)"
@@ -46,7 +47,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@origin-beta-db/postgres
       QR_BASE_URL: https://example.com
     depends_on:
-      - origin-beta-db
+      flyway:
+        condition: service_completed_successfully
     ports:
       - 9100:8000
 
@@ -55,9 +57,23 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - origin-beta-db-data:/var/lib/postgresql/data
 
+  flyway:
+    image: flyway/flyway:9-alpine
+    command: -url=jdbc:postgresql://origin-beta-db:5432/postgres -user=postgres -password=postgres -connectRetries=60 migrate
+    volumes:
+      - ./flyway/sql:/flyway/sql
+    depends_on:
+      origin-beta-db:
+        condition: service_healthy
+    restart: "no"
 
 
 volumes:
