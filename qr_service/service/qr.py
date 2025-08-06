@@ -7,9 +7,9 @@ from io import BytesIO
 
 import qrcode
 import qrcode.image.svg
-from PIL import Image
+from PIL import Image, ImageColor
 from qrcode.image.styledpil import StyledPilImage
-from qrcode.image.styles import moduledrawers
+from qrcode.image.styles import moduledrawers, colormasks
 
 
 # Ensure generated SVG elements use the desired namespaces without unexpected prefixes
@@ -91,8 +91,10 @@ def generate_svg(data: str) -> str:
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
-        fill_color=_env("QR_CODE_COLOR", "#000000"),
-        back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+        color_mask=colormasks.SolidFillColorMask(
+            back_color=ImageColor.getrgb(_env("QR_CODE_BACKGROUND_COLOR", "#ffffff")),
+            front_color=ImageColor.getrgb(_env("QR_CODE_COLOR", "#000000")),
+        ),
     )
     img = img.resize((SVG_SIZE, SVG_SIZE), Image.NEAREST)
     buffer = BytesIO()
