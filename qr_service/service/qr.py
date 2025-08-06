@@ -73,6 +73,7 @@ def generate_svg(data: str) -> str:
             image_factory=qrcode.image.svg.SvgPathImage,
             fill_color=_env("QR_CODE_COLOR", "#000000"),
             back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+            eye_drawer="circle",
         )
         root = _strip_ns(ET.fromstring(img.to_string()))
         ns_key = "{http://www.w3.org/2000/xmlns/}svg"
@@ -88,6 +89,7 @@ def generate_svg(data: str) -> str:
         img = qr.make_image(
             image_factory=qrcode.image.svg.SvgPathImage,
             module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
+            eye_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
             fill_color=_env("QR_CODE_COLOR", "#000000"),
             back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
         )
@@ -114,6 +116,7 @@ def generate_svg(data: str) -> str:
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
+        eye_drawer=moduledrawers.CircleModuleDrawer(),
         color_mask=colormasks.SolidFillColorMask(
             back_color=ImageColor.getrgb(_env("QR_CODE_BACKGROUND_COLOR", "#ffffff")),
             front_color=ImageColor.getrgb(_env("QR_CODE_COLOR", "#000000")),

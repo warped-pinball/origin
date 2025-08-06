@@ -29,6 +29,14 @@ def test_generate_svg_custom_color(monkeypatch):
     assert "#123456" in svg
 
 
+def test_alignment_boxes_rounded():
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    path = root.find("{http://www.w3.org/2000/svg}path")
+    assert path is not None
+    assert "A" in path.attrib.get("d", "")
+
+
 def test_generate_svg_error_correction(monkeypatch):
     import qrcode as qr_lib
 
