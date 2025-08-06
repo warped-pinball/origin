@@ -63,7 +63,10 @@ def add_frame(svg: str) -> str:
 
     padding_modules = int(_env("QR_FRAME_PADDING_MODULES", "2"))
     padding = padding_modules * module_px
-    corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
+    frame_corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
+    code_corner_radius = float(
+        _env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius))
+    )
 
     inner_w, inner_h = size + 2 * padding, size + 2 * padding
     outer_w, outer_h = inner_w + 40, inner_h + 80
@@ -74,6 +77,7 @@ def add_frame(svg: str) -> str:
         height=str(outer_h),
         viewBox=f"0 0 {outer_w} {outer_h}",
         xmlns="http://www.w3.org/2000/svg",
+        **{"xmlns:xlink": "http://www.w3.org/1999/xlink"},
     )
     ET.SubElement(
         outer,
@@ -83,8 +87,8 @@ def add_frame(svg: str) -> str:
         width=str(outer_w),
         height=str(outer_h),
         fill=_env("QR_FRAME_BACKGROUND_COLOR", "#0a0a0a"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(frame_corner_radius),
+        ry=str(frame_corner_radius),
     )
     ET.SubElement(
         outer,
@@ -94,12 +98,30 @@ def add_frame(svg: str) -> str:
         width=str(inner_w),
         height=str(inner_h),
         fill=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(code_corner_radius),
+        ry=str(code_corner_radius),
     )
     inner.set("x", str(20 + padding))
     inner.set("y", str(40 + padding))
     outer.append(inner)
+
+    logo_href = _env("QR_LOGO_IMAGE", "")
+    logo_scale = float(_env("QR_LOGO_SCALE", "0"))
+    if logo_href and logo_scale > 0:
+        logo_size = size * logo_scale
+        logo_x = 20 + padding + (size - logo_size) / 2
+        logo_y = 40 + padding + (size - logo_size) / 2
+        ET.SubElement(
+            outer,
+            "image",
+            {
+                "x": str(logo_x),
+                "y": str(logo_y),
+                "width": str(logo_size),
+                "height": str(logo_size),
+                "{http://www.w3.org/1999/xlink}href": logo_href,
+            },
+        )
     ET.SubElement(
         outer,
         "text",
@@ -125,8 +147,8 @@ def add_frame(svg: str) -> str:
         height=str(outer_h - 4),
         fill="none",
         stroke=_env("QR_FRAME_COLOR", "#ff0000"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(frame_corner_radius),
+        ry=str(frame_corner_radius),
         **{"stroke-width": "1"},
     )
     return ET.tostring(outer, encoding="unicode")

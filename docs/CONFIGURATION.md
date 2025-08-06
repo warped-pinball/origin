@@ -59,9 +59,18 @@ environment variables:
   `300`).
 - `QR_FRAME_PADDING_MODULES` – spacing between the QR code and its frame in
   module widths (default `2`).
-- `QR_FRAME_CORNER_RADIUS` – radius of the rounded corners in pixels (default
-  `10`).
+- `QR_FRAME_CORNER_RADIUS` – radius of the rounded frame corners in pixels
+  (default `10`).
+- `QR_CODE_CORNER_RADIUS` – radius of the QR code background corners in pixels
+  (default same as `QR_FRAME_CORNER_RADIUS`).
 - `QR_SHEET_GAP_MODULES` – gap between framed codes on a sheet in module widths
   (default `2`).
+- `QR_LOGO_IMAGE` – optional logo image (URL or data URI) to place in the
+  centre of the code.
+- `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.
+  `0.2` for 20%).
 
 Unset variables fall back to the defaults shown above.
+
+Note: when configuring colour values in YAML files, wrap the hex strings in
+quotes (e.g. `"#ff0000"`) so they are not interpreted as comments.

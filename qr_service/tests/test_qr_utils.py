@@ -59,3 +59,24 @@ def test_add_frame_padding_and_style(monkeypatch):
     assert border.get("stroke-width") == "1"
     assert "stroke-dasharray" not in border.attrib
     assert border.get("rx") == border.get("ry")
+
+
+def test_separate_corner_radii(monkeypatch):
+    monkeypatch.setenv("QR_FRAME_CORNER_RADIUS", "10")
+    monkeypatch.setenv("QR_CODE_CORNER_RADIUS", "5")
+    svg = add_frame(generate_svg("data"))
+    root = ET.fromstring(svg)
+    rects = root.findall("{http://www.w3.org/2000/svg}rect")
+    outer_rect = [r for r in rects if r.get("x") == "0" and r.get("y") == "0"][0]
+    inner_rect = [r for r in rects if r.get("x") == "20" and r.get("y") == "40"][0]
+    assert float(outer_rect.get("rx")) == 10
+    assert float(inner_rect.get("rx")) == 5
+
+
+def test_logo_included(monkeypatch):
+    monkeypatch.setenv("QR_LOGO_IMAGE", "logo.png")
+    monkeypatch.setenv("QR_LOGO_SCALE", "0.2")
+    svg = add_frame(generate_svg("data"))
+    root = ET.fromstring(svg)
+    images = root.findall("{http://www.w3.org/2000/svg}image")
+    assert images and images[0].get("{http://www.w3.org/1999/xlink}href") == "logo.png"
