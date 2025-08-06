@@ -3,6 +3,7 @@ import subprocess
 import pytest
 
 from qr_service.service.qr import random_suffix, generate_svg
+from qr_service.service.qr import add_frame
 
 
 def test_random_suffix_length():
@@ -29,3 +30,9 @@ def test_generate_svg_raises_without_svg(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake_run)
     with pytest.raises(ValueError):
         generate_svg("data")
+
+
+def test_add_frame_removes_namespace_prefixes():
+    inner = '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"></svg>'
+    framed = add_frame(inner)
+    assert 'ns0:' not in framed
