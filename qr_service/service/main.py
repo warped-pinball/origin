@@ -3,11 +3,23 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from models import QRCode
-from .qr import generate_svg, add_frame, random_suffix
+
+try:  # pragma: no cover - fallback for running as a package
+    from ..database import SessionLocal, Base, engine
+    from ..models import QRCode
+    from .qr import generate_svg, add_frame, random_suffix
+except ImportError:  # pragma: no cover
+    from database import SessionLocal, Base, engine
+    from models import QRCode
+    from qr import generate_svg, add_frame, random_suffix
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+def init_tables() -> None:
+    """Ensure database tables exist before handling requests."""
+    Base.metadata.create_all(bind=engine)
 
 
 def get_db():
