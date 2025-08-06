@@ -1,4 +1,8 @@
+import base64
 import xml.etree.ElementTree as ET
+from io import BytesIO
+
+from PIL import Image, ImageColor
 
 from qr_service.service.qr import random_suffix, generate_svg, add_frame
 
@@ -107,6 +111,21 @@ def test_module_drawer_generates_image(monkeypatch):
     assert images and images[0].get("{http://www.w3.org/1999/xlink}href").startswith(
         "data:image/png;base64,"
     )
+
+
+def test_module_drawer_respects_colors(monkeypatch):
+    monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
+    monkeypatch.setenv("QR_CODE_COLOR", "#123456")
+    monkeypatch.setenv("QR_CODE_BACKGROUND_COLOR", "#abcdef")
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    href = root.findall("{http://www.w3.org/2000/svg}image")[0].get(
+        "{http://www.w3.org/1999/xlink}href"
+    )
+    data = href.split(",", 1)[1]
+    img = Image.open(BytesIO(base64.b64decode(data))).convert("RGB")
+    fg = ImageColor.getrgb("#123456")
+    assert any(pixel == fg for pixel in img.getdata())
 
 
 def test_framed_svg_uses_xlink_prefix(monkeypatch):
