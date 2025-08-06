@@ -2,6 +2,8 @@ import importlib
 import os
 from sqlalchemy import Table, Column, Integer
 from fastapi.testclient import TestClient
+import sys
+from pathlib import Path
 
 
 def test_pending_endpoint_initializes_db(tmp_path, monkeypatch):
@@ -31,3 +33,23 @@ def test_pending_endpoint_initializes_db(tmp_path, monkeypatch):
         importlib.reload(database)
         importlib.reload(models)
         importlib.reload(main)
+
+
+def test_fallback_imports_service_qr(tmp_path, monkeypatch):
+    """Simulate running from container where service is top-level."""
+    db_file = tmp_path / "test.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_file}")
+
+    # Add path to mimic container /app layout with service at top level
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.syspath_prepend(str(root))
+
+    # Ensure a fresh import without existing package context
+    for mod in ["service.main", "service", "database", "models"]:
+        sys.modules.pop(mod, None)
+
+    main = importlib.import_module("service.main")
+    qr_mod = importlib.import_module("service.qr")
+
+    # If fallback worked, main should use service.qr's functions
+    assert main.generate_svg is qr_mod.generate_svg

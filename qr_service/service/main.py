@@ -32,12 +32,12 @@ except ImportError as exc:  # pragma: no cover
     from database import SessionLocal, Base, engine
     from models import QRCode
     try:
-        from qr import generate_svg, add_frame, random_suffix
+        from service.qr import generate_svg, add_frame, random_suffix
     except ImportError as inner:
-        logger.exception("Fallback import of qr failed: %s", inner)
+        logger.exception("Fallback import of service.qr failed: %s", inner)
         raise
     else:
-        logger.debug("Fallback import of qr succeeded")
+        logger.debug("Fallback import of service.qr succeeded")
 
 app = FastAPI()
 
