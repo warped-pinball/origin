@@ -33,7 +33,11 @@ def generate_svg(data: str) -> str:
         json.dumps(opts),
     ]
     res = subprocess.run(cmd, capture_output=True, check=True, text=True)
-    return res.stdout
+    output = res.stdout
+    start = output.find("<svg")
+    if start == -1:
+        raise ValueError("svg generation failed: missing <svg>")
+    return output[start:].strip()
 
 
 def add_frame(svg: str) -> str:
