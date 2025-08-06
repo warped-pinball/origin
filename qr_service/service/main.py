@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 
 logger = logging.getLogger(__name__)
@@ -60,24 +61,48 @@ def get_db():
         db.close()
 
 
-@app.post('/links')
-def create_link(suffix: str | None = None, db: Session = Depends(get_db)):
-    logger.debug("create_link called with suffix=%s", suffix)
+def _get_base_url() -> str:
     base_url = os.environ.get('QR_BASE_URL')
     if not base_url:
         logger.error("QR_BASE_URL not set")
         raise HTTPException(status_code=500, detail='QR_BASE_URL not set')
+    return base_url
+
+
+def _build_qr(base_url: str, suffix: str | None = None) -> QRCode:
     if suffix is None:
         suffix = random_suffix(8)
         logger.debug("Generated random suffix=%s", suffix)
     url = base_url.rstrip('/') + '/' + suffix
     logger.debug("Persisting QRCode for url=%s", url)
-    qr = QRCode(url=url)
+    return QRCode(url=url)
+
+
+class BulkRequest(BaseModel):
+    count: int
+
+
+@app.post('/links')
+def create_link(suffix: str | None = None, db: Session = Depends(get_db)):
+    logger.debug("create_link called with suffix=%s", suffix)
+    base_url = _get_base_url()
+    qr = _build_qr(base_url, suffix)
     db.add(qr)
     db.commit()
     db.refresh(qr)
     logger.debug("Created QRCode id=%s", qr.id)
     return {'id': qr.id, 'url': qr.url}
+
+
+@app.post('/links/bulk')
+def create_links(req: BulkRequest, db: Session = Depends(get_db)):
+    logger.debug("create_links called with count=%s", req.count)
+    base_url = _get_base_url()
+    qrs = [_build_qr(base_url) for _ in range(req.count)]
+    db.add_all(qrs)
+    db.commit()
+    logger.debug("Created %d QRCode entries", len(qrs))
+    return {'links': [{'id': qr.id, 'url': qr.url} for qr in qrs]}
 
 
 @app.get('/pending')
@@ -101,6 +126,30 @@ def generate_pending(db: Session = Depends(get_db)):
 @app.get('/', response_class=HTMLResponse)
 def index():
     logger.debug("index endpoint requested")
-    return """<!DOCTYPE html><html><body><div id='qrs'></div><script>
-fetch('/pending').then(r=>r.json()).then(d=>{const c=document.getElementById('qrs');d.svgs.forEach(s=>{const div=document.createElement('div');div.innerHTML=s;c.appendChild(div);});});
+    return """<!DOCTYPE html><html><head><style>
+body{font-family:sans-serif;margin:2rem}
+#controls{margin-bottom:1rem}
+#qrs{display:grid;gap:1rem}
+</style></head><body>
+<div id='controls'>
+  <input id='count' type='number' min='1' value='1'/>
+  <input id='cols' type='number' min='1' value='3'/>
+  <button id='generate'>Generate</button>
+</div>
+<div id='qrs'></div>
+<script>
+document.getElementById('generate').addEventListener('click',async()=>{
+ const count=parseInt(document.getElementById('count').value,10)||0;
+ const cols=parseInt(document.getElementById('cols').value,10)||1;
+ if(count<=0)return;
+ await fetch('/links/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({count})});
+ const r=await fetch('/pending');
+ const d=await r.json();
+ const c=document.getElementById('qrs');
+ c.innerHTML='';
+ c.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+ d.svgs.forEach(s=>{const div=document.createElement('div');div.innerHTML=s;c.appendChild(div);});
+});
 </script></body></html>"""
+
+
