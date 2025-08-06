@@ -1,5 +1,9 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from .database import Base
+
+try:  # pragma: no cover - fallback for running as a top-level module
+    from .database import Base
+except ImportError:  # pragma: no cover
+    from database import Base
 
 
 class QRCode(Base):
