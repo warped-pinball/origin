@@ -22,23 +22,16 @@ except OSError as exc:  # pragma: no cover - defensive logging
     logger.exception("Failed to list cwd contents: %s", exc)
 logger.debug("main directory contents: %s", list(Path(__file__).resolve().parent.iterdir()))
 
-try:  # pragma: no cover - fallback for running as a package
-    logger.debug("Attempting package-relative imports")
+if __package__ and __package__.startswith("qr_service"):
+    logger.debug("Using package-relative imports")
     from ..database import SessionLocal, Base, engine
     from ..models import QRCode
     from .qr import generate_svg, add_frame, random_suffix
-    logger.debug("Package-relative imports succeeded")
-except ImportError as exc:  # pragma: no cover
-    logger.exception("Package-relative imports failed: %s", exc)
+else:  # pragma: no cover - executed when service is top-level
+    logger.debug("Using top-level imports")
     from database import SessionLocal, Base, engine
     from models import QRCode
-    try:
-        from service.qr import generate_svg, add_frame, random_suffix
-    except ImportError as inner:
-        logger.exception("Fallback import of service.qr failed: %s", inner)
-        raise
-    else:
-        logger.debug("Fallback import of service.qr succeeded")
+    from service.qr import generate_svg, add_frame, random_suffix
 
 app = FastAPI()
 

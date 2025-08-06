@@ -5,6 +5,9 @@ import subprocess
 import uuid
 import xml.etree.ElementTree as ET
 
+# Ensure generated SVG elements use the default namespace without prefixes
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+
 BASE_OPTIONS = {
     "width": 300,
     "height": 300,
