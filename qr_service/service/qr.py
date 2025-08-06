@@ -3,8 +3,13 @@ import os
 import uuid
 import xml.etree.ElementTree as ET
 
+from io import BytesIO
+
 import qrcode
 import qrcode.image.svg
+from PIL import Image
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles import moduledrawers
 
 
 # Ensure generated SVG elements use the default namespace without prefixes
@@ -39,18 +44,71 @@ def generate_svg(data: str) -> str:
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=0)
     qr.add_data(data)
     qr.make(fit=True)
+
+    drawer = _env("QR_MODULE_DRAWER", "square").lower()
+    if drawer not in {
+        "square",
+        "gapped_square",
+        "circle",
+        "rounded",
+        "vertical_bars",
+        "horizontal_bars",
+    }:
+        drawer = "square"
+
+    if drawer == "square":
+        img = qr.make_image(
+            image_factory=qrcode.image.svg.SvgPathImage,
+            fill_color=_env("QR_CODE_COLOR", "#000000"),
+            back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+        )
+        root = _strip_ns(ET.fromstring(img.to_string()))
+        ns_key = "{http://www.w3.org/2000/xmlns/}svg"
+        if ns_key in root.attrib:
+            root.attrib["xmlns"] = root.attrib.pop(ns_key)
+        root.set("width", str(SVG_SIZE))
+        root.set("height", str(SVG_SIZE))
+        root.set("viewBox", f"0 0 {qr.modules_count} {qr.modules_count}")
+        return ET.tostring(root, encoding="unicode")
+
+    drawer_cls = {
+        "gapped_square": moduledrawers.GappedSquareModuleDrawer,
+        "circle": moduledrawers.CircleModuleDrawer,
+        "rounded": moduledrawers.RoundedModuleDrawer,
+        "vertical_bars": moduledrawers.VerticalBarsDrawer,
+        "horizontal_bars": moduledrawers.HorizontalBarsDrawer,
+    }[drawer]
+
     img = qr.make_image(
-        image_factory=qrcode.image.svg.SvgPathImage,
+        image_factory=StyledPilImage,
+        module_drawer=drawer_cls(),
         fill_color=_env("QR_CODE_COLOR", "#000000"),
         back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
     )
-    root = _strip_ns(ET.fromstring(img.to_string()))
-    ns_key = "{http://www.w3.org/2000/xmlns/}svg"
-    if ns_key in root.attrib:
-        root.attrib["xmlns"] = root.attrib.pop(ns_key)
-    root.set("width", str(SVG_SIZE))
-    root.set("height", str(SVG_SIZE))
-    root.set("viewBox", f"0 0 {qr.modules_count} {qr.modules_count}")
+    img = img.resize((SVG_SIZE, SVG_SIZE), Image.NEAREST)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+    root = ET.Element(
+        "svg",
+        width=str(SVG_SIZE),
+        height=str(SVG_SIZE),
+        viewBox=f"0 0 {qr.modules_count} {qr.modules_count}",
+        xmlns="http://www.w3.org/2000/svg",
+        **{"xmlns:xlink": "http://www.w3.org/1999/xlink"},
+    )
+    ET.SubElement(
+        root,
+        "image",
+        {
+            "x": "0",
+            "y": "0",
+            "width": str(qr.modules_count),
+            "height": str(qr.modules_count),
+            "{http://www.w3.org/1999/xlink}href": data_uri,
+        },
+    )
     return ET.tostring(root, encoding="unicode")
 
 
@@ -63,7 +121,10 @@ def add_frame(svg: str) -> str:
 
     padding_modules = int(_env("QR_FRAME_PADDING_MODULES", "2"))
     padding = padding_modules * module_px
-    corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
+    frame_corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
+    code_corner_radius = float(
+        _env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius))
+    )
 
     inner_w, inner_h = size + 2 * padding, size + 2 * padding
     outer_w, outer_h = inner_w + 40, inner_h + 80
@@ -74,6 +135,7 @@ def add_frame(svg: str) -> str:
         height=str(outer_h),
         viewBox=f"0 0 {outer_w} {outer_h}",
         xmlns="http://www.w3.org/2000/svg",
+        **{"xmlns:xlink": "http://www.w3.org/1999/xlink"},
     )
     ET.SubElement(
         outer,
@@ -83,8 +145,8 @@ def add_frame(svg: str) -> str:
         width=str(outer_w),
         height=str(outer_h),
         fill=_env("QR_FRAME_BACKGROUND_COLOR", "#0a0a0a"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(frame_corner_radius),
+        ry=str(frame_corner_radius),
     )
     ET.SubElement(
         outer,
@@ -94,12 +156,30 @@ def add_frame(svg: str) -> str:
         width=str(inner_w),
         height=str(inner_h),
         fill=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(code_corner_radius),
+        ry=str(code_corner_radius),
     )
     inner.set("x", str(20 + padding))
     inner.set("y", str(40 + padding))
     outer.append(inner)
+
+    logo_href = _env("QR_LOGO_IMAGE", "")
+    logo_scale = float(_env("QR_LOGO_SCALE", "0"))
+    if logo_href and logo_scale > 0:
+        logo_size = size * logo_scale
+        logo_x = 20 + padding + (size - logo_size) / 2
+        logo_y = 40 + padding + (size - logo_size) / 2
+        ET.SubElement(
+            outer,
+            "image",
+            {
+                "x": str(logo_x),
+                "y": str(logo_y),
+                "width": str(logo_size),
+                "height": str(logo_size),
+                "{http://www.w3.org/1999/xlink}href": logo_href,
+            },
+        )
     ET.SubElement(
         outer,
         "text",
@@ -125,8 +205,8 @@ def add_frame(svg: str) -> str:
         height=str(outer_h - 4),
         fill="none",
         stroke=_env("QR_FRAME_COLOR", "#ff0000"),
-        rx=str(corner_radius),
-        ry=str(corner_radius),
+        rx=str(frame_corner_radius),
+        ry=str(frame_corner_radius),
         **{"stroke-width": "1"},
     )
     return ET.tostring(outer, encoding="unicode")
