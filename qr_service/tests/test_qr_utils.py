@@ -25,6 +25,23 @@ def test_generate_svg_custom_color(monkeypatch):
     assert "#123456" in svg
 
 
+def test_generate_svg_error_correction(monkeypatch):
+    import qrcode as qr_lib
+
+    captured = {}
+    orig = qr_lib.QRCode
+
+    def capture_qrcode(*args, **kwargs):
+        captured["ec"] = kwargs.get("error_correction")
+        return orig(*args, **kwargs)
+
+    monkeypatch.setattr(qr_lib, "QRCode", capture_qrcode)
+    monkeypatch.setenv("QR_ERROR_CORRECTION", "H")
+
+    generate_svg("data")
+    assert captured["ec"] == qr_lib.constants.ERROR_CORRECT_H
+
+
 def test_add_frame_removes_namespace_prefixes():
     inner = '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"></svg>'
     framed = add_frame(inner)

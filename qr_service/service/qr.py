@@ -42,7 +42,15 @@ def random_suffix(length: int) -> str:
 
 
 def generate_svg(data: str) -> str:
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=0)
+    level = _env("QR_ERROR_CORRECTION", "M").upper()
+    ec_map = {
+        "L": qrcode.constants.ERROR_CORRECT_L,
+        "M": qrcode.constants.ERROR_CORRECT_M,
+        "Q": qrcode.constants.ERROR_CORRECT_Q,
+        "H": qrcode.constants.ERROR_CORRECT_H,
+    }
+    error_correction = ec_map.get(level, qrcode.constants.ERROR_CORRECT_M)
+    qr = qrcode.QRCode(error_correction=error_correction, border=0)
     qr.add_data(data)
     qr.make(fit=True)
 
