@@ -1,22 +1,14 @@
 import base64
-import json
-import os
-import subprocess
 import uuid
 import xml.etree.ElementTree as ET
+
+import qrcode
+import qrcode.image.svg
 
 # Ensure generated SVG elements use the default namespace without prefixes
 ET.register_namespace("", "http://www.w3.org/2000/svg")
 
-BASE_OPTIONS = {
-    "width": 300,
-    "height": 300,
-    "type": "svg",
-    "data": "",
-    "backgroundOptions": {"color": "#ffffff"},
-    "dotsOptions": {"color": "#000000", "type": "rounded"},
-    "cornersSquareOptions": {"color": "#000000", "type": "extra-rounded"},
-}
+SVG_SIZE = 300
 
 
 def random_suffix(length: int) -> str:
@@ -28,19 +20,22 @@ def random_suffix(length: int) -> str:
 
 
 def generate_svg(data: str) -> str:
-    opts = dict(BASE_OPTIONS)
-    opts["data"] = data
-    cmd = [
-        "node",
-        os.path.join(os.path.dirname(__file__), "generate.js"),
-        json.dumps(opts),
-    ]
-    res = subprocess.run(cmd, capture_output=True, check=True, text=True)
-    output = res.stdout
-    start = output.find("<svg")
-    if start == -1:
-        raise ValueError("svg generation failed: missing <svg>")
-    return output[start:].strip()
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=0)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(
+        image_factory=qrcode.image.svg.SvgPathImage,
+        fill_color="#000000",
+        back_color="#ffffff",
+    )
+    root = ET.fromstring(img.to_string())
+    ns_key = "{http://www.w3.org/2000/xmlns/}svg"
+    if ns_key in root.attrib:
+        root.attrib["xmlns"] = root.attrib.pop(ns_key)
+    root.set("width", str(SVG_SIZE))
+    root.set("height", str(SVG_SIZE))
+    root.set("viewBox", f"0 0 {qr.modules_count} {qr.modules_count}")
+    return ET.tostring(root, encoding="unicode")
 
 
 def add_frame(svg: str) -> str:
