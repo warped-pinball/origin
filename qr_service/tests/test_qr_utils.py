@@ -128,6 +128,30 @@ def test_module_drawer_respects_colors(monkeypatch):
     assert any(pixel == fg for pixel in img.getdata())
 
 
+def test_circle_drawer_returns_svg(monkeypatch):
+    monkeypatch.setenv("QR_MODULE_DRAWER", "circle")
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    assert not root.findall("svg:image", ns)
+    assert root.findall("svg:path", ns)
+
+
+def test_raster_scale_increases_resolution(monkeypatch):
+    monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
+    monkeypatch.setenv("QR_RASTER_SCALE", "5")
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    ns = {
+        "svg": "http://www.w3.org/2000/svg",
+        "xlink": "http://www.w3.org/1999/xlink",
+    }
+    href = root.find("svg:image", ns).get("{http://www.w3.org/1999/xlink}href")
+    data = base64.b64decode(href.split(",", 1)[1])
+    img = Image.open(BytesIO(data))
+    assert img.width > 300
+
+
 def test_framed_svg_uses_xlink_prefix(monkeypatch):
     monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
     svg = add_frame(generate_svg("data"))

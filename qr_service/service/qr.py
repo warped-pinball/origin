@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 import uuid
 import xml.etree.ElementTree as ET
@@ -7,9 +8,10 @@ from io import BytesIO
 
 import qrcode
 import qrcode.image.svg
-from PIL import Image, ImageColor
+from PIL import ImageColor
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers, colormasks
+from qrcode.image.styles.moduledrawers import svg as svg_moduledrawers
 
 
 # Ensure generated SVG elements use the desired namespaces without unexpected prefixes
@@ -53,6 +55,7 @@ def generate_svg(data: str) -> str:
     qr = qrcode.QRCode(error_correction=error_correction, border=0)
     qr.add_data(data)
     qr.make(fit=True)
+    modules = qr.modules_count
 
     drawer = _env("QR_MODULE_DRAWER", "square").lower()
     if drawer not in {
@@ -74,20 +77,40 @@ def generate_svg(data: str) -> str:
         root = _strip_ns(ET.fromstring(img.to_string()))
         ns_key = "{http://www.w3.org/2000/xmlns/}svg"
         if ns_key in root.attrib:
-            root.attrib["xmlns"] = root.attrib.pop(ns_key)
+            root.attrib.pop(ns_key)
+        root.set("xmlns", "http://www.w3.org/2000/svg")
         root.set("width", str(SVG_SIZE))
         root.set("height", str(SVG_SIZE))
-        root.set("viewBox", f"0 0 {qr.modules_count} {qr.modules_count}")
+        root.set("viewBox", f"0 0 {modules} {modules}")
+        return ET.tostring(root, encoding="unicode")
+
+    if drawer == "circle":
+        img = qr.make_image(
+            image_factory=qrcode.image.svg.SvgPathImage,
+            module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
+            fill_color=_env("QR_CODE_COLOR", "#000000"),
+            back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+        )
+        root = _strip_ns(ET.fromstring(img.to_string()))
+        ns_key = "{http://www.w3.org/2000/xmlns/}svg"
+        if ns_key in root.attrib:
+            root.attrib.pop(ns_key)
+        root.set("xmlns", "http://www.w3.org/2000/svg")
+        root.set("width", str(SVG_SIZE))
+        root.set("height", str(SVG_SIZE))
+        root.set("viewBox", f"0 0 {modules} {modules}")
         return ET.tostring(root, encoding="unicode")
 
     drawer_cls = {
         "gapped_square": moduledrawers.GappedSquareModuleDrawer,
-        "circle": moduledrawers.CircleModuleDrawer,
         "rounded": moduledrawers.RoundedModuleDrawer,
         "vertical_bars": moduledrawers.VerticalBarsDrawer,
         "horizontal_bars": moduledrawers.HorizontalBarsDrawer,
     }[drawer]
 
+    raster_scale = float(_env("QR_RASTER_SCALE", "5"))
+    box_size = max(1, int(math.ceil(SVG_SIZE * raster_scale / modules)))
+    qr.box_size = box_size
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
@@ -96,7 +119,6 @@ def generate_svg(data: str) -> str:
             front_color=ImageColor.getrgb(_env("QR_CODE_COLOR", "#000000")),
         ),
     )
-    img = img.resize((SVG_SIZE, SVG_SIZE), Image.NEAREST)
     buffer = BytesIO()
     img.save(buffer, format="PNG")
     data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
@@ -105,7 +127,7 @@ def generate_svg(data: str) -> str:
         "svg",
         width=str(SVG_SIZE),
         height=str(SVG_SIZE),
-        viewBox=f"0 0 {qr.modules_count} {qr.modules_count}",
+        viewBox=f"0 0 {modules} {modules}",
         xmlns="http://www.w3.org/2000/svg",
     )
     ET.SubElement(
@@ -114,8 +136,8 @@ def generate_svg(data: str) -> str:
         {
             "x": "0",
             "y": "0",
-            "width": str(qr.modules_count),
-            "height": str(qr.modules_count),
+            "width": str(modules),
+            "height": str(modules),
             "{http://www.w3.org/1999/xlink}href": data_uri,
         },
     )
