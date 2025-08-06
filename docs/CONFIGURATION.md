@@ -45,6 +45,7 @@ When running behind a reverse proxy, forward WebSocket connections to port
 The standalone QR code generator can be customised through the following
 environment variables:
 
+- `QR_BASE_URL` – base URL used to build the links encoded in the QR codes.
 - `QR_CODE_COLOR` – fill colour of the QR modules (default `#000000`).
 - `QR_CODE_BACKGROUND_COLOR` – background colour behind the QR code (default
   `#ffffff`).
@@ -56,5 +57,11 @@ environment variables:
 - `QR_BOTTOM_TEXT` – text displayed below the code (default "Warped Pinball").
 - `QR_CODE_SIZE` – width and height of the generated code in pixels (default
   `300`).
+- `QR_FRAME_PADDING_MODULES` – spacing between the QR code and its frame in
+  module widths (default `2`).
+- `QR_FRAME_CORNER_RADIUS` – radius of the rounded corners in pixels (default
+  `10`).
+- `QR_SHEET_GAP_MODULES` – gap between framed codes on a sheet in module widths
+  (default `2`).
 
 Unset variables fall back to the defaults shown above.
