@@ -90,3 +90,10 @@ def test_module_drawer_generates_image(monkeypatch):
     assert images and images[0].get("{http://www.w3.org/1999/xlink}href").startswith(
         "data:image/png;base64,"
     )
+
+
+def test_framed_svg_uses_xlink_prefix(monkeypatch):
+    monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
+    svg = add_frame(generate_svg("data"))
+    assert "ns0:href" not in svg
+    assert "xlink:href" in svg

@@ -12,8 +12,9 @@ from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers
 
 
-# Ensure generated SVG elements use the default namespace without prefixes
+# Ensure generated SVG elements use the desired namespaces without unexpected prefixes
 ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 
 def _env(key: str, default: str) -> str:
@@ -96,7 +97,6 @@ def generate_svg(data: str) -> str:
         height=str(SVG_SIZE),
         viewBox=f"0 0 {qr.modules_count} {qr.modules_count}",
         xmlns="http://www.w3.org/2000/svg",
-        **{"xmlns:xlink": "http://www.w3.org/1999/xlink"},
     )
     ET.SubElement(
         root,
@@ -135,7 +135,6 @@ def add_frame(svg: str) -> str:
         height=str(outer_h),
         viewBox=f"0 0 {outer_w} {outer_h}",
         xmlns="http://www.w3.org/2000/svg",
-        **{"xmlns:xlink": "http://www.w3.org/1999/xlink"},
     )
     ET.SubElement(
         outer,
