@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+
 from qr_service.service.qr import random_suffix, generate_svg, add_frame
 
 
@@ -44,3 +46,16 @@ def test_add_frame_env_customizations(monkeypatch):
     assert "#333333" in svg
     assert "Top" in svg
     assert "Bottom" in svg
+
+
+def test_add_frame_padding_and_style(monkeypatch):
+    monkeypatch.setenv("QR_FRAME_PADDING_MODULES", "1")
+    svg = add_frame(generate_svg("data"))
+    root = ET.fromstring(svg)
+    rects = root.findall("{http://www.w3.org/2000/svg}rect")
+    inner_rect = [r for r in rects if r.get("x") == "20" and r.get("y") == "40"][0]
+    assert float(inner_rect.get("width")) > 300
+    border = [r for r in rects if r.get("stroke")][0]
+    assert border.get("stroke-width") == "1"
+    assert "stroke-dasharray" not in border.attrib
+    assert border.get("rx") == border.get("ry")

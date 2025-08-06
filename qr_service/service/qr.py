@@ -57,7 +57,17 @@ def generate_svg(data: str) -> str:
 def add_frame(svg: str) -> str:
     inner = _strip_ns(ET.fromstring(svg))
     size = int(inner.attrib.get("width", str(SVG_SIZE)))
-    outer_w, outer_h = size + 40, size + 80
+    view_box = inner.attrib.get("viewBox", f"0 0 {size} {size}")
+    modules = int(view_box.split()[2])
+    module_px = size / modules
+
+    padding_modules = int(_env("QR_FRAME_PADDING_MODULES", "2"))
+    padding = padding_modules * module_px
+    corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
+
+    inner_w, inner_h = size + 2 * padding, size + 2 * padding
+    outer_w, outer_h = inner_w + 40, inner_h + 80
+
     outer = ET.Element(
         "svg",
         width=str(outer_w),
@@ -73,18 +83,22 @@ def add_frame(svg: str) -> str:
         width=str(outer_w),
         height=str(outer_h),
         fill=_env("QR_FRAME_BACKGROUND_COLOR", "#0a0a0a"),
+        rx=str(corner_radius),
+        ry=str(corner_radius),
     )
     ET.SubElement(
         outer,
         "rect",
         x="20",
         y="40",
-        width=str(size),
-        height=str(size),
+        width=str(inner_w),
+        height=str(inner_h),
         fill=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+        rx=str(corner_radius),
+        ry=str(corner_radius),
     )
-    inner.set("x", "20")
-    inner.set("y", "40")
+    inner.set("x", str(20 + padding))
+    inner.set("y", str(40 + padding))
     outer.append(inner)
     ET.SubElement(
         outer,
@@ -98,7 +112,7 @@ def add_frame(svg: str) -> str:
         outer,
         "text",
         x=str(outer_w / 2),
-        y=str(size + 70),
+        y=str(inner_h + 70),
         fill=_env("QR_TEXT_COLOR", "#ffffff"),
         **{"text-anchor": "middle", "font-size": "20"},
     ).text = _env("QR_BOTTOM_TEXT", "Warped Pinball")
@@ -111,6 +125,43 @@ def add_frame(svg: str) -> str:
         height=str(outer_h - 4),
         fill="none",
         stroke=_env("QR_FRAME_COLOR", "#ff0000"),
-        **{"stroke-width": "4", "stroke-dasharray": "8 4"},
+        rx=str(corner_radius),
+        ry=str(corner_radius),
+        **{"stroke-width": "1"},
     )
     return ET.tostring(outer, encoding="unicode")
+
+
+def build_sheet(svgs: list[str], cols: int, module_px: float) -> str:
+    """Combine multiple framed QR codes into a single SVG sheet."""
+    if not svgs:
+        return ""
+
+    gap_modules = int(_env("QR_SHEET_GAP_MODULES", "2"))
+    gap = gap_modules * module_px
+
+    first = _strip_ns(ET.fromstring(svgs[0]))
+    frame_w = float(first.attrib.get("width", "0"))
+    frame_h = float(first.attrib.get("height", "0"))
+
+    rows = (len(svgs) + cols - 1) // cols
+    sheet_w = frame_w * cols + gap * (cols - 1)
+    sheet_h = frame_h * rows + gap * (rows - 1)
+
+    root = ET.Element(
+        "svg",
+        width=str(sheet_w),
+        height=str(sheet_h),
+        viewBox=f"0 0 {sheet_w} {sheet_h}",
+        xmlns="http://www.w3.org/2000/svg",
+    )
+
+    for i, svg in enumerate(svgs):
+        elem = _strip_ns(ET.fromstring(svg))
+        x = (i % cols) * (frame_w + gap)
+        y = (i // cols) * (frame_h + gap)
+        elem.set("x", str(x))
+        elem.set("y", str(y))
+        root.append(elem)
+
+    return ET.tostring(root, encoding="unicode")
