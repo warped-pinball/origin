@@ -80,3 +80,13 @@ def test_logo_included(monkeypatch):
     root = ET.fromstring(svg)
     images = root.findall("{http://www.w3.org/2000/svg}image")
     assert images and images[0].get("{http://www.w3.org/1999/xlink}href") == "logo.png"
+
+
+def test_module_drawer_generates_image(monkeypatch):
+    monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    images = root.findall("{http://www.w3.org/2000/svg}image")
+    assert images and images[0].get("{http://www.w3.org/1999/xlink}href").startswith(
+        "data:image/png;base64,"
+    )

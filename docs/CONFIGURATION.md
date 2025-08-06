@@ -69,6 +69,9 @@ environment variables:
   centre of the code.
 - `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.
   `0.2` for 20%).
+- `QR_MODULE_DRAWER` – style used for the QR modules. Valid values are
+  `square` (default), `gapped_square`, `circle`, `rounded`, `vertical_bars` and
+  `horizontal_bars`.
 
 Unset variables fall back to the defaults shown above.
 
