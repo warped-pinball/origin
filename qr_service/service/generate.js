@@ -19,6 +19,18 @@ const qr = new QRCodeStyling({
   backgroundOptions: options.backgroundOptions,
 });
 
-qr.getRawData('svg').then((svg) => {
-  process.stdout.write(svg.toString());
-});
+(async () => {
+  const svg = await qr.getRawData('svg');
+  let out;
+  if (typeof svg === 'string') {
+    out = svg;
+  } else if (svg instanceof Buffer) {
+    out = svg.toString();
+  } else if (typeof svg.arrayBuffer === 'function') {
+    const buf = Buffer.from(await svg.arrayBuffer());
+    out = buf.toString();
+  } else {
+    throw new Error('Unsupported svg output');
+  }
+  process.stdout.write(out);
+})();
