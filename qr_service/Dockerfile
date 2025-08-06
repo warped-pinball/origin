@@ -6,5 +6,6 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY package.json ./
 RUN npm install --production
-COPY app ./app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY service ./service
+COPY database.py models.py __init__.py ./
+CMD ["uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8000"]

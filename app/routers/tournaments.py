@@ -31,25 +31,24 @@ def _get_tournament(tournament_id: int) -> Tournament:
 @router.post("/", response_model=Tournament)
 def create_tournament(tournament: TournamentBase) -> Tournament:
     new_id = len(_tournaments) + 1
-    t = Tournament(id=new_id, owner_id=1, **tournament.dict())
+    t = Tournament(id=new_id, owner_id=1, **tournament.model_dump())
     _tournaments.append(t)
     return t
+
+FILTER_WINDOWS = {"today": 1, "next7": 7, "next30": 30}
+
 
 @router.get("/", response_model=List[Tournament])
 def list_tournaments(filter: str | None = Query(default=None)) -> List[Tournament]:
     now = datetime.utcnow()
-    if filter == "today":
-        start = datetime(now.year, now.month, now.day)
-        end = start + timedelta(days=1)
-    elif filter == "next7":
-        start = now
-        end = now + timedelta(days=7)
-    elif filter == "next30":
-        start = now
-        end = now + timedelta(days=30)
-    else:
-        return _tournaments
-    return [t for t in _tournaments if start <= t.start_time < end]
+    today = datetime(now.year, now.month, now.day)
+
+    if filter in FILTER_WINDOWS:
+        start = today
+        end = start + timedelta(days=FILTER_WINDOWS[filter])
+        return [t for t in _tournaments if start <= t.start_time < end]
+
+    return _tournaments
 
 
 class UserAction(BaseModel):

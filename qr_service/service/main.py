@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app import models
+from database import SessionLocal
+from models import QRCode
 from .qr import generate_svg, add_frame, random_suffix
 
 app = FastAPI()
@@ -26,7 +26,7 @@ def create_link(suffix: str | None = None, db: Session = Depends(get_db)):
     if suffix is None:
         suffix = random_suffix(8)
     url = base_url.rstrip('/') + '/' + suffix
-    qr = models.QRCode(url=url)
+    qr = QRCode(url=url)
     db.add(qr)
     db.commit()
     db.refresh(qr)
@@ -35,7 +35,7 @@ def create_link(suffix: str | None = None, db: Session = Depends(get_db)):
 
 @app.get('/pending')
 def generate_pending(db: Session = Depends(get_db)):
-    qrs = db.query(models.QRCode).filter(models.QRCode.generated_at.is_(None)).all()
+    qrs = db.query(QRCode).filter(QRCode.generated_at.is_(None)).all()
     svgs = []
     for qr in qrs:
         raw = generate_svg(qr.url)

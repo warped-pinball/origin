@@ -1,4 +1,4 @@
-from qr_service.app.qr import random_suffix
+from qr_service.service.qr import random_suffix
 
 
 def test_random_suffix_length():
