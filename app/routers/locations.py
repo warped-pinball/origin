@@ -24,6 +24,19 @@ def create_location(
     return crud.create_location(db, current_user.id, location)
 
 
+@router.put("/{location_id}", response_model=schemas.Location)
+def update_location(
+    location_id: int,
+    location: schemas.LocationCreate,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
+    db_location = crud.get_location(db, location_id)
+    if not db_location or db_location.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Location not found")
+    return crud.update_location(db, db_location, location)
+
+
 @router.post("/{location_id}/machines", response_model=schemas.Location)
 def add_machine(
     location_id: int,

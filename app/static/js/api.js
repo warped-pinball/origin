@@ -68,6 +68,14 @@
       });
     }
 
+    async function updateLocation(id, data) {
+      return apiFetch(`/api/v1/locations/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+
     async function assignMachine(machineId, locationId) {
       return apiFetch(`/api/v1/locations/${locationId}/machines`, {
         method: 'POST',
@@ -87,6 +95,7 @@
       getMachines,
       getLocations,
       createLocation,
+      updateLocation,
       assignMachine
     };
   }

@@ -43,6 +43,19 @@ def test_location_flow(client):
     assert mach_res.status_code == 200
     machine_id = mach_res.json()["id"]
 
+    update_res = client.put(
+        f"/api/v1/locations/{location_id}",
+        json={
+            "name": "Arcade Updated",
+            "address": "456 Ave",
+            "website": "http://example2.com",
+            "hours": "24/7",
+        },
+        headers=headers,
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["name"] == "Arcade Updated"
+
     assign_res = client.post(
         f"/api/v1/locations/{location_id}/machines",
         json={"machine_id": machine_id},
@@ -58,5 +71,6 @@ def test_location_flow(client):
     assert locations_list.status_code == 200
     loc_data = locations_list.json()[0]
     assert loc_data["id"] == location_id
+    assert loc_data["name"] == "Arcade Updated"
     assert len(loc_data["machines"]) == 1
     assert loc_data["machines"][0]["id"] == machine_id

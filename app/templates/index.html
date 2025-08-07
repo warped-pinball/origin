@@ -350,19 +350,24 @@
                             </button>
                             <button onclick='openDeleteConfirm()' class='secondary outline'>Delete Account</button>
                         </div>
-                        <h3>Locations</h3>
-                        <ul id='locations-list'></ul>
+                        <h3>My Locations</h3>
+                        <div id='locations-list'></div>
                         <button id='add-location-btn' style='width:fit-content;margin-bottom:0.5rem;'>Add Location</button>
-                        <form id='location-form' style='display:none;margin-bottom:1rem;'>
-                            <input id='loc-name' placeholder='Name' required />
-                            <input id='loc-address' placeholder='Address' />
-                            <input id='loc-website' type='url' placeholder='Website' />
-                            <input id='loc-hours' placeholder='Hours' />
-                            <button type='submit'>Save</button>
-                        </form>
                         <h3>Machines</h3>
                         <ul id='machines-list'></ul>
                         <p style='text-align:center;margin-top:1rem;font-size:0.9rem;'>Version {{ version }}</p>
+                    </section>
+                    <section id='location-detail' class='page' style='display:none;'>
+                        <h2 id='location-detail-title'>Add Location</h2>
+                        <form id='location-detail-form'>
+                            <input id='detail-name' placeholder='Name' required />
+                            <input id='detail-address' placeholder='Address' />
+                            <input id='detail-website' type='url' placeholder='Website' />
+                            <input id='detail-hours' placeholder='Hours' />
+                            <button type='submit'>Save</button>
+                        </form>
+                        <h3>Machines</h3>
+                        <ul id='location-machines-list'></ul>
                     </section>
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:2000;max-width:75vw;width:max-content;text-align:center;'></div>
