@@ -72,6 +72,8 @@ environment variables:
 - `QR_MODULE_DRAWER` – style used for the QR modules. Valid values are
   `square` (default), `gapped_square`, `circle`, `rounded`, `vertical_bars` and
   `horizontal_bars`.
+- `QR_EYE_DRAWER` – style used for the QR "eyes". Valid values mirror
+  `QR_MODULE_DRAWER` and default to `circle`.
 - `QR_RASTER_SCALE` – multiplier applied to the pixel size of rasterised
   module styles (default `5`). Increase for sharper output when using drawers
   other than `square` or `circle`.

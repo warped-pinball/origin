@@ -37,6 +37,15 @@ def test_alignment_boxes_rounded():
     assert "A" in path.attrib.get("d", "")
 
 
+def test_eye_drawer_square(monkeypatch):
+    monkeypatch.setenv("QR_EYE_DRAWER", "square")
+    svg = generate_svg("data")
+    root = ET.fromstring(svg)
+    path = root.find("{http://www.w3.org/2000/svg}path")
+    assert path is not None
+    assert "A" not in path.attrib.get("d", "")
+
+
 def test_generate_svg_error_correction(monkeypatch):
     import qrcode as qr_lib
 
