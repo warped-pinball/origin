@@ -144,6 +144,17 @@ def set_machine_location(db: Session, machine: models.Machine, location_id: int)
     db.refresh(machine)
     return machine
 
+
+def update_location(
+    db: Session, db_location: models.Location, data: schemas.LocationCreate
+) -> models.Location:
+    for field, value in data.model_dump().items():
+        setattr(db_location, field, value)
+    db.add(db_location)
+    db.commit()
+    db.refresh(db_location)
+    return db_location
+
 # Scores
 
 def create_score(db: Session, score: schemas.ScoreCreate) -> models.Score:
