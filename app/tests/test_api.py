@@ -144,7 +144,8 @@ def test_password_reset_flow(client, db_session):
 def test_root_page(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "Sign Up" in response.text
+    assert "Reset Password" in response.text
+    assert "Create Account" in response.text
     assert __version__ in response.text
     assert '<meta name="description" content="Origin web application">' in response.text
     assert '<html lang="en"' in response.text
