@@ -19,7 +19,17 @@
       const data = await res.json();
       localStorage.setItem('token', data.access_token);
       document.getElementById('login-error').textContent = '';
-      showLoggedIn();
+      const params = new URLSearchParams(location.search);
+      const next = params.get('next');
+      if (next) {
+        params.delete('next');
+        const newQuery = params.toString();
+        const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
+        history.replaceState(null, '', newUrl);
+        location.href = next;
+      } else {
+        showLoggedIn();
+      }
     } else if (res.status === 401 || res.status === 404) {
       document.getElementById('login-error').textContent = 'Invalid email or password.';
     } else if (res.status === 403) {
@@ -162,7 +172,16 @@
       history.replaceState(null, '', newUrl);
     }
     const hasToken = !!localStorage.getItem('token');
+    const next = params.get('next');
     if (hasToken) {
+      if (next) {
+        params.delete('next');
+        const newQuery = params.toString();
+        const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
+        history.replaceState(null, '', newUrl);
+        location.href = next;
+        return;
+      }
       showLoggedIn();
     } else {
       showLogin();

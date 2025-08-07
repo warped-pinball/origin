@@ -63,3 +63,10 @@ def test_qr_invalid_code(client):
     )
     assert res.status_code == 400
     assert res.json()["detail"] == "Invalid code"
+
+
+def test_qr_redirects_to_login_when_unauthenticated(client):
+    encoded = _encode_id(1)
+    res = client.get(f"/q?r={encoded}", follow_redirects=False)
+    assert res.status_code == 307
+    assert res.headers["location"] == f"/?next=%2Fq%3Fr%3D{encoded}"
