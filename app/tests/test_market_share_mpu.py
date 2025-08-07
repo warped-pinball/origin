@@ -7,11 +7,13 @@ from scripts.market_share_mpu import (
     market_share,
 )
 
-DATA_FILE = Path(__file__).parent / "data" / "machines.csv"
+DATA_DIR = Path(__file__).parent / "data"
+DIRTY_FILE = DATA_DIR / "machines_dirty.csv"
+CLEAN_FILE = DATA_DIR / "machines.csv"
 
 
 def test_identify_outliers():
-    machines = load_machines(DATA_FILE)
+    machines = load_machines(DIRTY_FILE)
     outliers = identify_outliers(machines)
 
     assert "Spike 2" in outliers
@@ -26,7 +28,7 @@ def test_identify_outliers():
 
 
 def test_market_share_after_corrections():
-    machines = load_machines(DATA_FILE)
+    machines = load_machines(DIRTY_FILE)
     outliers = identify_outliers(machines)
     corrected = apply_corrections(machines, outliers)
     report = market_share(corrected)
@@ -35,4 +37,15 @@ def test_market_share_after_corrections():
 
     assert lookup[("Spike 2", "Stern")]["count"] == 4
     assert ("Spike 2", "Gottlieb") not in lookup
+    assert lookup[("System 11", "Williams")]["count"] == 4
+
+
+def test_clean_data_has_no_outliers():
+    machines = load_machines(CLEAN_FILE)
+    outliers = identify_outliers(machines)
+    assert outliers == {}
+
+    report = market_share(machines)
+    lookup = {(r["mpu"], r["manufacturer"]): r for r in report}
+    assert lookup[("Spike 2", "Stern")]["count"] == 4
     assert lookup[("System 11", "Williams")]["count"] == 4
