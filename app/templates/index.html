@@ -359,7 +359,13 @@
                     </section>
                     <section id='location-detail' class='page' style='display:none;'>
                         <h2 id='location-detail-title'>Add Location</h2>
-                        <form id='location-detail-form'>
+                        <div id='location-view'>
+                            <p id='view-address'></p>
+                            <p id='view-website'></p>
+                            <p id='view-hours'></p>
+                            <button id='edit-location-btn' style='width:fit-content;margin-bottom:0.5rem;display:none;'>Edit</button>
+                        </div>
+                        <form id='location-detail-form' style='display:none;'>
                             <input id='detail-name' placeholder='Name' required />
                             <input id='detail-address' placeholder='Address' />
                             <input id='detail-website' type='url' placeholder='Website' />

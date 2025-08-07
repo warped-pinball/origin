@@ -1,6 +1,7 @@
 (function (global) {
   let cachedLocations = [];
   let currentLocationId = null;
+  let currentLocation = null;
 
   async function loadLocations() {
     try {
@@ -20,6 +21,7 @@
             p.textContent = loc.address;
             card.appendChild(p);
           }
+          card.style.cursor = 'pointer';
           card.onclick = () => openLocation(loc);
           list.appendChild(card);
         });
@@ -80,22 +82,58 @@
 
   function openLocation(loc = null) {
     currentLocationId = loc ? loc.id : null;
+    currentLocation = loc;
     const title = document.getElementById('location-detail-title');
-    if (title) title.textContent = loc ? 'Edit Location' : 'Add Location';
     const form = document.getElementById('location-detail-form');
-    if (form) {
-      form.reset();
-      document.getElementById('detail-name').value = loc ? loc.name : '';
-      document.getElementById('detail-address').value = loc ? loc.address || '' : '';
-      document.getElementById('detail-website').value = loc ? loc.website || '' : '';
-      document.getElementById('detail-hours').value = loc ? loc.hours || '' : '';
-    }
-    showPage('location-detail');
-    if (currentLocationId) loadLocationMachines();
-    else {
+    const view = document.getElementById('location-view');
+    const editBtn = document.getElementById('edit-location-btn');
+    if (title) title.textContent = loc ? loc.name : 'Add Location';
+    if (loc) {
+      if (view) {
+        document.getElementById('view-address').textContent = loc.address || '';
+        const website = document.getElementById('view-website');
+        if (website) {
+          website.innerHTML = loc.website ? `<a href="${loc.website}" target="_blank">${loc.website}</a>` : '';
+        }
+        document.getElementById('view-hours').textContent = loc.hours || '';
+        view.style.display = 'block';
+      }
+      if (form) form.style.display = 'none';
+      const isOwner = cachedLocations.some(l => l.id === loc.id);
+      if (editBtn) editBtn.style.display = isOwner ? 'block' : 'none';
+      if (currentLocationId) loadLocationMachines(false);
+    } else {
+      if (view) view.style.display = 'none';
+      if (form) {
+        form.reset();
+        form.style.display = 'block';
+        document.getElementById('detail-name').value = '';
+        document.getElementById('detail-address').value = '';
+        document.getElementById('detail-website').value = '';
+        document.getElementById('detail-hours').value = '';
+      }
+      if (editBtn) editBtn.style.display = 'none';
       const ml = document.getElementById('location-machines-list');
       if (ml) ml.innerHTML = '';
     }
+    showPage('location-detail');
+  }
+
+  function enableLocationEdit() {
+    const form = document.getElementById('location-detail-form');
+    const view = document.getElementById('location-view');
+    const editBtn = document.getElementById('edit-location-btn');
+    if (editBtn) editBtn.style.display = 'none';
+    if (view) view.style.display = 'none';
+    if (form) {
+      form.reset();
+      document.getElementById('detail-name').value = currentLocation ? currentLocation.name : '';
+      document.getElementById('detail-address').value = currentLocation ? currentLocation.address || '' : '';
+      document.getElementById('detail-website').value = currentLocation ? currentLocation.website || '' : '';
+      document.getElementById('detail-hours').value = currentLocation ? currentLocation.hours || '' : '';
+      form.style.display = 'block';
+    }
+    if (currentLocationId) loadLocationMachines(true);
   }
 
   async function saveLocation(e) {
@@ -122,7 +160,7 @@
     }
   }
 
-  async function loadLocationMachines() {
+  async function loadLocationMachines(editable = false) {
     if (!currentLocationId) return;
     try {
       const res = await OriginApi.getMachines();
@@ -132,16 +170,22 @@
       if (list) {
         list.innerHTML = '';
         machines.forEach(m => {
-          const li = document.createElement('li');
-          li.textContent = m.name + ' ';
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.checked = m.location_id === currentLocationId;
-          cb.onchange = () => {
-            if (cb.checked) assignMachine(m.id, currentLocationId);
-          };
-          li.appendChild(cb);
-          list.appendChild(li);
+          if (editable) {
+            const li = document.createElement('li');
+            li.textContent = m.name + ' ';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = m.location_id === currentLocationId;
+            cb.onchange = () => {
+              if (cb.checked) assignMachine(m.id, currentLocationId);
+            };
+            li.appendChild(cb);
+            list.appendChild(li);
+          } else if (m.location_id === currentLocationId) {
+            const li = document.createElement('li');
+            li.textContent = m.name;
+            list.appendChild(li);
+          }
         });
       }
     } catch {}
@@ -152,9 +196,16 @@
     if (addBtn) addBtn.addEventListener('click', () => openLocation());
     const form = document.getElementById('location-detail-form');
     if (form) form.addEventListener('submit', saveLocation);
+    const editBtn = document.getElementById('edit-location-btn');
+    if (editBtn) editBtn.addEventListener('click', enableLocationEdit);
     loadLocations();
     loadMachines();
   }
+
+  global.openLocation = openLocation;
+  global.enableLocationEdit = enableLocationEdit;
+  global.loadLocations = loadLocations;
+  global.__setCachedLocations = locs => { cachedLocations = locs; };
 
   document.addEventListener('DOMContentLoaded', initSettings);
 })(typeof window !== 'undefined' ? window : this);
