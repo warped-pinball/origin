@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Assign QR Code</title>
+    <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
+  </head>
+  <body>
+    <main class="container">
+      {% if machines %}
+      <h1>Select Machine</h1>
+      <form method="post" action="/q/assign">
+        <input type="hidden" name="code" value="{{ code }}" />
+        <select name="machine_id">
+          {% for m in machines %}
+          <option value="{{ m.id }}">{{ m.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Assign</button>
+      </form>
+      {% else %}
+      <p>No machines are currently registered to your account. Set up a machine in order to configure a QR code.</p>
+      <button onclick="location.href='/'" class="secondary">Return Home</button>
+      {% endif %}
+    </main>
+  </body>
+</html>
