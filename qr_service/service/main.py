@@ -24,6 +24,18 @@ def _get_base_url() -> str:
     return base_url.rstrip("/")
 
 
+def _get_random_len() -> int:
+    """Length of the random suffix appended to generated URLs."""
+    try:
+        return int(os.environ.get("QR_RANDOM_LEN", "8"))
+    except ValueError:
+        logger.warning("Invalid QR_RANDOM_LEN; falling back to 8")
+        return 8
+
+
+RANDOM_LEN = _get_random_len()
+
+
 class GenerateRequest(BaseModel):
     count: int = 1
     cols: int = 1
@@ -36,7 +48,7 @@ def generate(req: GenerateRequest):
     svgs = []
     module_px = None
     for _ in range(req.count):
-        suffix = random_suffix(8)
+        suffix = random_suffix(RANDOM_LEN)
         url = f"{base_url}/{suffix}"
         inner_svg = generate_svg(url)
         if module_px is None:

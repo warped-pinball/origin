@@ -46,6 +46,8 @@ The standalone QR code generator can be customised through the following
 environment variables:
 
 - `QR_BASE_URL` – base URL used to build the links encoded in the QR codes.
+- `QR_RANDOM_LEN` – length of the random, URL-safe suffix appended to each
+  generated link (default `8`).
 - `QR_CODE_COLOR` – fill colour of the QR modules (default `#000000`).
 - `QR_CODE_BACKGROUND_COLOR` – background colour behind the QR code (default
   `#ffffff`).
