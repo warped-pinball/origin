@@ -23,8 +23,6 @@
                 #install-dialog { top:10vh; }
                 .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                #signup-dialog { top:10vh; }
-                #signup-dialog h3 { margin:0.5rem 0; }
                 button { text-align:center; }
                 :root {
                     --nav-icon-size: 2rem;
@@ -177,7 +175,7 @@
                         <form onsubmit='login(event)'>
                             <input id='login-email' type='email' placeholder='Email address' required />
                             <input id='login-password' type='password' placeholder='Password' required />
-                            <p style='font-size:0.9rem;'>Don't have an account?  <a href='#' onclick='openSignup(event)'>Sign Up</a></p>
+                            <p style='font-size:0.9rem;'>Don't have an account?  <a href='/signup'>Sign Up</a></p>
                             <button type='submit'>Log In</button>
                             <span id='login-error' class='error'></span>
                         </form>
@@ -192,25 +190,6 @@
                             <button id='install-confirm-btn' onclick='installApp()'>Install</button>
                             <button type='button' onclick='closeInstall()' class='secondary'>Not now</button>
                         </footer>
-                    </article>
-                </dialog>
-                <dialog id='signup-dialog'>
-                    <article>
-                        <h3>Create Account</h3>
-                        <form onsubmit='signup(event)'>
-                            <input id='signup-email' type='email' placeholder='Email address' required />
-                            <span id='signup-email-error' class='error'></span>
-                            <input id='signup-screen' type='text' placeholder='Screen name' required />
-                            <input id='signup-password' type='password' placeholder='Password' required />
-                            <footer class='grid'>
-                                <button id='signup-submit' type='submit'>
-                                    <span id='signup-spinner' class='spinner' style='display:none'></span>
-                                    <span id='signup-btn-text'>Create Account</span>
-                                </button>
-                                <button type='button' onclick='closeSignup()' class='secondary'>Cancel</button>
-                            </footer>
-                            <span id='signup-error' class='error'></span>
-                        </form>
                     </article>
                 </dialog>
                 <dialog id='delete-dialog'>

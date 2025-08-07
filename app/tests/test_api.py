@@ -101,6 +101,25 @@ def test_login_unverified_user(client, db_session):
     assert response.json()["detail"] == "Email not verified"
 
 
+def test_verify_email_redirects(client, db_session):
+    from .. import crud, schemas, models
+    user = schemas.UserCreate(email="verify@example.com", password="pass", screen_name="v")
+    created = crud.create_user(db_session, user)
+    token = created.verification_token
+    response = client.get(f"/api/v1/auth/verify?token={token}", follow_redirects=False)
+    assert response.status_code == 302
+    assert response.headers["location"].startswith("/?token=")
+    db_session.expire_all()
+    db_user = db_session.query(models.User).filter_by(email="verify@example.com").first()
+    assert db_user.is_verified
+
+
+def test_verify_email_bad_token(client):
+    response = client.get("/api/v1/auth/verify?token=bad", follow_redirects=False)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid token"
+
+
 def test_password_reset_flow(client, db_session):
     client.post(
         "/api/v1/users/",
@@ -129,6 +148,12 @@ def test_root_page(client):
     assert __version__ in response.text
     assert '<meta name="description" content="Origin web application">' in response.text
     assert '<html lang="en"' in response.text
+
+
+def test_signup_page(client):
+    response = client.get("/signup")
+    assert response.status_code == 200
+    assert "Create Account" in response.text
 
 
 def test_gzip_enabled(client):
