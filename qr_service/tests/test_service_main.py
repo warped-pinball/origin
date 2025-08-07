@@ -40,6 +40,22 @@ def test_generate_endpoint(monkeypatch):
             assert item["svg"].startswith("<svg")
 
 
+def test_generate_respects_random_len(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    monkeypatch.setenv("QR_RANDOM_LEN", "17")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1, "cols": 1})
+        assert resp.status_code == 200
+        data = resp.json()
+        suffix = data["items"][0]["suffix"]
+        assert len(suffix) == 17
+        assert data["items"][0]["url"].endswith(suffix)
+
+
 def test_index_contains_controls(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     for mod in ["qr_service.service.main"]:
