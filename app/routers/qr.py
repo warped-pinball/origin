@@ -1,7 +1,7 @@
 import os
 from base64 import urlsafe_b64decode
 from urllib.parse import quote
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -29,7 +29,9 @@ def handle_qr(
 ):
     if not current_user:
         next_url = quote(f"/q?r={r}", safe="")
-        return RedirectResponse(f"/?next={next_url}")
+        return RedirectResponse(
+            f"/?next={next_url}", status_code=status.HTTP_302_FOUND
+        )
     qr_id = _decode_id(r)
     qr = db.query(models.QRCode).filter(models.QRCode.id == qr_id).first()
     if not qr:
@@ -39,4 +41,4 @@ def handle_qr(
         location = f"{host}/machines/{qr.machine_id}"
     else:
         location = f"{host}/machines/assign?code={r}"
-    return RedirectResponse(location)
+    return RedirectResponse(location, status_code=status.HTTP_302_FOUND)
