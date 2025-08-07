@@ -144,7 +144,8 @@ def test_password_reset_flow(client, db_session):
 def test_root_page(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "Reset Password" in response.text
+    assert "Forgot your password?" in response.text
+    assert "Reset password" in response.text
     assert "Create Account" in response.text
     assert __version__ in response.text
     assert '<meta name="description" content="Origin web application">' in response.text
@@ -155,6 +156,21 @@ def test_signup_page(client):
     response = client.get("/signup")
     assert response.status_code == 200
     assert "Create Account" in response.text
+    assert "Return to Login" in response.text
+    assert "Privacy Policy" in response.text
+    assert "Terms of Service" in response.text
+
+
+def test_privacy_page(client):
+    response = client.get("/privacy")
+    assert response.status_code == 200
+    assert "Privacy Policy" in response.text
+
+
+def test_terms_page(client):
+    response = client.get("/terms")
+    assert response.status_code == 200
+    assert "Terms of Service" in response.text
 
 
 def test_gzip_enabled(client):

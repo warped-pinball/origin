@@ -12,9 +12,9 @@
       @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
     <script>window.API_BASE = "{{ api_base }}"; function checkAuth(){}; function setTournamentFilter(){}; function showTournamentViewById(){};</script>
-    <script src='/static/js/app.js' defer></script>
-    <script src='/static/js/api.js' defer></script>
-    <script src='/static/js/signup.js' defer></script>
+    <script src='/static/js/app.min.js' defer></script>
+    <script src='/static/js/api.min.js' defer></script>
+    <script src='/static/js/signup.min.js' defer></script>
   </head>
   <body>
     <main class='container'>
@@ -24,15 +24,19 @@
         <span id='signup-email-error' class='error'></span>
         <input id='signup-screen' type='text' placeholder='Screen name' required />
         <input id='signup-password' type='password' placeholder='Password' required />
+        <label>
+          <input id='signup-accept' type='checkbox' required />
+          I agree to the <a href='/terms' target='_blank'>Terms of Service</a> and <a href='/privacy' target='_blank'>Privacy Policy</a>
+        </label>
         <footer class='grid'>
           <button id='signup-submit' type='submit'>
             <span id='signup-spinner' class='spinner' style='display:none'></span>
             <span id='signup-btn-text'>Create Account</span>
           </button>
+          <a href='/' role='button' class='secondary'>Return to Login</a>
         </footer>
         <span id='signup-error' class='error'></span>
       </form>
-      <p>Already have an account? <a href='/'>Log in</a></p>
     </main>
   </body>
 </html>
