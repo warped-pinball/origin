@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-const code = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const code = fs.readFileSync(path.join(__dirname, 'tournaments.js'), 'utf8');
 
 global.window = { location: { origin: 'https://example.com' }, API_BASE: '', addEventListener: () => {} };
 global.document = { documentElement: { dataset: {} }, getElementById: () => null, querySelectorAll: () => [], addEventListener: () => {} };
@@ -12,6 +12,7 @@ global.navigator = {};
 vm.runInThisContext(code);
 global.showToast = () => {};
 global.alert = () => {};
+const shareTournament = window.shareTournament;
 
 test('shareTournament', async (t) => {
   await t.test('uses single link when navigator.share available', () => {
