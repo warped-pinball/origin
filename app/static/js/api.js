@@ -46,6 +46,14 @@
       });
     }
 
+    async function resetPassword(token, password) {
+      return fetch(API_BASE + '/api/v1/auth/password-reset/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      });
+    }
+
     async function deleteAccount() {
       return apiFetch('/api/v1/users/me', {
         method: 'DELETE'
@@ -92,6 +100,7 @@
       updatePassword,
       deleteAccount,
       requestPasswordReset,
+      resetPassword,
       getMachines,
       getLocations,
       createLocation,
