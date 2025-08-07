@@ -38,6 +38,14 @@
       });
     }
 
+    async function requestPasswordReset(email) {
+      return fetch(API_BASE + '/api/v1/auth/password-reset/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+    }
+
     async function deleteAccount() {
       return apiFetch('/api/v1/users/me', {
         method: 'DELETE'
@@ -50,7 +58,8 @@
       getMe,
       updateScreenName,
       updatePassword,
-      deleteAccount
+      deleteAccount,
+      requestPasswordReset
     };
   }
 

@@ -37,6 +37,11 @@ def signup_success(request: Request):
     return templates.TemplateResponse(request, "signup_success.html", {"version": __version__, "api_base": API_BASE})
 
 
+@app.get("/reset-password", response_class=HTMLResponse)
+def reset_password_page(request: Request):
+    return templates.TemplateResponse(request, "reset_password.html", {"version": __version__, "api_base": API_BASE})
+
+
 @app.exception_handler(HTTPException)
 async def log_http_exception(request: Request, exc: HTTPException):
     logger.warning("HTTP error %s on %s %s: %s", exc.status_code, request.method, request.url.path, exc.detail)

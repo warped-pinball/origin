@@ -175,8 +175,11 @@
                         <form onsubmit='login(event)'>
                             <input id='login-email' type='email' placeholder='Email address' required />
                             <input id='login-password' type='password' placeholder='Password' required />
-                            <p style='font-size:0.9rem;'>Don't have an account?  <a href='/signup'>Sign Up</a></p>
-                            <button type='submit'>Log In</button>
+                            <footer class='grid'>
+                                <button type='submit'>Log In</button>
+                                <button type='button' onclick="location.href='/signup'">Create Account</button>
+                            </footer>
+                            <p style='font-size:0.9rem;'><a href='/reset-password'>Reset Password</a></p>
                             <span id='login-error' class='error'></span>
                         </form>
                         
