@@ -35,7 +35,7 @@ def test_qr_redirects_to_machine(client, db_session):
         headers={"Authorization": f"Bearer {token}"},
         follow_redirects=False,
     )
-    assert res.status_code == 307
+    assert res.status_code == 302
     assert res.headers["location"] == f"https://example.com/machines/{machine.id}"
 
 
@@ -51,7 +51,7 @@ def test_qr_requires_configuration(client, db_session):
         headers={"Authorization": f"Bearer {token}"},
         follow_redirects=False,
     )
-    assert res.status_code == 307
+    assert res.status_code == 302
     assert res.headers["location"] == f"https://example.com/machines/assign?code={encoded}"
 
 
@@ -68,5 +68,5 @@ def test_qr_invalid_code(client):
 def test_qr_redirects_to_login_when_unauthenticated(client):
     encoded = _encode_id(1)
     res = client.get(f"/q?r={encoded}", follow_redirects=False)
-    assert res.status_code == 307
+    assert res.status_code == 302
     assert res.headers["location"] == f"/?next=%2Fq%3Fr%3D{encoded}"
