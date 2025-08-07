@@ -17,12 +17,32 @@ class User(Base):
     verification_token = Column(String, unique=True, index=True)
     reset_token = Column(String, unique=True, index=True)
     scores = relationship('Score', back_populates='user')
+    locations = relationship('Location', back_populates='user')
+    machines = relationship('Machine', back_populates='owner')
+
+class Location(Base):
+    __tablename__ = 'locations'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    name = Column(String, nullable=False)
+    address = Column(String)
+    website = Column(String)
+    hours = Column(String)
+
+    user = relationship('User', back_populates='locations')
+    machines = relationship('Machine', back_populates='location')
+
 
 class Machine(Base):
     __tablename__ = 'machines'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     secret = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    location_id = Column(Integer, ForeignKey('locations.id'))
+
+    owner = relationship('User', back_populates='machines')
+    location = relationship('Location', back_populates='machines')
     scores = relationship('Score', back_populates='machine')
 
 

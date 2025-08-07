@@ -44,10 +44,37 @@ class MachineBase(BaseModel):
 class MachineCreate(MachineBase):
     secret: str
 
+    location_id: Optional[int] = None
+
+
 class Machine(MachineBase):
     id: int
+    user_id: Optional[int] = None
+    location_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LocationBase(BaseModel):
+    name: str
+    address: Optional[str] = None
+    website: Optional[str] = None
+    hours: Optional[str] = None
+
+
+class LocationCreate(LocationBase):
+    pass
+
+
+class Location(LocationBase):
+    id: int
+    machines: list[Machine] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LocationMachineLink(BaseModel):
+    machine_id: int
 
 class ScoreBase(BaseModel):
     game: str
