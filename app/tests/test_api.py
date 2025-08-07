@@ -182,7 +182,9 @@ def test_signup_buttons_layout(client):
 def test_privacy_page(client):
     response = client.get("/privacy")
     assert response.status_code == 200
-    assert "Privacy Policy" in response.text
+    assert "Privacy Policy for Warped Pinball" in response.text
+    assert "Effective Date:" in response.text
+    assert "August 7th 2025" in response.text
 
 
 def test_terms_page(client):
