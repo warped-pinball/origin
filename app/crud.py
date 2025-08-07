@@ -96,8 +96,13 @@ def delete_user(db: Session, user: models.User):
 
 # Machines
 
-def create_machine(db: Session, machine: schemas.MachineCreate) -> models.Machine:
-    db_machine = models.Machine(name=machine.name, secret=machine.secret)
+def create_machine(db: Session, machine: schemas.MachineCreate, user_id: int) -> models.Machine:
+    db_machine = models.Machine(
+        name=machine.name,
+        secret=machine.secret,
+        user_id=user_id,
+        location_id=machine.location_id,
+    )
     db.add(db_machine)
     db.commit()
     db.refresh(db_machine)
@@ -108,6 +113,36 @@ def get_machine(db: Session, machine_id: int) -> Optional[models.Machine]:
 
 def get_machine_by_name(db: Session, name: str) -> Optional[models.Machine]:
     return db.query(models.Machine).filter(models.Machine.name == name).first()
+
+
+def get_machines_for_user(db: Session, user_id: int) -> List[models.Machine]:
+    return db.query(models.Machine).filter(models.Machine.user_id == user_id).all()
+
+
+# Locations
+
+def create_location(db: Session, user_id: int, location: schemas.LocationCreate) -> models.Location:
+    db_location = models.Location(user_id=user_id, **location.model_dump())
+    db.add(db_location)
+    db.commit()
+    db.refresh(db_location)
+    return db_location
+
+
+def get_locations_for_user(db: Session, user_id: int) -> List[models.Location]:
+    return db.query(models.Location).filter(models.Location.user_id == user_id).all()
+
+
+def get_location(db: Session, location_id: int) -> Optional[models.Location]:
+    return db.query(models.Location).filter(models.Location.id == location_id).first()
+
+
+def set_machine_location(db: Session, machine: models.Machine, location_id: int) -> models.Machine:
+    machine.location_id = location_id
+    db.add(machine)
+    db.commit()
+    db.refresh(machine)
+    return machine
 
 # Scores
 

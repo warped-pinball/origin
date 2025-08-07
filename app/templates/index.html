@@ -164,6 +164,7 @@
             <script src="/static/js/api.min.js" defer></script>
             <script src="/static/js/tournaments.min.js" defer></script>
             <script src="/static/js/auth.min.js" defer></script>
+            <script src="/static/js/settings.min.js" defer></script>
             <script src="/static/js/app.min.js" defer></script>
         </head>
         <body>
@@ -349,6 +350,18 @@
                             </button>
                             <button onclick='openDeleteConfirm()' class='secondary outline'>Delete Account</button>
                         </div>
+                        <h3>Locations</h3>
+                        <ul id='locations-list'></ul>
+                        <button id='add-location-btn' style='width:fit-content;margin-bottom:0.5rem;'>Add Location</button>
+                        <form id='location-form' style='display:none;margin-bottom:1rem;'>
+                            <input id='loc-name' placeholder='Name' required />
+                            <input id='loc-address' placeholder='Address' />
+                            <input id='loc-website' type='url' placeholder='Website' />
+                            <input id='loc-hours' placeholder='Hours' />
+                            <button type='submit'>Save</button>
+                        </form>
+                        <h3>Machines</h3>
+                        <ul id='machines-list'></ul>
                         <p style='text-align:center;margin-top:1rem;font-size:0.9rem;'>Version {{ version }}</p>
                     </section>
                 </section>

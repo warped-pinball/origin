@@ -52,6 +52,30 @@
       });
     }
 
+    async function getMachines() {
+      return apiFetch('/api/v1/machines/me');
+    }
+
+    async function getLocations() {
+      return apiFetch('/api/v1/locations/');
+    }
+
+    async function createLocation(data) {
+      return apiFetch('/api/v1/locations/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    }
+
+    async function assignMachine(machineId, locationId) {
+      return apiFetch(`/api/v1/locations/${locationId}/machines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ machine_id: machineId })
+      });
+    }
+
     return {
       signup,
       login,
@@ -59,7 +83,11 @@
       updateScreenName,
       updatePassword,
       deleteAccount,
-      requestPasswordReset
+      requestPasswordReset,
+      getMachines,
+      getLocations,
+      createLocation,
+      assignMachine
     };
   }
 
