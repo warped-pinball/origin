@@ -43,6 +43,7 @@ def test_password_reset_email_link(monkeypatch):
     monkeypatch.setattr(email, "send_email", fake_send_email)
     email.send_password_reset_email("user@example.com", "Screen", "tok")
     assert "Hello Screen" in captured["text"]
+    assert "If you didn't request this, you can ignore this email." in captured["text"]
     assert (
         "Reset your password: https://example.com/reset-password?token=tok"
         in captured["text"]
@@ -52,6 +53,7 @@ def test_password_reset_email_link(monkeypatch):
         in captured["html"]
     )
     assert "Reset your password" in captured["html"]
+    assert "If you didn't request this" in captured["html"]
     assert (
         '<img src="https://example.com/static/img/logo.png"' in captured["html"]
     )

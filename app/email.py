@@ -86,7 +86,7 @@ def send_password_reset_email(email: str, screen_name: str, token: str) -> None:
         email,
         screen_name,
         "Reset your password",
-        "Use the link below to reset your password.",
+        "Use the link below to reset your password. If you didn't request this, you can ignore this email.",
         link,
         "Reset your password",
     )
