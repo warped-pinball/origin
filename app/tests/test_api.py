@@ -188,7 +188,8 @@ def test_privacy_page(client):
 def test_terms_page(client):
     response = client.get("/terms")
     assert response.status_code == 200
-    assert "Terms of Service" in response.text
+    assert "Terms of Service for Warped Pinball" in response.text
+    assert "Effective Date: August 7th 2025" in response.text
 
 
 def test_gzip_enabled(client):
