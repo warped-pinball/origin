@@ -161,6 +161,24 @@ def test_signup_page(client):
     assert "Terms of Service" in response.text
 
 
+def test_login_buttons_layout(client):
+    response = client.get("/")
+    assert "<footer class='grid'>" in response.text
+    assert (
+        "<button type='button' class='secondary' onclick=\"location.href='/signup'\">Create Account</button>"
+        in response.text
+    )
+
+
+def test_signup_buttons_layout(client):
+    response = client.get("/signup")
+    assert "<footer class='grid'>" in response.text
+    assert (
+        "<button type='button' class='secondary' onclick=\"location.href='/'\">Return to Login</button>"
+        in response.text
+    )
+
+
 def test_privacy_page(client):
     response = client.get("/privacy")
     assert response.status_code == 200
