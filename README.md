@@ -33,7 +33,7 @@ RSA key pair and obtaining email API credentials.
 
 ### Database Migrations
 
-Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql` and a dedicated Flyway container applies them before the application services start. The container waits for Postgres to become available and updates the `schema_version` table so the app skips its internal Python migrations. Add a new numbered SQL file alongside the code that requires it.
+Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql`, and a dedicated Flyway image built from this directory is published to GHCR. Docker Compose pulls the prebuilt image so the migrations are baked into the container and no external volume is required. The container waits for Postgres to become available and updates the `schema_version` table so the app skips its internal Python migrations. When adding a new numbered SQL file, rebuild and push the Flyway image.
 
 ## Progressive Web App
 
