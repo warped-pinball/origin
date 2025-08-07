@@ -41,3 +41,10 @@ jobs:
           push: 'false'
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/qr-service:pr-${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build flyway image
+        uses: ./.github/actions/docker-build
+        with:
+          context: flyway
+          push: 'false'
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/origin-flyway:pr-${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
