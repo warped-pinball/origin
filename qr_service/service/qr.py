@@ -4,6 +4,7 @@ import os
 import uuid
 import xml.etree.ElementTree as ET
 
+from decimal import Decimal
 from io import BytesIO
 
 import qrcode
@@ -68,12 +69,31 @@ def generate_svg(data: str) -> str:
     }:
         drawer = "square"
 
+    eye_drawer = _env("QR_EYE_DRAWER", "circle").lower()
+    if eye_drawer not in {
+        "square",
+        "gapped_square",
+        "circle",
+        "rounded",
+        "vertical_bars",
+        "horizontal_bars",
+    }:
+        eye_drawer = "circle"
+
     if drawer == "square":
+        svg_eye_drawers = {
+            "circle": svg_moduledrawers.SvgPathCircleDrawer,
+            "square": svg_moduledrawers.SvgPathSquareDrawer,
+            "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
+                size_ratio=Decimal("0.8")
+            ),
+        }
+        eye = svg_eye_drawers.get(eye_drawer, svg_moduledrawers.SvgPathCircleDrawer)()
         img = qr.make_image(
             image_factory=qrcode.image.svg.SvgPathImage,
             fill_color=_env("QR_CODE_COLOR", "#000000"),
             back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
-            eye_drawer="circle",
+            eye_drawer=eye,
         )
         root = _strip_ns(ET.fromstring(img.to_string()))
         ns_key = "{http://www.w3.org/2000/xmlns/}svg"
@@ -86,10 +106,18 @@ def generate_svg(data: str) -> str:
         return ET.tostring(root, encoding="unicode")
 
     if drawer == "circle":
+        svg_eye_drawers = {
+            "circle": svg_moduledrawers.SvgPathCircleDrawer,
+            "square": svg_moduledrawers.SvgPathSquareDrawer,
+            "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
+                size_ratio=Decimal("0.8")
+            ),
+        }
+        eye = svg_eye_drawers.get(eye_drawer, svg_moduledrawers.SvgPathCircleDrawer)()
         img = qr.make_image(
             image_factory=qrcode.image.svg.SvgPathImage,
             module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
-            eye_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
+            eye_drawer=eye,
             fill_color=_env("QR_CODE_COLOR", "#000000"),
             back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
         )
@@ -110,13 +138,22 @@ def generate_svg(data: str) -> str:
         "horizontal_bars": moduledrawers.HorizontalBarsDrawer,
     }[drawer]
 
+    eye_drawer_cls = {
+        "square": moduledrawers.SquareModuleDrawer,
+        "gapped_square": moduledrawers.GappedSquareModuleDrawer,
+        "circle": moduledrawers.CircleModuleDrawer,
+        "rounded": moduledrawers.RoundedModuleDrawer,
+        "vertical_bars": moduledrawers.VerticalBarsDrawer,
+        "horizontal_bars": moduledrawers.HorizontalBarsDrawer,
+    }.get(eye_drawer, moduledrawers.CircleModuleDrawer)
+
     raster_scale = float(_env("QR_RASTER_SCALE", "5"))
     box_size = max(1, int(math.ceil(SVG_SIZE * raster_scale / modules)))
     qr.box_size = box_size
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
-        eye_drawer=moduledrawers.CircleModuleDrawer(),
+        eye_drawer=eye_drawer_cls(),
         color_mask=colormasks.SolidFillColorMask(
             back_color=ImageColor.getrgb(_env("QR_CODE_BACKGROUND_COLOR", "#ffffff")),
             front_color=ImageColor.getrgb(_env("QR_CODE_COLOR", "#000000")),
