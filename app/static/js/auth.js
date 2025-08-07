@@ -1,57 +1,4 @@
 (function (global) {
-  async function signup(e) {
-    e.preventDefault();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-    const screen_name = document.getElementById('signup-screen').value;
-    const btn = document.getElementById('signup-submit');
-    const spinner = document.getElementById('signup-spinner');
-    const errEl = document.getElementById('signup-error');
-    if (errEl) errEl.textContent = '';
-    if (spinner) spinner.style.display = 'inline-block';
-    if (btn) btn.disabled = true;
-    logToFile('Signup attempt: ' + email);
-    let res;
-    try {
-      res = await OriginApi.signup(email, password, screen_name);
-    } catch (err) {
-      if (errEl) errEl.textContent = 'Network error';
-      logToFile('Signup network error: ' + err);
-      if (spinner) spinner.style.display = 'none';
-      if (btn) btn.disabled = false;
-      return;
-    }
-    if (res.ok) {
-      let loginRes;
-      try {
-        loginRes = await OriginApi.login(email, password);
-      } catch (err) {
-        logToFile('Auto-login error: ' + err);
-        loginRes = { ok: false };
-      }
-      closeSignup();
-      if (loginRes.ok) {
-        const data = await loginRes.json();
-        localStorage.setItem('token', data.access_token);
-        showLoggedIn();
-        showToast('Account created', 'success');
-      } else if (loginRes.status === 403) {
-        showToast('Account created. Please verify using the email link before logging in.', 'info');
-        showLogin();
-      } else {
-        showToast('Account created but login failed', 'error');
-        showLogin();
-      }
-    } else if (res.status === 422) {
-      const emailInput = document.getElementById('signup-email');
-      emailInput.setCustomValidity('Please enter a valid email address.');
-      emailInput.reportValidity();
-    } else {
-      showToast('Signup failed', 'error');
-    }
-    if (spinner) spinner.style.display = 'none';
-    if (btn) btn.disabled = false;
-  }
 
   async function login(e) {
     e.preventDefault();
@@ -159,19 +106,6 @@
     if (dialog) dialog.close();
   }
 
-  function openSignup(e) {
-    e.preventDefault();
-    document.getElementById('signup-dialog').showModal();
-  }
-
-  function closeSignup() {
-    document.getElementById('signup-dialog').close();
-    const emailInput = document.getElementById('signup-email');
-    if (emailInput) {
-      emailInput.setCustomValidity('');
-    }
-    document.getElementById('signup-email-error').textContent = '';
-  }
 
   function showLogin() {
     const login = document.getElementById('login-section');
@@ -218,25 +152,29 @@
   }
 
   function checkAuth() {
+    const params = new URLSearchParams(location.search);
+    const urlToken = params.get('token');
+    if (urlToken) {
+      try { localStorage.setItem('token', urlToken); } catch {}
+      params.delete('token');
+      const newQuery = params.toString();
+      const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
+      history.replaceState(null, '', newUrl);
+    }
     const hasToken = !!localStorage.getItem('token');
-    if (hasToken && location.pathname.endsWith('login.html')) {
-      showLoggedIn();
-    } else if (hasToken) {
+    if (hasToken) {
       showLoggedIn();
     } else {
       showLogin();
     }
   }
 
-  global.signup = signup;
   global.login = login;
   global.logout = logout;
   global.loadUserInfo = loadUserInfo;
   global.updateScreenName = updateScreenName;
   global.updatePassword = updatePassword;
   global.deleteAccount = deleteAccount;
-  global.openSignup = openSignup;
-  global.closeSignup = closeSignup;
   global.showLogin = showLogin;
   global.showLoggedIn = showLoggedIn;
   global.checkAuth = checkAuth;

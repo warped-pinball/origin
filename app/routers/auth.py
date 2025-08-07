@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
@@ -33,7 +34,11 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     user = crud.verify_user(db, token)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid token")
-    return {"detail": "Email verified"}
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return RedirectResponse(url=f"/?token={access_token}", status_code=302)
 
 
 @router.post("/password-reset/request")

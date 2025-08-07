@@ -27,6 +27,16 @@ def read_root(request: Request):
     return templates.TemplateResponse(request, "index.html", {"version": __version__, "api_base": API_BASE})
 
 
+@app.get("/signup", response_class=HTMLResponse)
+def signup_page(request: Request):
+    return templates.TemplateResponse(request, "signup.html", {"version": __version__, "api_base": API_BASE})
+
+
+@app.get("/signup/success", response_class=HTMLResponse)
+def signup_success(request: Request):
+    return templates.TemplateResponse(request, "signup_success.html", {"version": __version__, "api_base": API_BASE})
+
+
 @app.exception_handler(HTTPException)
 async def log_http_exception(request: Request, exc: HTTPException):
     logger.warning("HTTP error %s on %s %s: %s", exc.status_code, request.method, request.url.path, exc.detail)
