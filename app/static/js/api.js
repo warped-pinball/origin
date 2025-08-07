@@ -18,38 +18,29 @@
       });
     }
 
-    async function getMe(token) {
-      return fetch(API_BASE + '/api/v1/users/me', {
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
+    async function getMe() {
+      return apiFetch('/api/v1/users/me');
     }
 
-    async function updateScreenName(token, screenName) {
-      return fetch(API_BASE + '/api/v1/users/me', {
+    async function updateScreenName(screenName) {
+      return apiFetch('/api/v1/users/me', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ screen_name: screenName })
       });
     }
 
-    async function updatePassword(token, password) {
-      return fetch(API_BASE + '/api/v1/users/me/password', {
+    async function updatePassword(password) {
+      return apiFetch('/api/v1/users/me/password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
       });
     }
 
-    async function deleteAccount(token) {
-      return fetch(API_BASE + '/api/v1/users/me', {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
+    async function deleteAccount() {
+      return apiFetch('/api/v1/users/me', {
+        method: 'DELETE'
       });
     }
 
