@@ -9,6 +9,8 @@
             <link rel='stylesheet' href='/static/css/material-icons.css'>
             <link rel='stylesheet' href='/static/css/material-symbols.css'>
             <link rel='manifest' href='/static/manifest.json'>
+            <link rel='stylesheet' href='/static/css/style.css'>
+            <link rel="icon" type="image/png" href="/static/img/logo.png">
             <script>
                 try {
                     const t = localStorage.getItem('theme');
@@ -17,148 +19,6 @@
                     }
                 } catch {}
             </script>
-            <style>
-                .error { color: red; font-size: small; }
-                a { text-decoration: underline; }
-                #install-dialog { top:10vh; }
-                .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                button { text-align:center; }
-                :root {
-                    --nav-icon-size: 2rem;
-                    --nav-gap: 2rem;
-                    --nav-max-width: 30rem;
-                }
-                @media (max-width: 400px) {
-                    :root {
-                        --nav-icon-size: 1.5rem;
-                        --nav-gap: 1rem;
-                    }
-                }
-                @media (max-width: 340px) {
-                    :root {
-                        --nav-icon-size: 1.2rem;
-                        --nav-gap: 0.5rem;
-                    }
-                }
-                #navbar {
-                    position:fixed;
-                    bottom:0;
-                    left:0;
-                    width:100%;
-                    display:flex;
-                    justify-content:center;
-                    background:transparent;
-                    padding:0.5rem 0;
-                }
-                #navbar ul {
-                    display:flex;
-                    gap:var(--nav-gap);
-                    list-style:none;
-                    margin:0 auto;
-                    padding:0 var(--nav-gap);
-                    align-items:center;
-                    max-width:var(--nav-max-width);
-                }
-                #navbar a[data-page] {
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                }
-                #navbar .material-icons {
-                    font-size:var(--nav-icon-size);
-                    width:var(--nav-icon-size);
-                    height:var(--nav-icon-size);
-                }
-                #profile-avatar {
-                    width:calc(var(--nav-icon-size)*4);
-                    height:auto;
-                    aspect-ratio:1;
-                    object-fit:contain;
-                }
-                #account-overlay {
-                    --clip-x:100%;
-                    --clip-y:0;
-                    position:fixed;
-                    left:0;
-                    top:0;
-                    width:100%;
-                    height:100vh;
-                    overflow:auto;
-                    background:var(--pico-surface,#222);
-                    text-align:center;
-                    padding-top:2rem;
-                    z-index:1000;
-                    opacity:0;
-                    pointer-events:none;
-                    clip-path:circle(0 at var(--clip-x) var(--clip-y));
-                    transition:clip-path 0.4s ease,opacity 0.4s ease;
-                }
-                #account-overlay.show {
-                    opacity:1;
-                    pointer-events:auto;
-                    clip-path:circle(150% at var(--clip-x) var(--clip-y));
-                }
-                #account-avatar {
-                    width:2.5rem;
-                    height:2.5rem;
-                    border-radius:50%;
-                    cursor:pointer;
-                    transform:scale(0.5);
-                    transition:transform 0.3s;
-                }
-                #account-overlay.show #account-avatar { transform: scale(1); }
-                #account-close {
-                    position:absolute;
-                    top:0.5rem;
-                    right:0.5rem;
-                    width:2rem;
-                    height:2rem;
-                    background:none;
-                    border:1px solid currentColor;
-                    border-radius:50%;
-                    color:inherit;
-                    cursor:pointer;
-                    padding:0;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                }
-                #account-actions {
-                    position:absolute;
-                    top:0.5rem;
-                    right:3rem;
-                    display:flex;
-                    gap:0.5rem;
-                    opacity:0;
-                    pointer-events:none;
-                    transform:translateX(0.5rem);
-                    transition:opacity 0.2s ease, transform 0.2s ease;
-                }
-                #account-actions.visible {
-                    opacity:1;
-                    pointer-events:auto;
-                    transform:translateX(0);
-                }
-                #account-save {
-                    width:2rem;
-                    height:2rem;
-                    border-radius:50%;
-                    background:var(--pico-primary);
-                    border:none;
-                    color:var(--pico-on-primary, #fff);
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    transition:background 0.3s;
-                    cursor:pointer;
-                  }
-                  #account-save.saved {
-                      background:#15803d;
-                  }
-                @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
-                main.container { padding-bottom:3.5rem; }
-            </style>
             <script>window.API_BASE = "{{ api_base }}";</script>
             <script src="/static/js/http.min.js" defer></script>
             <script src="/static/js/api.min.js" defer></script>
@@ -174,13 +34,15 @@
                 <section id='login-section'>
                     <article>
                         <h2>Login</h2>
-                        <form onsubmit='login(event)'>
-                            <input id='login-email' type='email' placeholder='Email address' required />
-                            <input id='login-password' type='password' placeholder='Password' required />
+                        <form id='login-form'>
+                            <label for='login-email'>Email address</label>
+                            <input id='login-email' name='email' type='email' placeholder='Email address' required />
+                            <label for='login-password'>Password</label>
+                            <input id='login-password' name='password' type='password' placeholder='Password' required />
                             <p style='font-size:0.9rem;'>Forgot your password? <a href='/reset-password'>Reset password</a></p>
                             <footer class='grid'>
                                 <button type='submit'>Log In</button>
-                                <button type='button' class='secondary' onclick="location.href='/signup'">Create Account</button>
+                                <button id='create-account-btn' type='button' class='secondary'>Create Account</button>
                             </footer>
                             <span id='login-error' class='error'></span>
                         </form>
@@ -210,11 +72,12 @@
                 <dialog id='password-dialog'>
                     <article>
                         <h3>Change Password</h3>
-                        <form onsubmit='updatePassword(event)'>
-                            <input id='account-password' type='password' placeholder='New password' required />
+                        <form id='password-form'>
+                            <label for='account-password'>New password</label>
+                            <input id='account-password' name='new-password' type='password' placeholder='New password' required />
                             <footer class='grid'>
                                 <button type='submit'>Change</button>
-                                <button type='button' onclick="document.getElementById('password-dialog').close()" class='secondary'>Cancel</button>
+                                <button id='password-cancel' type='button' class='secondary'>Cancel</button>
                             </footer>
                         </form>
                     </article>
@@ -222,10 +85,10 @@
                 <section id='loggedin-section' style='display:none;'>
                     <nav id='navbar' class='container-fluid'>
                         <ul>
-                            <li><a href='#' data-page='achievements' class='secondary' onclick="showPage('achievements', event)">
+                            <li><a href='#' data-page='achievements' class='secondary' title='Achievements' aria-label='Achievements'>
                                 <span class='material-symbols-outlined'>beenhere</span>
                             </a></li>
-                            <li><a href='#' data-page='tournaments' class='secondary' onclick="showPage('tournaments', event)">
+                            <li><a href='#' data-page='tournaments' class='secondary' title='Tournaments' aria-label='Tournaments'>
                                 <span class='material-icons'>emoji_events</span>
                             </a></li>
                             <li>
@@ -234,10 +97,10 @@
                                     <img id='profile-avatar' src='/static/img/logo.png' alt='Profile picture' style='display:none;'>
                                 </picture>
                             </li>
-                            <li><a href='#' data-page='friends' class='secondary' onclick="showPage('friends', event)">
+                            <li><a href='#' data-page='friends' class='secondary' title='Friends' aria-label='Friends'>
                                 <span class='material-icons'>group</span>
                             </a></li>
-                            <li><a href='#' data-page='settings' class='secondary' onclick="showPage('settings', event)">
+                            <li><a href='#' data-page='settings' class='secondary' title='Settings' aria-label='Settings'>
                                 <span class='material-icons'>settings</span>
                             </a></li>
                         </ul>
@@ -248,7 +111,7 @@
                     </section>
                     <section id='tournaments' class='page' style='display:none;'>
                         <h2>Tournaments</h2>
-                        <button id='create-tournament-btn' onclick="showPage('tournament-create', event)">Create Tournament</button>
+                        <button id='create-tournament-btn'>Create Tournament</button>
                         <section id='tournament-filters' style='margin-top:1rem;'>
                             <h3>Filter</h3>
                             <div id='tournament-filter-buttons' role='group'>
@@ -340,7 +203,7 @@
                         <h2>Settings</h2>
                         <h3>Appearance</h3>
                         <label class='switch' style='margin-bottom:1rem;'>
-                            <input id='theme-toggle' type='checkbox' role='switch' onchange='toggleTheme()' checked>
+                            <input id='theme-toggle' type='checkbox' role='switch' checked>
                             Dark Mode
                         </label>
                         <h3>Account</h3>

@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <title>Assign QR Code</title>
-    <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@1.*/css/pico.min.css'>
+    <link rel='stylesheet' href='/static/css/pico.min.css'>
+    <link rel='stylesheet' href='/static/css/style.css'>
+    <link rel="icon" type="image/png" href="/static/img/logo.png">
   </head>
   <body>
     <main class="container">
@@ -20,7 +22,7 @@
       </form>
       {% else %}
       <p>No machines are currently registered to your account. Set up a machine in order to configure a QR code.</p>
-      <button onclick="location.href='/'" class="secondary">Return Home</button>
+      <a href="/" class="secondary button">Return Home</a>
       {% endif %}
     </main>
   </body>
