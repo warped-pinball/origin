@@ -38,7 +38,17 @@ def verify_email(token: str, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return RedirectResponse(url=f"/?token={access_token}", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(
+        key="token",
+        value=access_token,
+        max_age=int(access_token_expires.total_seconds()),
+        secure=True,
+        httponly=False,
+        samesite="lax",
+        path="/",
+    )
+    return response
 
 
 @router.post("/password-reset/request")

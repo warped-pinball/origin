@@ -161,15 +161,22 @@
     }
   }
 
+  function getCookie(name) {
+    const cookies = document.cookie ? document.cookie.split('; ') : [];
+    for (const c of cookies) {
+      if (c.startsWith(name + '=')) {
+        return decodeURIComponent(c.slice(name.length + 1));
+      }
+    }
+    return null;
+  }
+
   function checkAuth() {
     const params = new URLSearchParams(location.search);
-    const urlToken = params.get('token');
-    if (urlToken) {
-      try { localStorage.setItem('token', urlToken); } catch {}
-      params.delete('token');
-      const newQuery = params.toString();
-      const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
-      history.replaceState(null, '', newUrl);
+    const cookieToken = getCookie('token');
+    if (cookieToken) {
+      try { localStorage.setItem('token', cookieToken); } catch {}
+      document.cookie = 'token=; Max-Age=0; path=/';
     }
     const hasToken = !!localStorage.getItem('token');
     const next = params.get('next');
