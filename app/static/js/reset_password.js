@@ -64,8 +64,10 @@
     if (res.ok) {
       if (errEl) {
         errEl.style.color = 'green';
-        errEl.textContent = 'Password reset. You can now log in.';
+        errEl.textContent = 'Password reset. Redirecting to login...';
       }
+      showToast('Password reset. You can now log in.', 'success');
+      setTimeout(() => { global.location.href = '/'; }, 1500);
     } else {
       showToast('Reset failed', 'error');
     }
