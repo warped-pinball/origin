@@ -156,9 +156,7 @@
 
   async function joinTournament(id) {
     const res = await apiFetch(`/api/v1/tournaments/${id}/join`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: 1 })
+      method: 'POST'
     });
     if (res.ok) {
       showToast('Joined tournament', 'success');
