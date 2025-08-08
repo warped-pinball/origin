@@ -3,6 +3,7 @@ import base64
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, NoEncryption, PrivateFormat
 from app import models
+from app.routers.claim import generate_code
 
 
 def test_machine_claim_flow(client, ws_client, db_session):
@@ -47,3 +48,8 @@ def test_machine_claim_flow(client, ws_client, db_session):
     res = client.get(f"/api/machines/{data['machine_id']}/status")
     assert res.status_code == 200
     assert res.json() == {"linked": True}
+
+
+def test_generate_code_uniqueness():
+    codes = {generate_code() for _ in range(100)}
+    assert len(codes) == 100
