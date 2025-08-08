@@ -59,6 +59,8 @@ environment variables:
 - `QR_BOTTOM_TEXT` – text displayed below the code (default "Warped Pinball").
 - `QR_CODE_SIZE` – width and height of the generated code in pixels (default
   `300`).
+- `QR_PRINT_WIDTH_IN` – width of the framed QR code when printing, in inches
+  (default `2.0`). Height scales proportionally.
 - `QR_FRAME_PADDING_MODULES` – spacing between the QR code and its frame in
   module widths (default `2`).
 - `QR_FRAME_CORNER_RADIUS` – radius of the rounded frame corners in pixels

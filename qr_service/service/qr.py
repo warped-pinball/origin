@@ -1,4 +1,5 @@
 import base64
+import base64
 import math
 import os
 import uuid
@@ -280,6 +281,12 @@ def add_frame(svg: str) -> str:
         ry=str(frame_corner_radius),
         **{"stroke-width": "1"},
     )
+
+    print_width_in = float(_env("QR_PRINT_WIDTH_IN", "2.0"))
+    scale = print_width_in / outer_w
+    outer.set("width", f"{print_width_in}in")
+    outer.set("height", f"{outer_h * scale}in")
+
     return ET.tostring(outer, encoding="unicode")
 
 

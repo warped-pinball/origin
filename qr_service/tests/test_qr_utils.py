@@ -174,3 +174,15 @@ def test_framed_svg_uses_xlink_prefix(monkeypatch):
     svg = add_frame(generate_svg("data"))
     assert "ns0:href" not in svg
     assert "xlink:href" in svg
+
+
+def test_add_frame_sets_print_dimensions(monkeypatch):
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "3.5")
+    svg = add_frame(generate_svg("data"))
+    root = ET.fromstring(svg)
+    assert root.get("width") == "3.5in"
+    view = root.get("viewBox").split()
+    outer_w = float(view[2])
+    outer_h = float(view[3])
+    expected_height = 3.5 * outer_h / outer_w
+    assert abs(float(root.get("height")[:-2]) - expected_height) < 1e-6
