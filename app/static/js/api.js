@@ -14,7 +14,8 @@
       return fetch(API_BASE + '/api/v1/auth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ username: email, password })
+        body: new URLSearchParams({ username: email, password }),
+        credentials: 'include'
       });
     }
 

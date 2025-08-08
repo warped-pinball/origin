@@ -16,8 +16,6 @@
     }
     const res = await OriginApi.login(email, password);
     if (res.ok) {
-      const data = await res.json();
-      localStorage.setItem('token', data.access_token);
       document.getElementById('login-error').textContent = '';
       const params = new URLSearchParams(location.search);
       const next = params.get('next');
@@ -47,7 +45,6 @@
   }
 
   function logout() {
-    localStorage.removeItem('token');
     showLogin();
   }
 
@@ -161,29 +158,25 @@
     }
   }
 
-  function checkAuth() {
+  async function checkAuth() {
     const params = new URLSearchParams(location.search);
-    const urlToken = params.get('token');
-    if (urlToken) {
-      try { localStorage.setItem('token', urlToken); } catch {}
-      params.delete('token');
-      const newQuery = params.toString();
-      const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
-      history.replaceState(null, '', newUrl);
-    }
-    const hasToken = !!localStorage.getItem('token');
     const next = params.get('next');
-    if (hasToken) {
-      if (next) {
-        params.delete('next');
-        const newQuery = params.toString();
-        const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
-        history.replaceState(null, '', newUrl);
-        location.href = next;
-        return;
+    try {
+      const res = await OriginApi.getMe();
+      if (res.ok) {
+        if (next) {
+          params.delete('next');
+          const newQuery = params.toString();
+          const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
+          history.replaceState(null, '', newUrl);
+          location.href = next;
+          return;
+        }
+        showLoggedIn();
+      } else {
+        showLogin();
       }
-      showLoggedIn();
-    } else {
+    } catch {
       showLogin();
     }
   }

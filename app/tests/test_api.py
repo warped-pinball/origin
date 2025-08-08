@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from .. import models
 from ..version import __version__
+from ..main import app
 
 
 
@@ -99,6 +100,25 @@ def test_login_unverified_user(client, db_session):
     )
     assert response.status_code == 403
     assert response.json()["detail"] == "Email not verified"
+
+
+def test_login_sets_cookie_and_authenticates_requests():
+    https_client = TestClient(app, base_url="https://testserver")
+    https_client.post(
+        "/api/v1/users/",
+        json={"email": "cookie@example.com", "password": "pass", "screen_name": "cookie"},
+    )
+    res = https_client.post(
+        "/api/v1/auth/token",
+        data={"username": "cookie@example.com", "password": "pass"},
+    )
+    assert res.status_code == 200
+    cookie = res.headers.get("set-cookie")
+    assert cookie and "token=" in cookie
+    assert "HttpOnly" in cookie
+    assert "Secure" in cookie
+    res2 = https_client.get("/api/v1/users/me")
+    assert res2.status_code == 200
 
 
 def test_verify_email_redirects(client, db_session):
