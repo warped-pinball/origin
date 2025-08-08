@@ -81,7 +81,6 @@ class ScoreBase(BaseModel):
     value: int
 
 class ScoreCreate(ScoreBase):
-    user_id: int
     machine_id: int
 
 class Score(ScoreBase):
