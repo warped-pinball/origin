@@ -13,21 +13,28 @@ global.localStorage = {
 };
 let replaced;
 global.history = { replaceState: (a, b, url) => { replaced = url; } };
-global.document = { getElementById: () => null };
+let cookieStore = 'token=abc';
+global.document = {
+  getElementById: () => null,
+  get cookie() { return cookieStore; },
+  set cookie(v) { cookieStore = v; }
+};
 global.displayPage = () => {};
 global.loadUserInfo = () => {};
-global.location = { search: '?token=abc', pathname: '/', hash: '' };
+global.location = { search: '', pathname: '/', hash: '' };
 vm.runInThisContext(code);
 let loggedIn = false;
 let loginShown = false;
 global.showLoggedIn = () => { loggedIn = true; };
 global.showLogin = () => { loginShown = true; };
 
-test('checkAuth stores token from query', () => {
+test('checkAuth stores token from cookie', () => {
   loggedIn = false;
   loginShown = false;
   replaced = undefined;
+  cookieStore = 'token=abc';
   checkAuth();
   assert.strictEqual(store.token, 'abc');
-  assert.strictEqual(replaced, '/');
+  assert.strictEqual(cookieStore, 'token=; Max-Age=0; path=/');
+  assert.strictEqual(replaced, undefined);
 });

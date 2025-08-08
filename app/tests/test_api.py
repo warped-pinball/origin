@@ -108,7 +108,10 @@ def test_verify_email_redirects(client, db_session):
     token = created.verification_token
     response = client.get(f"/api/v1/auth/verify?token={token}", follow_redirects=False)
     assert response.status_code == 302
-    assert response.headers["location"].startswith("/?token=")
+    assert response.headers["location"] == "/"
+    assert "token" not in response.headers["location"]
+    cookie = response.headers.get("set-cookie", "")
+    assert "token=" in cookie
     db_session.expire_all()
     db_user = db_session.query(models.User).filter_by(email="verify@example.com").first()
     assert db_user.is_verified
