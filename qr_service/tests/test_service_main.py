@@ -22,22 +22,22 @@ def test_fallback_imports_service_qr(tmp_path, monkeypatch):
 
 def test_generate_endpoint(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "2.5")
     for mod in ["qr_service.service.main"]:
         sys.modules.pop(mod, None)
     import qr_service.service.main as main
 
     with TestClient(main.app) as client:
-        resp = client.post("/generate", json={"count": 2, "cols": 1})
+        resp = client.post("/generate", json={"count": 2})
         assert resp.status_code == 200
         data = resp.json()
         assert len(data["items"]) == 2
-        assert data["sheet"].startswith("<svg")
-        root = ET.fromstring(data["sheet"])
-        ns = "{http://www.w3.org/2000/svg}"
-        assert len(root.findall(f"{ns}svg")) == 2
+        assert "sheet" not in data
         for item in data["items"]:
             assert item["url"].startswith("https://example.com/")
-            assert item["svg"].startswith("<svg")
+            root = ET.fromstring(item["svg"])
+            assert root.get("width") == "2.5in"
+            assert root.get("height").endswith("in")
 
 
 def test_generate_respects_random_len(monkeypatch):
@@ -48,7 +48,7 @@ def test_generate_respects_random_len(monkeypatch):
     import qr_service.service.main as main
 
     with TestClient(main.app) as client:
-        resp = client.post("/generate", json={"count": 1, "cols": 1})
+        resp = client.post("/generate", json={"count": 1})
         assert resp.status_code == 200
         data = resp.json()
         suffix = data["items"][0]["suffix"]
@@ -68,5 +68,4 @@ def test_index_contains_controls(monkeypatch):
         text = resp.text
         assert "Generate" in text
         assert "count" in text
-        assert "cols" in text
         assert "Download" in text
