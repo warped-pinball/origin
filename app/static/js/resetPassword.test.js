@@ -19,7 +19,8 @@ const elements = {
 };
 
 global.document = {
-  getElementById: id => elements[id] || null
+  getElementById: id => elements[id] || null,
+  addEventListener: () => {}
 };
 
 global.location = { search: '', href: '/reset-password' };

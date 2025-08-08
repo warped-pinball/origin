@@ -93,7 +93,28 @@
         document.getElementById('view-address').textContent = loc.address || '';
         const website = document.getElementById('view-website');
         if (website) {
-          website.innerHTML = loc.website ? `<a href="${loc.website}" target="_blank">${loc.website}</a>` : '';
+          if (loc.website) {
+            try {
+              const url = new URL(loc.website);
+              if (url.protocol === 'http:' || url.protocol === 'https:') {
+                website.textContent = loc.website;
+                website.href = loc.website;
+                website.target = '_blank';
+              } else {
+                website.textContent = '';
+                website.removeAttribute('href');
+                website.removeAttribute('target');
+              }
+            } catch {
+              website.textContent = '';
+              website.removeAttribute('href');
+              website.removeAttribute('target');
+            }
+          } else {
+            website.textContent = '';
+            website.removeAttribute('href');
+            website.removeAttribute('target');
+          }
         }
         document.getElementById('view-hours').textContent = loc.hours || '';
         view.style.display = 'block';

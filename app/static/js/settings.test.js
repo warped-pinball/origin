@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 
-function createEl() {
+  function createEl() {
   return {
     style: {},
     children: [],
@@ -14,7 +14,10 @@ function createEl() {
     dataset: {},
     value: '',
     innerHTML: '',
-    textContent: ''
+    textContent: '',
+    href: '',
+    target: '',
+    removeAttribute(attr) { this[attr] = ''; }
   };
 }
 
@@ -72,5 +75,11 @@ test('enableLocationEdit toggles to form', () => {
 test('openLocation hides edit for non-owner', () => {
   openLocation({ id: 2, name: 'Other' });
   assert.strictEqual(el('edit-location-btn').style.display, 'none');
+});
+
+test('openLocation rejects javascript protocol in website', () => {
+  openLocation({ id: 3, name: 'Bad', website: 'javascript:alert(1)' });
+  assert.strictEqual(el('view-website').href, '');
+  assert.strictEqual(el('view-website').textContent, '');
 });
 
