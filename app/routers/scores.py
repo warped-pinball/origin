@@ -8,8 +8,12 @@ from ..auth import get_current_user
 router = APIRouter(prefix="/scores", tags=["scores"])
 
 @router.post("/", response_model=schemas.Score)
-def submit_score(score: schemas.ScoreCreate, db: Session = Depends(get_db), current_user: crud.models.User = Depends(get_current_user)):
-    return crud.create_score(db, score)
+def submit_score(
+    score: schemas.ScoreCreate,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
+    return crud.create_score(db, score, user_id=current_user.id)
 
 @router.get("/top/{game}", response_model=List[schemas.ScoreOut])
 def get_top_scores(game: str, limit: int = 10, offset: int = 0, db: Session = Depends(get_db)):

@@ -157,8 +157,8 @@ def update_location(
 
 # Scores
 
-def create_score(db: Session, score: schemas.ScoreCreate) -> models.Score:
-    db_score = models.Score(**score.dict())
+def create_score(db: Session, score: schemas.ScoreCreate, user_id: int) -> models.Score:
+    db_score = models.Score(**score.model_dump(), user_id=user_id)
     db.add(db_score)
     db.commit()
     db.refresh(db_score)
