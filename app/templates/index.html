@@ -19,7 +19,7 @@
                     }
                 } catch {}
             </script>
-            <script>window.API_BASE = "{{ api_base }}";</script>
+            <script>window.API_BASE = {{ api_base | tojson }};</script>
             <script src="/static/js/http.min.js" defer></script>
             <script src="/static/js/api.min.js" defer></script>
             <script src="/static/js/tournaments.min.js" defer></script>
