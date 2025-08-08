@@ -12,6 +12,7 @@ generate_schema_md()
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 os.environ["DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
+os.environ.setdefault("SECRET_KEY", "test-secret")
 if os.path.exists("test.db"):
     os.remove("test.db")
 

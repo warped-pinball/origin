@@ -28,6 +28,12 @@ Create an account and obtain the following environment variables:
 If `BREVO_API_KEY` is not set, email sending is disabled and new accounts are
 automatically verified.
 
+## Secret key
+
+Set `SECRET_KEY` to a strong, random value. It is used to sign access tokens
+and other sensitive data. The application will refuse to start if this variable
+is unset. Generate at least a 32-byte random string and keep it secret.
+
 ## Public host URL
 
 Set `PUBLIC_HOST_URL` to the public base URL of your deployment. It is used
