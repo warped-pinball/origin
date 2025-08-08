@@ -12,22 +12,33 @@ global.localStorage = {
   setItem: (k, v) => { store[k] = v; }
 };
 let replaced;
+let redirected;
 global.history = { replaceState: (a, b, url) => { replaced = url; } };
 global.document = { getElementById: () => null };
 global.displayPage = () => {};
 global.loadUserInfo = () => {};
 global.location = { search: '?token=abc', pathname: '/', hash: '' };
 vm.runInThisContext(code);
-let loggedIn = false;
-let loginShown = false;
-global.showLoggedIn = () => { loggedIn = true; };
-global.showLogin = () => { loginShown = true; };
-
 test('checkAuth stores token from query', () => {
-  loggedIn = false;
-  loginShown = false;
   replaced = undefined;
+  global.location = { search: '?token=abc', pathname: '/', hash: '' };
   checkAuth();
   assert.strictEqual(store.token, 'abc');
+  assert.strictEqual(replaced, '/');
+});
+
+test('checkAuth rejects external next URLs', () => {
+  replaced = undefined;
+  redirected = undefined;
+  store.token = 'abc';
+  global.location = {
+    search: '?next=https://evil.com',
+    pathname: '/',
+    hash: '',
+    origin: 'http://example.com',
+    set href(v) { redirected = v; }
+  };
+  checkAuth();
+  assert.strictEqual(redirected, undefined);
   assert.strictEqual(replaced, '/');
 });

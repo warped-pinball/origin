@@ -1,5 +1,21 @@
 (function (global) {
 
+  function redirectIfValid(next, params) {
+    if (!next) return false;
+    params.delete('next');
+    const newQuery = params.toString();
+    const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
+    history.replaceState(null, '', newUrl);
+    try {
+      const url = new URL(next, location.origin);
+      if (url.origin === location.origin) {
+        location.href = url.href;
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
   async function login(e) {
     e.preventDefault();
     const emailInput = document.getElementById('login-email');
@@ -20,14 +36,7 @@
       localStorage.setItem('token', data.access_token);
       document.getElementById('login-error').textContent = '';
       const params = new URLSearchParams(location.search);
-      const next = params.get('next');
-      if (next) {
-        params.delete('next');
-        const newQuery = params.toString();
-        const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
-        history.replaceState(null, '', newUrl);
-        location.href = next;
-      } else {
+      if (!redirectIfValid(params.get('next'), params)) {
         showLoggedIn();
       }
     } else if (res.status === 401 || res.status === 404) {
@@ -172,17 +181,10 @@
       history.replaceState(null, '', newUrl);
     }
     const hasToken = !!localStorage.getItem('token');
-    const next = params.get('next');
     if (hasToken) {
-      if (next) {
-        params.delete('next');
-        const newQuery = params.toString();
-        const newUrl = location.pathname + (newQuery ? '?' + newQuery : '') + location.hash;
-        history.replaceState(null, '', newUrl);
-        location.href = next;
-        return;
+      if (!redirectIfValid(params.get('next'), params)) {
+        showLoggedIn();
       }
-      showLoggedIn();
     } else {
       showLogin();
     }
