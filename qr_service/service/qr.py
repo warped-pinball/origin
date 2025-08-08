@@ -1,5 +1,4 @@
 import base64
-import base64
 import math
 import os
 import uuid
@@ -195,9 +194,7 @@ def add_frame(svg: str) -> str:
     padding_modules = int(_env("QR_FRAME_PADDING_MODULES", "2"))
     padding = padding_modules * module_px
     frame_corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
-    code_corner_radius = float(
-        _env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius))
-    )
+    code_corner_radius = float(_env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius)))
 
     inner_w, inner_h = size + 2 * padding, size + 2 * padding
     outer_w, outer_h = inner_w + 40, inner_h + 80
