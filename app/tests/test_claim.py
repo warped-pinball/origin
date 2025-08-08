@@ -36,14 +36,32 @@ def test_machine_claim_flow(client, ws_client, db_session):
         "/api/v1/users/",
         json={"email": "claimer@example.com", "password": "pass", "screen_name": "claimer"},
     )
+    db_session.expire_all()
+    user = db_session.query(models.User).filter_by(email="claimer@example.com").first()
 
-    # finalize claim
+    # unauthorized finalize attempt
+    res = client.post("/api/claim", json={"code": data["claim_code"]})
+    assert res.status_code == 401
+
+    # login to obtain token
+    token_res = client.post(
+        "/api/v1/auth/token", data={"username": "claimer@example.com", "password": "pass"}
+    )
+    assert token_res.status_code == 200
+    token = token_res.json()["access_token"]
+
+    # authorized finalize claim
     res = client.post(
-        "/api/claim", json={"code": data["claim_code"], "user_id": 1}
+        "/api/claim",
+        json={"code": data["claim_code"]},
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 204
 
-    # status should be linked
+    # status should be linked and associated with user
     res = client.get(f"/api/machines/{data['machine_id']}/status")
     assert res.status_code == 200
     assert res.json() == {"linked": True}
+    db_session.expire_all()
+    claim = db_session.query(models.MachineClaim).filter_by(machine_id=data["machine_id"]).first()
+    assert claim.user_id == user.id

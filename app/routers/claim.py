@@ -14,6 +14,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 
 from ..database import get_db
 from .. import models, schemas
+from ..auth import get_current_user
 
 router = APIRouter(tags=["claim"])
 ws_router = APIRouter()
@@ -107,11 +108,14 @@ def claim_page(request: Request, code: str, db: Session = Depends(get_db)):
 
 class ClaimRequest(schemas.BaseModel):
     code: str
-    user_id: int
 
 
 @router.post("/api/claim", status_code=204)
-def finalize_claim(req: ClaimRequest, db: Session = Depends(get_db)):
+def finalize_claim(
+    req: ClaimRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     claim = (
         db.query(models.MachineClaim)
         .filter(models.MachineClaim.claim_code == req.code)
@@ -121,7 +125,7 @@ def finalize_claim(req: ClaimRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Code not found")
     if claim.claimed:
         raise HTTPException(status_code=409, detail="Code already claimed")
-    claim.user_id = req.user_id
+    claim.user_id = current_user.id
     claim.claimed = True
     claim.claim_code = None
     db.commit()
