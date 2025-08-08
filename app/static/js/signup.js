@@ -35,4 +35,10 @@
   }
 
   global.signup = signup;
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('signup-form');
+    if (form) form.addEventListener('submit', signup);
+    const ret = document.getElementById('signup-return');
+    if (ret) ret.addEventListener('click', () => location.href = '/');
+  });
 })(typeof window !== 'undefined' ? window : this);

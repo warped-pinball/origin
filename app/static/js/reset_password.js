@@ -85,4 +85,10 @@
   global.requestReset = requestReset;
   global.resetPassword = resetPassword;
   init();
+  document.addEventListener('DOMContentLoaded', () => {
+    const reqForm = document.getElementById('request-form');
+    if (reqForm) reqForm.addEventListener('submit', requestReset);
+    const resetForm = document.getElementById('reset-form');
+    if (resetForm) resetForm.addEventListener('submit', resetPassword);
+  });
 })(typeof window !== 'undefined' ? window : this);

@@ -65,8 +65,8 @@ function showPage(id, e) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuth();
     try {
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme === 'light' || storedTheme === 'dark') {
@@ -89,6 +89,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = location.hash.substring(1);
         if (page) displayPage(page);
     });
+    document.querySelectorAll('#navbar a[data-page]').forEach(link => {
+        link.addEventListener('click', e => showPage(link.dataset.page, e));
+    });
+    const createAccountBtn = document.getElementById('create-account-btn');
+    if (createAccountBtn) {
+        createAccountBtn.addEventListener('click', () => location.href = '/signup');
+    }
+    const createTournamentBtn = document.getElementById('create-tournament-btn');
+    if (createTournamentBtn) {
+        createTournamentBtn.addEventListener('click', e => showPage('tournament-create', e));
+    }
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', login);
+    }
+    const passwordForm = document.getElementById('password-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', updatePassword);
+    }
+    const passwordCancel = document.getElementById('password-cancel');
+    if (passwordCancel) {
+        passwordCancel.addEventListener('click', () => document.getElementById('password-dialog').close());
+    }
     const emailInput = document.getElementById('signup-email');
     if (emailInput) {
         emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
@@ -104,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         themeToggle.checked = document.documentElement.dataset.theme === 'dark';
+        themeToggle.addEventListener('change', toggleTheme);
     }
     const confirmDelete = document.getElementById('confirm-delete-btn');
     if (confirmDelete) {
