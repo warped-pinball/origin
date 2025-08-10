@@ -27,6 +27,16 @@
       const emailInput = document.getElementById('signup-email');
       emailInput.setCustomValidity('Please enter a valid email address.');
       emailInput.reportValidity();
+    } else if (res.status === 400) {
+      let msg = 'Email already registered.';
+      try {
+        const data = await res.json();
+        if (data.detail) msg = data.detail;
+      } catch {}
+      if (errEl) {
+        const resetHref = `/reset-password?email=${encodeURIComponent(email)}`;
+        errEl.innerHTML = `${msg} <a href='${resetHref}'>Reset your password?</a>`;
+      }
     } else {
       showToast('Signup failed', 'error');
     }
