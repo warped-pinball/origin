@@ -3,7 +3,7 @@ import base64
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, NoEncryption, PrivateFormat
 from app import models
-from app.routers.claim import generate_code
+from app.websocket_app import generate_code
 
 
 def test_machine_claim_flow(client, ws_client, db_session):
@@ -38,9 +38,19 @@ def test_machine_claim_flow(client, ws_client, db_session):
         json={"email": "claimer@example.com", "password": "pass", "screen_name": "claimer"},
     )
 
+    # login user
+    token_res = client.post(
+        "/api/v1/auth/token",
+        data={"username": "claimer@example.com", "password": "pass"},
+    )
+    assert token_res.status_code == 200
+    token = token_res.json()["access_token"]
+
     # finalize claim
     res = client.post(
-        "/api/claim", json={"code": data["claim_code"], "user_id": 1}
+        "/api/claim",
+        json={"code": data["claim_code"]},
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert res.status_code == 204
 
@@ -53,3 +63,8 @@ def test_machine_claim_flow(client, ws_client, db_session):
 def test_generate_code_uniqueness():
     codes = {generate_code() for _ in range(100)}
     assert len(codes) == 100
+
+
+def test_finalize_claim_requires_auth(client):
+    res = client.post("/api/claim", json={"code": "FAKE"})
+    assert res.status_code == 401
