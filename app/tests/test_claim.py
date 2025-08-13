@@ -75,6 +75,17 @@ def test_machine_claim_flow(client, ws_client, db_session):
     )
     assert res.status_code == 204
 
+    # claim should be marked claimed and retain original code
+    db_session.expire_all()
+    claim = (
+        db_session.query(models.MachineClaim)
+        .filter_by(machine_id=data["machine_id"])
+        .first()
+    )
+    assert claim is not None
+    assert claim.claimed is True
+    assert claim.claim_code == data["claim_code"]
+
     # status should be linked
     res = client.get(f"/api/machines/{data['machine_id']}/status")
     assert res.status_code == 200
@@ -89,6 +100,54 @@ def test_generate_code_uniqueness():
 def test_finalize_claim_requires_auth(client):
     res = client.post("/api/claim", json={"code": "FAKE"})
     assert res.status_code == 401
+
+
+def test_claim_code_remains_valid_after_unauthenticated_attempt(
+    client, ws_client, db_session
+):
+    # generate claim via websocket
+    with ws_client.websocket_connect("/ws/claim") as ws:
+        data = ws.receive_json()
+
+    code = data["claim_code"]
+    machine_id = data["machine_id"]
+
+    # attempt to finalize without authentication
+    res = client.post("/api/claim", json={"code": code})
+    assert res.status_code == 401
+
+    # ensure claim record untouched
+    claim = (
+        db_session.query(models.MachineClaim).filter_by(machine_id=machine_id).first()
+    )
+    assert claim is not None
+    assert claim.claimed is False
+    assert claim.claim_code == code
+
+    # create and log in user
+    client.post(
+        "/api/v1/users/",
+        json={"email": "auth@example.com", "password": "pass", "screen_name": "auth"},
+    )
+    token_res = client.post(
+        "/api/v1/auth/token",
+        data={"username": "auth@example.com", "password": "pass"},
+    )
+    token = token_res.json()["access_token"]
+
+    # finalize claim successfully
+    res = client.post(
+        "/api/claim",
+        json={"code": code},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 204
+
+    claim = (
+        db_session.query(models.MachineClaim).filter_by(machine_id=machine_id).first()
+    )
+    assert claim.claimed is True
+    assert claim.claim_code == code
 
 
 def test_claim_page_shows_game_title(client, db_session):

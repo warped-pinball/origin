@@ -57,7 +57,6 @@ def finalize_claim(
         raise HTTPException(status_code=409, detail="Code already claimed")
     claim.user_id = current_user.id
     claim.claimed = True
-    claim.claim_code = None
     db.commit()
     return Response(status_code=204)
 
