@@ -1,12 +1,21 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.exceptions import RequestValidationError
 from .database import init_db
-from .routers import auth, users, machines, scores, claim, tournaments, qr, locations
-from .version import __version__
+from .routers import (
+    auth,
+    users,
+    machines,
+    scores,
+    claim,
+    tournaments,
+    qr,
+    locations,
+    meta,
+    pages,
+)
 import os
 import logging
 
@@ -17,39 +26,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Origin")
 app.add_middleware(GZipMiddleware, minimum_size=100)
-
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
-
-API_BASE = os.environ.get("PUBLIC_API_URL", "")
-
-@app.get("/", response_class=HTMLResponse)
-def read_root(request: Request):
-    return templates.TemplateResponse(request, "index.html", {"version": __version__, "api_base": API_BASE})
-
-
-@app.get("/signup", response_class=HTMLResponse)
-def signup_page(request: Request):
-    return templates.TemplateResponse(request, "signup.html", {"version": __version__, "api_base": API_BASE})
-
-
-@app.get("/signup/success", response_class=HTMLResponse)
-def signup_success(request: Request):
-    return templates.TemplateResponse(request, "signup_success.html", {"version": __version__, "api_base": API_BASE})
-
-
-@app.get("/reset-password", response_class=HTMLResponse)
-def reset_password_page(request: Request):
-    return templates.TemplateResponse(request, "reset_password.html", {"version": __version__, "api_base": API_BASE})
-
-
-@app.get("/privacy", response_class=HTMLResponse)
-def privacy_page(request: Request):
-    return templates.TemplateResponse(request, "privacy.html", {"version": __version__, "api_base": API_BASE})
-
-
-@app.get("/terms", response_class=HTMLResponse)
-def terms_page(request: Request):
-    return templates.TemplateResponse(request, "terms.html", {"version": __version__, "api_base": API_BASE})
 
 
 @app.exception_handler(HTTPException)
@@ -77,6 +53,7 @@ well_known_dir = os.path.join(static_dir, '.well-known')
 app.mount('/.well-known', StaticFiles(directory=well_known_dir), name='well-known')
 
 
+app.include_router(pages.router)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(machines.router, prefix="/api/v1")
@@ -85,8 +62,5 @@ app.include_router(locations.router, prefix="/api/v1")
 app.include_router(claim.router)
 app.include_router(tournaments.router, prefix="/api/v1")
 app.include_router(qr.router)
-
-@app.get("/api/v1/version")
-def get_version():
-    return {"version": __version__}
+app.include_router(meta.router, prefix="/api/v1")
 

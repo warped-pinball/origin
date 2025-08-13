@@ -1,5 +1,5 @@
 import json
-from app.main import templates
+from app.routers.pages import templates
 
 MALICIOUS = '/foo";alert(1);//'
 
