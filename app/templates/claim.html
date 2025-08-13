@@ -2,17 +2,46 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Claim Machine</title>
+    <title>Claim {{ game_title }}</title>
     <link rel='stylesheet' href='/static/css/pico.min.css'>
     <link rel='stylesheet' href='/static/css/style.css'>
     <link rel="icon" type="image/png" href="/static/img/logo.png">
   </head>
   <body>
     <main class="container">
-      <h1>Claim Machine</h1>
+      <h1>Claim {{ game_title }}</h1>
       <p>Machine ID: {{ machine_id }}</p>
       <p>Code: {{ code }}</p>
-      <button>Claim</button>
+      <p id="status"></p>
+      <button id="claim-btn">Claim</button>
     </main>
+    <script>
+      const code = {{ code | tojson }};
+      document.getElementById('claim-btn').addEventListener('click', async () => {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/claim', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({ code })
+        });
+        if (res.status === 204) {
+          document.getElementById('status').textContent = 'Machine claimed!';
+          document.getElementById('claim-btn').disabled = true;
+        } else if (res.status === 401) {
+          const next = encodeURIComponent(location.pathname + location.search);
+          location.href = '/?next=' + next;
+        } else {
+          let msg = 'Claim failed';
+          try {
+            const err = await res.json();
+            if (err.detail) msg = err.detail;
+          } catch {}
+          document.getElementById('status').textContent = msg;
+        }
+      });
+    </script>
   </body>
 </html>
