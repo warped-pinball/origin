@@ -11,7 +11,9 @@ from .. import models, schemas
 
 router = APIRouter(tags=["claim"])
 
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "..", "templates"))
+templates = Jinja2Templates(
+    directory=os.path.join(os.path.dirname(__file__), "..", "templates")
+)
 
 
 @router.get("/claim", response_class=HTMLResponse)
@@ -26,7 +28,11 @@ def claim_page(request: Request, code: str, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request,
         "claim.html",
-        {"code": code, "machine_id": claim.machine_id},
+        {
+            "code": code,
+            "machine_id": claim.machine_id,
+            "game_title": claim.client_game_title,
+        },
     )
 
 
