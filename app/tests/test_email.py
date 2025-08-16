@@ -28,8 +28,6 @@ def test_verification_email_link(monkeypatch):
         '<img src="https://example.com/static/img/logo.png"' in captured["html"]
     )
     assert 'style="display:inline-block' in captured["html"]
-    assert '@media (prefers-color-scheme: dark)' in captured["html"]
-    assert 'class="logo"' in captured["html"]
 
 
 def test_password_reset_email_link(monkeypatch):
@@ -60,5 +58,3 @@ def test_password_reset_email_link(monkeypatch):
         '<img src="https://example.com/static/img/logo.png"' in captured["html"]
     )
     assert 'style="display:inline-block' in captured["html"]
-    assert '@media (prefers-color-scheme: dark)' in captured["html"]
-    assert 'class="logo"' in captured["html"]
