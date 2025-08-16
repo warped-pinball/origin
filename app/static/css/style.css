@@ -136,3 +136,29 @@ a { text-decoration: underline; }
 }
 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
 main.container { padding-bottom:3.5rem; }
+
+#install-banner {
+    border:1px solid var(--pico-muted-border,#444);
+    box-shadow:0 0.25rem 0.5rem rgba(0,0,0,0.2);
+    padding:1rem;
+    margin-bottom:1rem;
+    position:relative;
+}
+
+#install-banner .banner-close {
+    position:absolute;
+    top:0.25rem;
+    right:0.25rem;
+    background:none;
+    border:none;
+    font-size:1.25rem;
+    line-height:1;
+    cursor:pointer;
+}
+
+.app-logo {
+    display:block;
+    margin:0 auto 1rem;
+    max-width:5rem;
+    height:auto;
+}

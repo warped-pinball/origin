@@ -30,15 +30,14 @@
         </head>
         <body>
             <div id='install-banner' class='container-fluid' hidden>
+                <button type='button' class='banner-close' onclick='closeInstall()' aria-label='Close'>&times;</button>
                 <p>Install this app for a better experience.</p>
-                <div class='grid'>
-                    <button onclick='installApp()'>Install</button>
-                    <button type='button' onclick='closeInstall()' class='secondary'>Not now</button>
-                </div>
+                <button onclick='installApp()'>Install</button>
             </div>
             <main class='container'>
                 <section id='login-section'>
                     <form id='login-form'>
+                        <img src='/static/img/logo.png' alt='Origin logo' class='app-logo'>
                         <h1>Log In</h1>
                         <label for='login-email'>Email address</label>
                         <input id='login-email' name='email' type='email' placeholder='Email address' required />
