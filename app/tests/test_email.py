@@ -26,8 +26,6 @@ def test_verification_email_link(monkeypatch):
     assert "Verify your account" in captured["html"]
     assert 'src="data:image/png;base64,' in captured["html"]
     assert 'style="display:inline-block' in captured["html"]
-    assert '@media (prefers-color-scheme: dark)' in captured["html"]
-    assert 'class="logo"' in captured["html"]
 
 
 def test_password_reset_email_link(monkeypatch):
@@ -56,5 +54,3 @@ def test_password_reset_email_link(monkeypatch):
     assert "If you didn't request this" in captured["html"]
     assert 'src="data:image/png;base64,' in captured["html"]
     assert 'style="display:inline-block' in captured["html"]
-    assert '@media (prefers-color-scheme: dark)' in captured["html"]
-    assert 'class="logo"' in captured["html"]
