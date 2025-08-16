@@ -1,4 +1,8 @@
 import os
+import re
+import base64
+from io import BytesIO
+from PIL import Image
 from app import email
 
 
@@ -25,9 +29,12 @@ def test_verification_email_link(monkeypatch):
     )
     assert "Verify your account" in captured["html"]
     assert (
-        '<img src="https://example.com/static/img/logo.png"' in captured["html"]
+        'src="data:image/png;base64' in captured["html"]
     )
+    _assert_logo_has_no_transparency(captured["html"])
     assert 'style="display:inline-block' in captured["html"]
+    assert '@media (prefers-color-scheme: dark)' in captured["html"]
+    assert 'class="logo"' in captured["html"]
 
 
 def test_password_reset_email_link(monkeypatch):
@@ -55,6 +62,17 @@ def test_password_reset_email_link(monkeypatch):
     assert "Reset your password" in captured["html"]
     assert "If you didn't request this" in captured["html"]
     assert (
-        '<img src="https://example.com/static/img/logo.png"' in captured["html"]
+        'src="data:image/png;base64' in captured["html"]
     )
+    _assert_logo_has_no_transparency(captured["html"])
     assert 'style="display:inline-block' in captured["html"]
+    assert '@media (prefers-color-scheme: dark)' in captured["html"]
+    assert 'class="logo"' in captured["html"]
+
+
+def _assert_logo_has_no_transparency(html: str) -> None:
+    match = re.search(r'src="data:image/png;base64,([^"]+)"', html)
+    assert match, "Logo data URI not found"
+    data = base64.b64decode(match.group(1))
+    img = Image.open(BytesIO(data))
+    assert img.mode == "RGB"

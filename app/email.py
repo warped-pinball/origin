@@ -1,7 +1,10 @@
 import os
+import base64
+from io import BytesIO
 import httpx
 import logging
 from jinja2 import Environment, FileSystemLoader
+from PIL import Image
 
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SENDER = os.getenv("BREVO_SENDER_EMAIL", "noreply@example.com")
@@ -38,6 +41,22 @@ def _render_template(name: str, **context: str) -> str:
     return template.render(**context)
 
 
+def _logo_data_url() -> str:
+    """Return logo image as a base64 data URL with transparent areas filled white."""
+    logo_path = os.path.join(os.path.dirname(__file__), "static", "img", "logo.png")
+    with Image.open(logo_path) as img:
+        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+            background = Image.new("RGBA", img.size, "WHITE")
+            background.paste(img, mask=img.split()[-1])
+            img = background.convert("RGB")
+        else:
+            img = img.convert("RGB")
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
 def _send_action_email(
     email: str,
     screen_name: str,
@@ -47,7 +66,7 @@ def _send_action_email(
     action_text: str,
 ) -> None:
     host = os.getenv("PUBLIC_HOST_URL", "")
-    logo_url = f"{host}/static/img/logo.png"
+    logo_src = _logo_data_url()
     text = _render_template(
         "action_email.jinja",
         screen_name=screen_name,
@@ -61,7 +80,7 @@ def _send_action_email(
         message=message,
         action_url=action_url,
         action_text=action_text,
-        logo_url=logo_url,
+        logo_src=logo_src,
     )
     send_email(email, subject, text, html)
 
