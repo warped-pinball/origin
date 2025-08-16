@@ -31,14 +31,15 @@
         <body>
             <div id='install-banner' class='container-fluid' hidden>
                 <p>Install this app for a better experience.</p>
-                <div class='grid'>
-                    <button onclick='installApp()'>Install</button>
-                    <button type='button' onclick='closeInstall()' class='secondary'>Not now</button>
-                </div>
+                <button onclick='installApp()'>Install</button>
+                <button type='button' class='close-button banner-close' onclick='closeInstall()' aria-label='Close'>
+                    <span class='material-icons'>close</span>
+                </button>
             </div>
             <main class='container'>
                 <section id='login-section'>
                     <form id='login-form'>
+                        <img src='/static/img/logo.png' alt='Origin logo' class='app-logo'>
                         <h1>Log In</h1>
                         <label for='login-email'>Email address</label>
                         <input id='login-email' name='email' type='email' placeholder='Email address' required />
@@ -235,7 +236,7 @@
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:2000;max-width:75vw;width:max-content;text-align:center;'></div>
                 <div id='account-overlay'>
-                    <button id='account-close' aria-label='Close'><span class='material-icons'>close</span></button>
+                    <button id='account-close' class='close-button' aria-label='Close'><span class='material-icons'>close</span></button>
                     <div id='account-actions'>
                         <button id='account-save' aria-label='Save'><span class='material-icons'>save</span></button>
                     </div>

@@ -86,10 +86,8 @@ a { text-decoration: underline; }
     transition:transform 0.3s;
 }
 #account-overlay.show #account-avatar { transform: scale(1); }
-#account-close {
-    position:absolute;
-    top:0.5rem;
-    right:0.5rem;
+
+.close-button {
     width:2rem;
     height:2rem;
     background:none;
@@ -101,6 +99,12 @@ a { text-decoration: underline; }
     display:flex;
     align-items:center;
     justify-content:center;
+}
+
+#account-close {
+    position:absolute;
+    top:0.5rem;
+    right:0.5rem;
 }
 #account-actions {
     position:absolute;
@@ -136,3 +140,22 @@ a { text-decoration: underline; }
 }
 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
 main.container { padding-bottom:3.5rem; }
+
+#install-banner {
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    border:1px solid var(--pico-muted-border,#444);
+    box-shadow:0 0.25rem 0.5rem rgba(0,0,0,0.2);
+    padding:1rem;
+    margin-bottom:1rem;
+}
+
+#install-banner .banner-close { margin-left:auto; }
+
+.app-logo {
+    display:block;
+    margin:0 auto 1rem;
+    max-width:3rem;
+    height:auto;
+}
