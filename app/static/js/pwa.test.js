@@ -49,3 +49,9 @@ test('assigns functions to window', () => {
   assert.strictEqual(typeof window.installApp, 'function');
   assert.strictEqual(typeof window.closeInstall, 'function');
 });
+
+test('closeInstall hides banner', () => {
+  banner.hidden = false;
+  window.closeInstall();
+  assert.strictEqual(banner.hidden, true);
+});
