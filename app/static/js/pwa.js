@@ -28,3 +28,6 @@ async function installApp() {
   deferredPrompt = null;
   closeInstall();
 }
+
+window.closeInstall = closeInstall;
+window.installApp = installApp;

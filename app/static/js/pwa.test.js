@@ -31,7 +31,7 @@ test('shows banner and installs app', async () => {
   };
   beforeHandler(ev);
   assert.strictEqual(banner.hidden, false);
-  await installApp();
+  await window.installApp();
   assert.ok(ev.promptCalled);
   assert.strictEqual(banner.hidden, true);
   assert.strictEqual(deferredPrompt, null);
@@ -43,4 +43,9 @@ test('appinstalled handler clears prompt and hides banner', () => {
   installHandler();
   assert.strictEqual(banner.hidden, true);
   assert.strictEqual(deferredPrompt, null);
+});
+
+test('assigns functions to window', () => {
+  assert.strictEqual(typeof window.installApp, 'function');
+  assert.strictEqual(typeof window.closeInstall, 'function');
 });
