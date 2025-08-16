@@ -3,9 +3,9 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  const dialog = document.getElementById('install-dialog');
-  if (dialog) {
-    dialog.showModal();
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.hidden = false;
   }
 });
 
@@ -15,9 +15,9 @@ window.addEventListener('appinstalled', () => {
 });
 
 function closeInstall() {
-  const dialog = document.getElementById('install-dialog');
-  if (dialog) {
-    dialog.close();
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.hidden = true;
   }
 }
 
