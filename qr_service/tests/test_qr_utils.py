@@ -4,7 +4,7 @@ from io import BytesIO
 
 from PIL import Image, ImageColor
 
-from qr_service.service.qr import random_suffix, generate_svg, add_frame
+from qr_service.service.qr import random_suffix, generate_svg, add_frame, apply_template
 
 
 def test_random_suffix_length():
@@ -66,8 +66,8 @@ def test_generate_svg_error_correction(monkeypatch):
 def test_add_frame_removes_namespace_prefixes():
     inner = '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"></svg>'
     framed = add_frame(inner)
-    assert 'ns0:' not in framed
-    assert 'svg:' not in framed
+    assert "ns0:" not in framed
+    assert "svg:" not in framed
 
 
 def test_add_frame_env_customizations(monkeypatch):
@@ -174,6 +174,20 @@ def test_framed_svg_uses_xlink_prefix(monkeypatch):
     svg = add_frame(generate_svg("data"))
     assert "ns0:href" not in svg
     assert "xlink:href" in svg
+
+
+def test_apply_template_centers_qr():
+    inner = generate_svg("data")
+    svg = apply_template(inner, "white.png")
+    root = ET.fromstring(svg)
+    assert not root.findall("{http://www.w3.org/2000/svg}text")
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    width = float(root.get("width"))
+    height = float(root.get("height"))
+    size = float(inner_svg.get("width"))
+    assert float(inner_svg.get("x")) == (width - size) / 2
+    assert float(inner_svg.get("y")) == (height - size) / 2
 
 
 def test_add_frame_sets_print_dimensions(monkeypatch):
