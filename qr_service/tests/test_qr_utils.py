@@ -4,7 +4,13 @@ from io import BytesIO
 
 from PIL import Image, ImageColor
 
-from qr_service.service.qr import random_suffix, generate_svg, add_frame, apply_template
+from qr_service.service.qr import (
+    random_suffix,
+    generate_svg,
+    add_frame,
+    apply_template,
+    TEMPLATES_DIR,
+)
 
 
 def test_random_suffix_length():
@@ -188,6 +194,17 @@ def test_apply_template_centers_qr():
     size = float(inner_svg.get("width"))
     assert float(inner_svg.get("x")) == (width - size) / 2
     assert float(inner_svg.get("y")) == (height - size) / 2
+
+
+def test_apply_template_respects_scale(monkeypatch):
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.5")
+    inner = generate_svg("data")
+    svg = apply_template(inner, "white.png")
+    root = ET.fromstring(svg)
+    with Image.open(TEMPLATES_DIR / "white.png") as img:
+        orig_w, orig_h = img.size
+    assert float(root.get("width")) == orig_w * 0.5
+    assert float(root.get("height")) == orig_h * 0.5
 
 
 def test_add_frame_sets_print_dimensions(monkeypatch):

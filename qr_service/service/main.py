@@ -60,7 +60,9 @@ def generate(req: GenerateRequest):
     for _ in range(req.count):
         suffix = random_suffix(RANDOM_LEN)
         url = f"{base_url}/{suffix}"
-        inner_svg = generate_svg(url)
+        inner_svg = generate_svg(
+            url, background_color="transparent" if req.template else None
+        )
         if req.template:
             try:
                 svg = apply_template(inner_svg, req.template)
