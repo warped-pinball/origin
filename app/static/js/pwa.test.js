@@ -8,12 +8,7 @@ const code = fs.readFileSync(path.join(__dirname, 'pwa.js'), 'utf8');
 
 let beforeHandler;
 let installHandler;
-const dialog = {
-  showModalCalled: false,
-  closeCalled: false,
-  showModal() { this.showModalCalled = true; },
-  close() { this.closeCalled = true; }
-};
+const banner = { hidden: true };
 
 global.window = {
   addEventListener: (event, handler) => {
@@ -23,29 +18,40 @@ global.window = {
 };
 
 global.document = {
-  getElementById: () => dialog
+  getElementById: () => banner
 };
 
 vm.runInThisContext(code);
 
-test('shows dialog and installs app', async () => {
+test('shows banner and installs app', async () => {
   const ev = {
     preventDefault() {},
     prompt: () => { ev.promptCalled = true; return Promise.resolve(); },
     userChoice: Promise.resolve({ outcome: 'accepted' })
   };
   beforeHandler(ev);
-  assert.ok(dialog.showModalCalled);
-  await installApp();
+  assert.strictEqual(banner.hidden, false);
+  await window.installApp();
   assert.ok(ev.promptCalled);
-  assert.ok(dialog.closeCalled);
+  assert.strictEqual(banner.hidden, true);
   assert.strictEqual(deferredPrompt, null);
 });
 
-test('appinstalled handler clears prompt and closes dialog', () => {
-  dialog.closeCalled = false;
+test('appinstalled handler clears prompt and hides banner', () => {
+  banner.hidden = false;
   deferredPrompt = {};
   installHandler();
-  assert.ok(dialog.closeCalled);
+  assert.strictEqual(banner.hidden, true);
   assert.strictEqual(deferredPrompt, null);
+});
+
+test('assigns functions to window', () => {
+  assert.strictEqual(typeof window.installApp, 'function');
+  assert.strictEqual(typeof window.closeInstall, 'function');
+});
+
+test('closeInstall hides banner', () => {
+  banner.hidden = false;
+  window.closeInstall();
+  assert.strictEqual(banner.hidden, true);
 });

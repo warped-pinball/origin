@@ -1,5 +1,6 @@
 # Origin
 
+
 This repository contains the Origin backend API built with FastAPI and a simple Progressive Web App (PWA). Additional documentation lives in the [docs](docs/) folder. Start with the [Developer Guide](docs/DEVELOPER_GUIDE.md) and the [API specification](docs/API_SPEC.md).
 
 ## Backend

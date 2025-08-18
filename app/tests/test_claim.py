@@ -1,7 +1,14 @@
-import os
 import base64
+import os
+
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, NoEncryption, PrivateFormat
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    PublicFormat,
+)
+
 from app import models
 from app.websocket_app import generate_code
 
@@ -25,17 +32,31 @@ def test_machine_claim_flow(client, ws_client, db_session):
         ws.send_json({"client_key": client_key})
         data = ws.receive_json()
 
-    assert {"server_key", "claim_code", "machine_id", "signature", "claim_url"} <= data.keys()
+    assert {
+        "server_key",
+        "claim_code",
+        "machine_id",
+        "signature",
+        "claim_url",
+    } <= data.keys()
     assert data["claim_url"] == f"https://example.com/claim?code={data['claim_code']}"
 
     # ensure record stored
-    claim = db_session.query(models.MachineClaim).filter_by(machine_id=data["machine_id"]).first()
+    claim = (
+        db_session.query(models.MachineClaim)
+        .filter_by(machine_id=data["machine_id"])
+        .first()
+    )
     assert claim is not None
 
     # create user
     client.post(
         "/api/v1/users/",
-        json={"email": "claimer@example.com", "password": "pass", "screen_name": "claimer"},
+        json={
+            "email": "claimer@example.com",
+            "password": "pass",
+            "screen_name": "claimer",
+        },
     )
 
     # login user
@@ -68,3 +89,19 @@ def test_generate_code_uniqueness():
 def test_finalize_claim_requires_auth(client):
     res = client.post("/api/claim", json={"code": "FAKE"})
     assert res.status_code == 401
+
+
+def test_claim_page_shows_game_title(client, db_session):
+    claim = models.MachineClaim(
+        machine_id="m123",
+        claim_code="CODE123",
+        shared_secret="secret",
+        client_game_title="Test Game",
+        claimed=False,
+    )
+    db_session.add(claim)
+    db_session.commit()
+
+    res = client.get("/claim", params={"code": "CODE123"})
+    assert res.status_code == 200
+    assert "Test Game" in res.text

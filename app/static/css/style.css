@@ -1,9 +1,7 @@
 .error { color: red; font-size: small; }
 a { text-decoration: underline; }
-#install-dialog { top:10vh; }
 .spinner { display:inline-block; width:1em; height:1em; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin 0.75s linear infinite; vertical-align:-0.125em; margin-right:0.25em; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-button { text-align:center; }
 :root {
     --nav-icon-size: 2rem;
     --nav-gap: 2rem;
@@ -88,10 +86,8 @@ button { text-align:center; }
     transition:transform 0.3s;
 }
 #account-overlay.show #account-avatar { transform: scale(1); }
-#account-close {
-    position:absolute;
-    top:0.5rem;
-    right:0.5rem;
+
+.close-button {
     width:2rem;
     height:2rem;
     background:none;
@@ -103,6 +99,12 @@ button { text-align:center; }
     display:flex;
     align-items:center;
     justify-content:center;
+}
+
+#account-close {
+    position:absolute;
+    top:0.5rem;
+    right:0.5rem;
 }
 #account-actions {
     position:absolute;
@@ -138,3 +140,23 @@ button { text-align:center; }
 }
 @keyframes fadeIn { from { opacity:0;transform:translateY(-0.25rem); } to { opacity:1;transform:translateY(0); } }
 main.container { padding-bottom:3.5rem; }
+
+#install-banner {
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    border:1px solid var(--pico-muted-border,#444);
+    box-shadow:0 0.25rem 0.5rem rgba(0,0,0,0.2);
+    padding:1rem;
+    margin-bottom:1rem;
+}
+
+#install-banner .banner-close { margin-left:auto; }
+#install-banner p { margin:0; }
+
+.app-logo {
+    display:block;
+    margin:1rem auto 0;
+    max-width:6rem;
+    height:auto;
+}

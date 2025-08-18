@@ -1,30 +1,36 @@
 let deferredPrompt;
+const banner = document.getElementById('install-banner');
+
+function showInstall() {
+  if (banner) {
+    banner.hidden = false;
+  }
+}
+
+function hideInstall() {
+  if (banner) {
+    banner.hidden = true;
+  }
+}
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  const dialog = document.getElementById('install-dialog');
-  if (dialog) {
-    dialog.showModal();
-  }
+  showInstall();
 });
 
 window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
-  closeInstall();
+  hideInstall();
 });
-
-function closeInstall() {
-  const dialog = document.getElementById('install-dialog');
-  if (dialog) {
-    dialog.close();
-  }
-}
 
 async function installApp() {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
   deferredPrompt = null;
-  closeInstall();
+  hideInstall();
 }
+
+window.installApp = installApp;
+window.closeInstall = hideInstall;

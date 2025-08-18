@@ -29,36 +29,29 @@
             <script src="/static/js/app.min.js" defer></script>
         </head>
         <body>
+            <div id='install-banner' class='container-fluid' hidden>
+                <p>Install this app for a better experience.</p>
+                <button onclick='installApp()'>Install</button>
+                <button type='button' class='close-button banner-close' onclick='closeInstall()' aria-label='Close'>
+                    <span class='material-icons'>close</span>
+                </button>
+            </div>
             <main class='container'>
-                <h1 id='welcome-title'>Welcome</h1>
                 <section id='login-section'>
-                    <article>
-                        <h2>Login</h2>
-                        <form id='login-form'>
-                            <label for='login-email'>Email address</label>
-                            <input id='login-email' name='email' type='email' placeholder='Email address' required />
-                            <label for='login-password'>Password</label>
-                            <input id='login-password' name='password' type='password' placeholder='Password' required />
-                            <p style='font-size:0.9rem;'>Forgot your password? <a href='/reset-password'>Reset password</a></p>
-                            <footer class='grid'>
-                                <button type='submit'>Log In</button>
-                                <button id='create-account-btn' type='button' class='secondary'>Create Account</button>
-                            </footer>
-                            <span id='login-error' class='error'></span>
-                        </form>
-                        
-                    </article>
+                    <form id='login-form'>
+                        <h1>Log In</h1>
+                        <label for='login-email'>Email address</label>
+                        <input id='login-email' name='email' type='email' placeholder='Email address' required />
+                        <label for='login-password'>Password</label>
+                        <input id='login-password' name='password' type='password' placeholder='Password' required />
+                        <small>Forgot your password? <a href='/reset-password'>Reset password</a></small>
+                        <div class='grid'>
+                            <button type='submit'>Log In</button>
+                            <button id='create-account-btn' type='button' class='secondary'>Create Account</button>
+                        </div>
+                        <span id='login-error' class='error'></span>
+                    </form>
                 </section>
-                <dialog id='install-dialog'>
-                    <article>
-                        <h3>Install App</h3>
-                        <p>Install this app for a better experience.</p>
-                        <footer class='grid'>
-                            <button id='install-confirm-btn' onclick='installApp()'>Install</button>
-                            <button type='button' onclick='closeInstall()' class='secondary'>Not now</button>
-                        </footer>
-                    </article>
-                </dialog>
                 <dialog id='delete-dialog'>
                     <article>
                         <h3>Delete Account</h3>
@@ -242,7 +235,7 @@
                 </section>
                 <div id='toast' class='toast' style='display:none;position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#333;color:white;padding:0.5rem 1rem;border-radius:4px;z-index:2000;max-width:75vw;width:max-content;text-align:center;'></div>
                 <div id='account-overlay'>
-                    <button id='account-close' aria-label='Close'><span class='material-icons'>close</span></button>
+                    <button id='account-close' class='close-button' aria-label='Close'><span class='material-icons'>close</span></button>
                     <div id='account-actions'>
                         <button id='account-save' aria-label='Save'><span class='material-icons'>save</span></button>
                     </div>
@@ -256,5 +249,6 @@
                     </label>
                 </div>
             </main>
+            <img src='/static/img/logo.png' alt='Origin logo' class='app-logo'>
         </body>
     </html>
