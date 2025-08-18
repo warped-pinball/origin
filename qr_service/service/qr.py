@@ -6,10 +6,11 @@ import xml.etree.ElementTree as ET
 
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 
 import qrcode
 import qrcode.image.svg
-from PIL import ImageColor
+from PIL import ImageColor, Image
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers, colormasks
 from qrcode.image.styles.moduledrawers import svg as svg_moduledrawers
@@ -34,6 +35,7 @@ def _strip_ns(elem: ET.Element) -> ET.Element:
 
 
 SVG_SIZE = int(_env("QR_CODE_SIZE", "300"))
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
 def random_suffix(length: int) -> str:
@@ -182,6 +184,41 @@ def generate_svg(data: str) -> str:
         },
     )
     return ET.tostring(root, encoding="unicode")
+
+
+def apply_template(svg: str, template: str) -> str:
+    inner = _strip_ns(ET.fromstring(svg))
+    size = int(inner.attrib.get("width", str(SVG_SIZE)))
+
+    path = TEMPLATES_DIR / template
+    with Image.open(path) as img:
+        width, height = img.size
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+    data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+    outer = ET.Element(
+        "svg",
+        width=str(width),
+        height=str(height),
+        viewBox=f"0 0 {width} {height}",
+        xmlns="http://www.w3.org/2000/svg",
+    )
+    ET.SubElement(
+        outer,
+        "image",
+        {
+            "x": "0",
+            "y": "0",
+            "width": str(width),
+            "height": str(height),
+            "{http://www.w3.org/1999/xlink}href": data_uri,
+        },
+    )
+    inner.set("x", str((width - size) / 2))
+    inner.set("y", str((height - size) / 2))
+    outer.append(inner)
+    return ET.tostring(outer, encoding="unicode")
 
 
 def add_frame(svg: str) -> str:

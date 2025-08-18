@@ -40,6 +40,27 @@ def test_generate_endpoint(monkeypatch):
             assert root.get("height").endswith("in")
 
 
+def test_generate_with_template(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1, "template": "white.png"})
+        assert resp.status_code == 200
+        svg = resp.json()["items"][0]["svg"]
+        root = ET.fromstring(svg)
+        assert not root.findall("{http://www.w3.org/2000/svg}text")
+        inner = root.find("{http://www.w3.org/2000/svg}svg")
+        assert inner is not None
+        w = float(root.get("width"))
+        h = float(root.get("height"))
+        size = float(inner.get("width"))
+        assert float(inner.get("x")) == (w - size) / 2
+        assert float(inner.get("y")) == (h - size) / 2
+
+
 def test_generate_respects_random_len(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_RANDOM_LEN", "17")
@@ -69,3 +90,4 @@ def test_index_contains_controls(monkeypatch):
         assert "Generate" in text
         assert "count" in text
         assert "Download" in text
+        assert "template" in text
