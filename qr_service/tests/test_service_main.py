@@ -2,8 +2,12 @@ import importlib
 import sys
 from pathlib import Path
 
+import base64
 import xml.etree.ElementTree as ET
+from io import BytesIO
 from fastapi.testclient import TestClient
+from PIL import Image
+from qr_service.service.qr import TEMPLATES_DIR
 
 
 def test_fallback_imports_service_qr(tmp_path, monkeypatch):
@@ -42,6 +46,8 @@ def test_generate_endpoint(monkeypatch):
 
 def test_generate_with_template(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.5")
     for mod in ["qr_service.service.main"]:
         sys.modules.pop(mod, None)
     import qr_service.service.main as main
@@ -59,6 +65,23 @@ def test_generate_with_template(monkeypatch):
         size = float(inner.get("width"))
         assert float(inner.get("x")) == (w - size) / 2
         assert float(inner.get("y")) == (h - size) / 2
+
+        with Image.open(TEMPLATES_DIR / "white.png") as img:
+            orig_w, orig_h = img.size
+        assert w == orig_w * 0.5
+        assert h == orig_h * 0.5
+
+        ns = {
+            "svg": "http://www.w3.org/2000/svg",
+            "xlink": "http://www.w3.org/1999/xlink",
+        }
+        image = inner.find("svg:image", ns)
+        assert image is not None
+        href = image.get("{http://www.w3.org/1999/xlink}href")
+        data = base64.b64decode(href.split(",", 1)[1])
+        img = Image.open(BytesIO(data))
+        assert img.mode == "RGBA"
+        assert img.getchannel("A").getextrema()[0] == 0
 
 
 def test_generate_respects_random_len(monkeypatch):
