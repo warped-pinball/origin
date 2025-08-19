@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from qr_service.service.qr import TEMPLATES_DIR
 import pytest
+import zipfile
 
 
 def test_fallback_imports_service_qr(tmp_path, monkeypatch):
@@ -36,13 +37,18 @@ def test_generate_endpoint(monkeypatch):
         resp = client.post("/generate", json={"count": 2})
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 2
-        assert "sheet" not in data
-        for item in data["items"]:
-            assert item["url"].startswith("https://example.com/")
-            root = ET.fromstring(item["svg"])
-            assert root.get("width") == "2.5in"
-            assert root.get("height").endswith("in")
+        assert "preview" in data and "download_id" in data
+        item = data["preview"]
+        assert item["url"].startswith("https://example.com/")
+        root = ET.fromstring(item["svg"])
+        assert root.get("width") == "2.5in"
+        assert root.get("height").endswith("in")
+
+        # test download
+        resp2 = client.get(f"/download/{data['download_id']}")
+        assert resp2.status_code == 200
+        z = zipfile.ZipFile(BytesIO(resp2.content))
+        assert len(z.namelist()) == 2
 
 
 def test_generate_with_template(monkeypatch):
@@ -56,7 +62,7 @@ def test_generate_with_template(monkeypatch):
     with TestClient(main.app) as client:
         resp = client.post("/generate", json={"count": 1, "template": "white.png"})
         assert resp.status_code == 200
-        svg = resp.json()["items"][0]["svg"]
+        svg = resp.json()["preview"]["svg"]
         root = ET.fromstring(svg)
         assert not root.findall("{http://www.w3.org/2000/svg}text")
         inner = root.find("{http://www.w3.org/2000/svg}svg")
@@ -95,7 +101,7 @@ def test_generate_with_template_and_offset(monkeypatch):
     with TestClient(main.app) as client:
         resp = client.post("/generate", json={"count": 1, "template": "white.png"})
         assert resp.status_code == 200
-        svg = resp.json()["items"][0]["svg"]
+        svg = resp.json()["preview"]["svg"]
         root = ET.fromstring(svg)
         inner = root.find("{http://www.w3.org/2000/svg}svg")
         assert inner is not None
@@ -115,9 +121,9 @@ def test_generate_respects_random_len(monkeypatch):
         resp = client.post("/generate", json={"count": 1})
         assert resp.status_code == 200
         data = resp.json()
-        suffix = data["items"][0]["suffix"]
+        suffix = data["preview"]["suffix"]
         assert len(suffix) == 17
-        assert data["items"][0]["url"].endswith(suffix)
+        assert data["preview"]["url"].endswith(suffix)
 
 
 def test_index_contains_controls(monkeypatch):

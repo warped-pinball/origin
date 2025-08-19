@@ -60,9 +60,6 @@ environment variables:
 - `QR_FRAME_BACKGROUND_COLOR` – colour of the surrounding frame (default
   `#0a0a0a`).
 - `QR_FRAME_COLOR` – colour of the dashed outer border (default `#ff0000`).
-- `QR_TEXT_COLOR` – colour of the top and bottom text (default `#ffffff`).
-- `QR_TOP_TEXT` – text displayed above the code (default "Tap or scan").
-- `QR_BOTTOM_TEXT` – text displayed below the code (default "Warped Pinball").
 - `QR_CODE_SIZE` – width and height of the generated code in pixels (default
   `300`).
 - `QR_PRINT_WIDTH_IN` – width of the framed QR code when printing, in inches
@@ -73,8 +70,8 @@ environment variables:
   (default `10`).
 - `QR_CODE_CORNER_RADIUS` – radius of the QR code background corners in pixels
   (default same as `QR_FRAME_CORNER_RADIUS`).
-- `QR_SHEET_GAP_MODULES` – gap between framed codes on a sheet in module widths
-  (default `2`).
+- `QR_CUT_CORNER_RADIUS` – radius of the cut line corners in pixels (default
+  `20`).
 - `QR_LOGO_IMAGE` – optional logo image (URL or data URI) to place in the
   centre of the code.
 - `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.

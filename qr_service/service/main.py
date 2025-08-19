@@ -2,8 +2,12 @@ import os
 import logging
 import html
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
+import uuid
+import zipfile
+from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -14,7 +18,8 @@ if __package__ and __package__.startswith("qr_service"):
         generate_svg,
         add_frame,
         random_suffix,
-        apply_template,
+        prepare_template,
+        apply_template_prepared,
         TEMPLATES_DIR,
     )
 else:  # pragma: no cover - executed when service is top-level
@@ -22,7 +27,8 @@ else:  # pragma: no cover - executed when service is top-level
         generate_svg,
         add_frame,
         random_suffix,
-        apply_template,
+        prepare_template,
+        apply_template_prepared,
         TEMPLATES_DIR,
     )
 
@@ -53,25 +59,57 @@ class GenerateRequest(BaseModel):
     template: str | None = None
 
 
+ZIPS: dict[str, bytes] = {}
+
+
+def _generate_single(base_url: str, tpl):
+    suffix = random_suffix(RANDOM_LEN)
+    url = f"{base_url}/{suffix}"
+    inner_svg = generate_svg(url, background_color="transparent" if tpl else None)
+    if tpl:
+        svg = apply_template_prepared(inner_svg, tpl)
+    else:
+        svg = add_frame(inner_svg)
+    return {"suffix": suffix, "url": url, "svg": svg}
+
+
 @app.post("/generate")
 def generate(req: GenerateRequest):
     base_url = _get_base_url()
-    items = []
-    for _ in range(req.count):
-        suffix = random_suffix(RANDOM_LEN)
-        url = f"{base_url}/{suffix}"
-        inner_svg = generate_svg(
-            url, background_color="transparent" if req.template else None
-        )
-        if req.template:
-            try:
-                svg = apply_template(inner_svg, req.template)
-            except FileNotFoundError:
-                raise HTTPException(status_code=400, detail="Template not found")
-        else:
-            svg = add_frame(inner_svg)
-        items.append({"suffix": suffix, "url": url, "svg": svg})
-    return {"items": items}
+    tpl = None
+    if req.template:
+        try:
+            tpl = prepare_template(req.template)
+        except FileNotFoundError:
+            raise HTTPException(status_code=400, detail="Template not found")
+
+    with ThreadPoolExecutor() as ex:
+        items = list(ex.map(lambda _: _generate_single(base_url, tpl), range(req.count)))
+
+    if not items:
+        raise HTTPException(status_code=400, detail="No items generated")
+
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w") as zf:
+        for item in items:
+            zf.writestr(f"{item['suffix']}.svg", item["svg"])
+    zip_id = uuid.uuid4().hex
+    ZIPS[zip_id] = zip_buffer.getvalue()
+
+    preview = items[0]
+    return {"preview": preview, "download_id": zip_id}
+
+
+@app.get("/download/{zip_id}")
+def download(zip_id: str):
+    data = ZIPS.pop(zip_id, None)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return Response(
+        data,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=qrs.zip"},
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -83,7 +121,7 @@ def index():
     return f"""<!DOCTYPE html><html><head><style>
 body{{font-family:sans-serif;margin:2rem}}
 #controls{{margin-bottom:1rem}}
-</style><script src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'></script></head><body>
+</style></head><body>
 <div id='controls'>
   <input id='count' type='number' min='1' value='1'/>
   <select id='template'><option value=''>None</option>{opts}</select>
@@ -92,7 +130,7 @@ body{{font-family:sans-serif;margin:2rem}}
 </div>
 <div id='qrs'></div>
 <script>
-let current=[];
+let downloadId='';
 document.getElementById('generate').addEventListener('click',async()=>{{
  const count=parseInt(document.getElementById('count').value,10)||0;
  const template=document.getElementById('template').value;
@@ -101,23 +139,14 @@ document.getElementById('generate').addEventListener('click',async()=>{{
  const d=await r.json();
  const c=document.getElementById('qrs');
  c.innerHTML='';
- current=d.items;
- current.forEach(it=>{{
-  const div=document.createElement('div');
-  div.innerHTML=it.svg;
-  c.appendChild(div.firstElementChild);
- }});
- document.getElementById('download').disabled=current.length===0;
+ const div=document.createElement('div');
+ div.innerHTML=d.preview.svg;
+ c.appendChild(div.firstElementChild);
+ downloadId=d.download_id;
+ document.getElementById('download').disabled=!downloadId;
 }});
 document.getElementById('download').addEventListener('click',()=>{{
- if(!current.length)return;
- const zip=new JSZip();
-  current.forEach((it,i)=>zip.file(`qr_${{i+1}}.svg`,it.svg));
- zip.generateAsync({{type:'blob'}}).then(blob=>{{
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='qrs.zip';a.click();
-  URL.revokeObjectURL(url);
- }});
+ if(!downloadId)return;
+ window.location='/download/'+downloadId;
 }});
 </script></body></html>"""
