@@ -16,6 +16,7 @@ if __package__ and __package__.startswith("qr_service"):
         random_suffix,
         apply_template,
         TEMPLATES_DIR,
+        LOGOS_DIR,
     )
 else:  # pragma: no cover - executed when service is top-level
     from service.qr import (
@@ -24,6 +25,7 @@ else:  # pragma: no cover - executed when service is top-level
         random_suffix,
         apply_template,
         TEMPLATES_DIR,
+        LOGOS_DIR,
     )
 
 app = FastAPI()
@@ -51,6 +53,7 @@ RANDOM_LEN = _get_random_len()
 class GenerateRequest(BaseModel):
     count: int = 1
     template: str | None = None
+    logo: str | None = None
 
 
 @app.post("/generate")
@@ -61,7 +64,9 @@ def generate(req: GenerateRequest):
         suffix = random_suffix(RANDOM_LEN)
         url = f"{base_url}/{suffix}"
         inner_svg = generate_svg(
-            url, background_color="transparent" if req.template else None
+            url,
+            background_color="transparent" if req.template else None,
+            logo=req.logo,
         )
         if req.template:
             try:
@@ -76,9 +81,13 @@ def generate(req: GenerateRequest):
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    opts = "".join(
+    template_opts = "".join(
         f"<option value='{html.escape(t)}'>{html.escape(t)}</option>"
         for t in sorted(p.name for p in TEMPLATES_DIR.iterdir() if p.is_file())
+    )
+    logo_opts = "".join(
+        f"<option value='{html.escape(l)}'>{html.escape(l)}</option>"
+        for l in sorted(p.name for p in LOGOS_DIR.iterdir() if p.is_file())
     )
     return f"""<!DOCTYPE html><html><head><style>
 body{{font-family:sans-serif;margin:2rem}}
@@ -86,7 +95,8 @@ body{{font-family:sans-serif;margin:2rem}}
 </style><script src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'></script></head><body>
 <div id='controls'>
   <input id='count' type='number' min='1' value='1'/>
-  <select id='template'><option value=''>None</option>{opts}</select>
+  <select id='template'><option value=''>None</option>{template_opts}</select>
+  <select id='logo'><option value=''>None</option>{logo_opts}</select>
   <button id='generate'>Generate</button>
   <button id='download' disabled>Download</button>
 </div>
@@ -96,8 +106,9 @@ let current=[];
 document.getElementById('generate').addEventListener('click',async()=>{{
  const count=parseInt(document.getElementById('count').value,10)||0;
  const template=document.getElementById('template').value;
+ const logo=document.getElementById('logo').value;
  if(count<=0)return;
- const r=await fetch('/generate',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{count,template}})}});
+ const r=await fetch('/generate',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{count,template,logo}})}});
  const d=await r.json();
  const c=document.getElementById('qrs');
  c.innerHTML='';
