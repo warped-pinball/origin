@@ -201,8 +201,9 @@ def test_apply_template_centers_qr():
 
 def test_apply_template_vertical_offset(monkeypatch, tmp_path):
     monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
-    path = tmp_path / "10test.png"
+    path = tmp_path / "test.png"
     Image.new("RGB", (500, 500), color="white").save(path)
+    monkeypatch.setenv("QR_TEMPLATE_OFFSET", "0.4")
     inner = generate_svg("data")
     svg = apply_template(inner, path.name)
     root = ET.fromstring(svg)

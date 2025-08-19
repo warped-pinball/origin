@@ -8,6 +8,7 @@ from io import BytesIO
 from fastapi.testclient import TestClient
 from PIL import Image
 from qr_service.service.qr import TEMPLATES_DIR
+import pytest
 
 
 def test_fallback_imports_service_qr(tmp_path, monkeypatch):
@@ -82,6 +83,25 @@ def test_generate_with_template(monkeypatch):
         img = Image.open(BytesIO(data))
         assert img.mode == "RGBA"
         assert img.getchannel("A").getextrema()[0] == 0
+
+
+def test_generate_with_template_and_offset(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    monkeypatch.setenv("QR_TEMPLATE_OFFSET", "0.4")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1, "template": "white.png"})
+        assert resp.status_code == 200
+        svg = resp.json()["items"][0]["svg"]
+        root = ET.fromstring(svg)
+        inner = root.find("{http://www.w3.org/2000/svg}svg")
+        assert inner is not None
+        h = float(root.get("height"))
+        size = float(inner.get("height"))
+        assert float(inner.get("y")) == pytest.approx(h * 0.4 - size / 2)
 
 
 def test_generate_respects_random_len(monkeypatch):
