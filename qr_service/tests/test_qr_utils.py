@@ -223,6 +223,24 @@ def test_apply_template_respects_scale(monkeypatch):
     assert float(root.get("height")) == orig_h * 0.5
 
 
+def test_apply_template_adds_cut_line_border():
+    inner = generate_svg("data")
+    svg = apply_template(inner, "white.png")
+    root = ET.fromstring(svg)
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    border = [r for r in root.findall("svg:rect", ns) if r.get("stroke") == "#ff0000"]
+    assert border, "border rect not found"
+    border = border[0]
+    width = float(root.get("width"))
+    height = float(root.get("height"))
+    x = float(border.get("x"))
+    y = float(border.get("y"))
+    assert float(border.get("width")) == pytest.approx(width - 2 * x)
+    assert float(border.get("height")) == pytest.approx(height - 2 * y)
+    assert border.get("fill") == "none"
+    assert border.get("rx") == border.get("ry")
+
+
 def test_add_frame_sets_print_dimensions(monkeypatch):
     monkeypatch.setenv("QR_PRINT_WIDTH_IN", "3.5")
     svg = add_frame(generate_svg("data"))

@@ -238,6 +238,20 @@ def apply_template(svg: str, template: str) -> str:
     inner.set("x", str((width - size) / 2))
     inner.set("y", str(height * offset_pct - size / 2))
     outer.append(inner)
+    inset = 2
+    ET.SubElement(
+        outer,
+        "rect",
+        x=str(inset),
+        y=str(inset),
+        width=str(width - 2 * inset),
+        height=str(height - 2 * inset),
+        fill="none",
+        stroke="#ff0000",
+        rx="20",
+        ry="20",
+        **{"stroke-width": "1"},
+    )
     return ET.tostring(outer, encoding="unicode")
 
 
