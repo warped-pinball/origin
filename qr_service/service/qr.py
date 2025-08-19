@@ -6,10 +6,11 @@ import xml.etree.ElementTree as ET
 
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 
 import qrcode
 import qrcode.image.svg
-from PIL import ImageColor
+from PIL import ImageColor, Image
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers, colormasks
 from qrcode.image.styles.moduledrawers import svg as svg_moduledrawers
@@ -34,6 +35,7 @@ def _strip_ns(elem: ET.Element) -> ET.Element:
 
 
 SVG_SIZE = int(_env("QR_CODE_SIZE", "300"))
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
 def random_suffix(length: int) -> str:
@@ -44,7 +46,7 @@ def random_suffix(length: int) -> str:
     return data[:length]
 
 
-def generate_svg(data: str) -> str:
+def generate_svg(data: str, background_color: str | None = None) -> str:
     level = _env("QR_ERROR_CORRECTION", "M").upper()
     ec_map = {
         "L": qrcode.constants.ERROR_CORRECT_L,
@@ -57,6 +59,8 @@ def generate_svg(data: str) -> str:
     qr.add_data(data)
     qr.make(fit=True)
     modules = qr.modules_count
+    back_color = background_color or _env("QR_CODE_BACKGROUND_COLOR", "#ffffff")
+    fill_color = _env("QR_CODE_COLOR", "#000000")
 
     drawer = _env("QR_MODULE_DRAWER", "square").lower()
     if drawer not in {
@@ -91,8 +95,8 @@ def generate_svg(data: str) -> str:
         eye = svg_eye_drawers.get(eye_drawer, svg_moduledrawers.SvgPathCircleDrawer)()
         img = qr.make_image(
             image_factory=qrcode.image.svg.SvgPathImage,
-            fill_color=_env("QR_CODE_COLOR", "#000000"),
-            back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+            fill_color=fill_color,
+            back_color=back_color,
             eye_drawer=eye,
         )
         root = _strip_ns(ET.fromstring(img.to_string()))
@@ -118,8 +122,8 @@ def generate_svg(data: str) -> str:
             image_factory=qrcode.image.svg.SvgPathImage,
             module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
             eye_drawer=eye,
-            fill_color=_env("QR_CODE_COLOR", "#000000"),
-            back_color=_env("QR_CODE_BACKGROUND_COLOR", "#ffffff"),
+            fill_color=fill_color,
+            back_color=back_color,
         )
         root = _strip_ns(ET.fromstring(img.to_string()))
         ns_key = "{http://www.w3.org/2000/xmlns/}svg"
@@ -150,13 +154,21 @@ def generate_svg(data: str) -> str:
     raster_scale = float(_env("QR_RASTER_SCALE", "5"))
     box_size = max(1, int(math.ceil(SVG_SIZE * raster_scale / modules)))
     qr.box_size = box_size
+    if back_color.lower() == "transparent":
+        bg = (0, 0, 0, 0)
+    else:
+        bg = ImageColor.getcolor(back_color, "RGBA")
+    fg = ImageColor.getcolor(fill_color, "RGBA")
+    if bg[3] == 255 and fg[3] == 255:
+        bg = bg[:3]
+        fg = fg[:3]
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
         eye_drawer=eye_drawer_cls(),
         color_mask=colormasks.SolidFillColorMask(
-            back_color=ImageColor.getrgb(_env("QR_CODE_BACKGROUND_COLOR", "#ffffff")),
-            front_color=ImageColor.getrgb(_env("QR_CODE_COLOR", "#000000")),
+            back_color=bg,
+            front_color=fg,
         ),
     )
     buffer = BytesIO()
@@ -182,6 +194,51 @@ def generate_svg(data: str) -> str:
         },
     )
     return ET.tostring(root, encoding="unicode")
+
+
+def apply_template(svg: str, template: str) -> str:
+    inner = _strip_ns(ET.fromstring(svg))
+    size = int(inner.attrib.get("width", str(SVG_SIZE)))
+
+    path = TEMPLATES_DIR / template
+    scale = float(_env("QR_TEMPLATE_SCALE", "1.0"))
+    with Image.open(path) as img:
+        width, height = img.size
+        if scale != 1.0:
+            width = int(width * scale)
+            height = int(height * scale)
+            img = img.resize((width, height), Image.LANCZOS)
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+    data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+    try:
+        offset_pct = float(_env("QR_TEMPLATE_OFFSET", "0.5"))
+    except ValueError:
+        offset_pct = 0.5
+
+    outer = ET.Element(
+        "svg",
+        width=str(width),
+        height=str(height),
+        viewBox=f"0 0 {width} {height}",
+        xmlns="http://www.w3.org/2000/svg",
+    )
+    ET.SubElement(
+        outer,
+        "image",
+        {
+            "x": "0",
+            "y": "0",
+            "width": str(width),
+            "height": str(height),
+            "{http://www.w3.org/1999/xlink}href": data_uri,
+        },
+    )
+    inner.set("x", str((width - size) / 2))
+    inner.set("y", str(height * offset_pct - size / 2))
+    outer.append(inner)
+    return ET.tostring(outer, encoding="unicode")
 
 
 def add_frame(svg: str) -> str:
