@@ -196,10 +196,8 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-def apply_template(svg: str, template: str) -> str:
-    inner = _strip_ns(ET.fromstring(svg))
-    size = int(inner.attrib.get("width", str(SVG_SIZE)))
-
+def prepare_template(template: str) -> dict:
+    """Load template image once for repeated use."""
     path = TEMPLATES_DIR / template
     scale = float(_env("QR_TEMPLATE_SCALE", "1.0"))
     with Image.open(path) as img:
@@ -216,6 +214,25 @@ def apply_template(svg: str, template: str) -> str:
         offset_pct = float(_env("QR_TEMPLATE_OFFSET", "0.5"))
     except ValueError:
         offset_pct = 0.5
+
+    return {
+        "width": width,
+        "height": height,
+        "data_uri": data_uri,
+        "offset_pct": offset_pct,
+    }
+
+
+def apply_template_prepared(svg: str, tpl: dict) -> str:
+    """Apply a preloaded template to an inner SVG."""
+    inner = _strip_ns(ET.fromstring(svg))
+    size = int(inner.attrib.get("width", str(SVG_SIZE)))
+
+    width = tpl["width"]
+    height = tpl["height"]
+    data_uri = tpl["data_uri"]
+    offset_pct = tpl["offset_pct"]
+    cut_corner_radius = float(_env("QR_CUT_CORNER_RADIUS", "20"))
 
     outer = ET.Element(
         "svg",
@@ -248,11 +265,17 @@ def apply_template(svg: str, template: str) -> str:
         height=str(height - 2 * inset),
         fill="none",
         stroke="#ff0000",
-        rx="20",
-        ry="20",
+        rx=str(cut_corner_radius),
+        ry=str(cut_corner_radius),
         **{"stroke-width": "1"},
     )
     return ET.tostring(outer, encoding="unicode")
+
+
+def apply_template(svg: str, template: str) -> str:
+    """Compatibility wrapper for single-use template application."""
+    tpl = prepare_template(template)
+    return apply_template_prepared(svg, tpl)
 
 
 def add_frame(svg: str) -> str:
@@ -266,6 +289,7 @@ def add_frame(svg: str) -> str:
     padding = padding_modules * module_px
     frame_corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
     code_corner_radius = float(_env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius)))
+    cut_corner_radius = float(_env("QR_CUT_CORNER_RADIUS", "20"))
 
     inner_w, inner_h = size + 2 * padding, size + 2 * padding
     outer_w, outer_h = inner_w + 40, inner_h + 80
@@ -322,22 +346,6 @@ def add_frame(svg: str) -> str:
         )
     ET.SubElement(
         outer,
-        "text",
-        x=str(outer_w / 2),
-        y="30",
-        fill=_env("QR_TEXT_COLOR", "#ffffff"),
-        **{"text-anchor": "middle", "font-size": "20"},
-    ).text = _env("QR_TOP_TEXT", "Tap or scan")
-    ET.SubElement(
-        outer,
-        "text",
-        x=str(outer_w / 2),
-        y=str(inner_h + 70),
-        fill=_env("QR_TEXT_COLOR", "#ffffff"),
-        **{"text-anchor": "middle", "font-size": "20"},
-    ).text = _env("QR_BOTTOM_TEXT", "Warped Pinball")
-    ET.SubElement(
-        outer,
         "rect",
         x="2",
         y="2",
@@ -345,8 +353,8 @@ def add_frame(svg: str) -> str:
         height=str(outer_h - 4),
         fill="none",
         stroke=_env("QR_FRAME_COLOR", "#ff0000"),
-        rx=str(frame_corner_radius),
-        ry=str(frame_corner_radius),
+        rx=str(cut_corner_radius),
+        ry=str(cut_corner_radius),
         **{"stroke-width": "1"},
     )
 
@@ -356,38 +364,3 @@ def add_frame(svg: str) -> str:
     outer.set("height", f"{outer_h * scale}in")
 
     return ET.tostring(outer, encoding="unicode")
-
-
-def build_sheet(svgs: list[str], cols: int, module_px: float) -> str:
-    """Combine multiple framed QR codes into a single SVG sheet."""
-    if not svgs:
-        return ""
-
-    gap_modules = int(_env("QR_SHEET_GAP_MODULES", "2"))
-    gap = gap_modules * module_px
-
-    first = _strip_ns(ET.fromstring(svgs[0]))
-    frame_w = float(first.attrib.get("width", "0"))
-    frame_h = float(first.attrib.get("height", "0"))
-
-    rows = (len(svgs) + cols - 1) // cols
-    sheet_w = frame_w * cols + gap * (cols - 1)
-    sheet_h = frame_h * rows + gap * (rows - 1)
-
-    root = ET.Element(
-        "svg",
-        width=str(sheet_w),
-        height=str(sheet_h),
-        viewBox=f"0 0 {sheet_w} {sheet_h}",
-        xmlns="http://www.w3.org/2000/svg",
-    )
-
-    for i, svg in enumerate(svgs):
-        elem = _strip_ns(ET.fromstring(svg))
-        x = (i % cols) * (frame_w + gap)
-        y = (i // cols) * (frame_h + gap)
-        elem.set("x", str(x))
-        elem.set("y", str(y))
-        root.append(elem)
-
-    return ET.tostring(root, encoding="unicode")

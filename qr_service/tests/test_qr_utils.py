@@ -83,16 +83,10 @@ def test_add_frame_env_customizations(monkeypatch):
     monkeypatch.setenv("QR_CODE_BACKGROUND_COLOR", "#abcdef")
     monkeypatch.setenv("QR_FRAME_BACKGROUND_COLOR", "#111111")
     monkeypatch.setenv("QR_FRAME_COLOR", "#222222")
-    monkeypatch.setenv("QR_TEXT_COLOR", "#333333")
-    monkeypatch.setenv("QR_TOP_TEXT", "Top")
-    monkeypatch.setenv("QR_BOTTOM_TEXT", "Bottom")
     svg = add_frame(generate_svg("data"))
     assert "#abcdef" in svg
     assert "#111111" in svg
     assert "#222222" in svg
-    assert "#333333" in svg
-    assert "Top" in svg
-    assert "Bottom" in svg
 
 
 def test_add_frame_padding_and_style(monkeypatch):
@@ -111,13 +105,16 @@ def test_add_frame_padding_and_style(monkeypatch):
 def test_separate_corner_radii(monkeypatch):
     monkeypatch.setenv("QR_FRAME_CORNER_RADIUS", "10")
     monkeypatch.setenv("QR_CODE_CORNER_RADIUS", "5")
+    monkeypatch.setenv("QR_CUT_CORNER_RADIUS", "15")
     svg = add_frame(generate_svg("data"))
     root = ET.fromstring(svg)
     rects = root.findall("{http://www.w3.org/2000/svg}rect")
     outer_rect = [r for r in rects if r.get("x") == "0" and r.get("y") == "0"][0]
     inner_rect = [r for r in rects if r.get("x") == "20" and r.get("y") == "40"][0]
+    cut_rect = [r for r in rects if r.get("x") == "2" and r.get("y") == "2"][0]
     assert float(outer_rect.get("rx")) == 10
     assert float(inner_rect.get("rx")) == 5
+    assert float(cut_rect.get("rx")) == 15
 
 
 def test_logo_included(monkeypatch):
