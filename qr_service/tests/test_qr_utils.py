@@ -163,6 +163,27 @@ def test_circle_drawer_returns_svg(monkeypatch):
     assert root.findall("svg:path", ns)
 
 
+def test_generate_svg_embeds_logo(monkeypatch, tmp_path):
+    img = Image.new("RGB", (10, 10), color="red")
+    logo_dir = tmp_path / "logos"
+    logo_dir.mkdir()
+    logo_path = logo_dir / "logo.png"
+    img.save(logo_path)
+    monkeypatch.setattr(qr_module, "LOGOS_DIR", logo_dir)
+    svg = generate_svg("data", logo="logo.png")
+    root = ET.fromstring(svg)
+    ns = {
+        "svg": "http://www.w3.org/2000/svg",
+        "xlink": "http://www.w3.org/1999/xlink",
+    }
+    image = root.find("svg:image", ns)
+    assert image is not None
+    href = image.get("{http://www.w3.org/1999/xlink}href")
+    data = base64.b64decode(href.split(",", 1)[1])
+    embedded = Image.open(BytesIO(data)).convert("RGB")
+    assert (255, 0, 0) in embedded.getdata()
+
+
 def test_raster_scale_increases_resolution(monkeypatch):
     monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
     monkeypatch.setenv("QR_RASTER_SCALE", "5")

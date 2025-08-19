@@ -8,6 +8,7 @@ from io import BytesIO
 from fastapi.testclient import TestClient
 from PIL import Image
 from qr_service.service.qr import TEMPLATES_DIR
+import qr_service.service.qr as qr_module
 import pytest
 
 
@@ -85,6 +86,32 @@ def test_generate_with_template(monkeypatch):
         assert img.getchannel("A").getextrema()[0] == 0
 
 
+def test_generate_with_logo(monkeypatch, tmp_path):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    logo_dir = tmp_path / "logos"
+    logo_dir.mkdir()
+    path = logo_dir / "logo.png"
+    Image.new("RGB", (10, 10), color="red").save(path)
+    monkeypatch.setattr(qr_module, "LOGOS_DIR", logo_dir)
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1, "logo": "logo.png"})
+        assert resp.status_code == 200
+        svg = resp.json()["items"][0]["svg"]
+        root = ET.fromstring(svg)
+        inner = root.find("{http://www.w3.org/2000/svg}svg")
+        assert inner is not None
+        ns = {
+            "svg": "http://www.w3.org/2000/svg",
+            "xlink": "http://www.w3.org/1999/xlink",
+        }
+        image = inner.find("svg:image", ns)
+        assert image is not None
+
+
 def test_generate_with_template_and_offset(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_TEMPLATE_OFFSET", "0.4")
@@ -134,3 +161,4 @@ def test_index_contains_controls(monkeypatch):
         assert "count" in text
         assert "Download" in text
         assert "template" in text
+        assert "logo" in text

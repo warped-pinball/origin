@@ -35,7 +35,9 @@ def _strip_ns(elem: ET.Element) -> ET.Element:
 
 
 SVG_SIZE = int(_env("QR_CODE_SIZE", "300"))
-TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+LOGOS_DIR = BASE_DIR / "logos"
 
 
 def random_suffix(length: int) -> str:
@@ -46,7 +48,9 @@ def random_suffix(length: int) -> str:
     return data[:length]
 
 
-def generate_svg(data: str, background_color: str | None = None) -> str:
+def generate_svg(
+    data: str, background_color: str | None = None, logo: str | None = None
+) -> str:
     level = _env("QR_ERROR_CORRECTION", "M").upper()
     ec_map = {
         "L": qrcode.constants.ERROR_CORRECT_L,
@@ -55,6 +59,8 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
         "H": qrcode.constants.ERROR_CORRECT_H,
     }
     error_correction = ec_map.get(level, qrcode.constants.ERROR_CORRECT_M)
+    if logo is not None:
+        error_correction = qrcode.constants.ERROR_CORRECT_H
     qr = qrcode.QRCode(error_correction=error_correction, border=0)
     qr.add_data(data)
     qr.make(fit=True)
@@ -84,47 +90,43 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
     }:
         eye_drawer = "circle"
 
-    if drawer == "square":
-        svg_eye_drawers = {
-            "circle": svg_moduledrawers.SvgPathCircleDrawer,
-            "square": svg_moduledrawers.SvgPathSquareDrawer,
-            "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
-                size_ratio=Decimal("0.8")
-            ),
-        }
-        eye = svg_eye_drawers.get(eye_drawer, svg_moduledrawers.SvgPathCircleDrawer)()
-        img = qr.make_image(
-            image_factory=qrcode.image.svg.SvgPathImage,
-            fill_color=fill_color,
-            back_color=back_color,
-            eye_drawer=eye,
-        )
-        root = _strip_ns(ET.fromstring(img.to_string()))
-        ns_key = "{http://www.w3.org/2000/xmlns/}svg"
-        if ns_key in root.attrib:
-            root.attrib.pop(ns_key)
-        root.set("xmlns", "http://www.w3.org/2000/svg")
-        root.set("width", str(SVG_SIZE))
-        root.set("height", str(SVG_SIZE))
-        root.set("viewBox", f"0 0 {modules} {modules}")
-        return ET.tostring(root, encoding="unicode")
-
-    if drawer == "circle":
-        svg_eye_drawers = {
-            "circle": svg_moduledrawers.SvgPathCircleDrawer,
-            "square": svg_moduledrawers.SvgPathSquareDrawer,
-            "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
-                size_ratio=Decimal("0.8")
-            ),
-        }
-        eye = svg_eye_drawers.get(eye_drawer, svg_moduledrawers.SvgPathCircleDrawer)()
-        img = qr.make_image(
-            image_factory=qrcode.image.svg.SvgPathImage,
-            module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
-            eye_drawer=eye,
-            fill_color=fill_color,
-            back_color=back_color,
-        )
+    need_raster = logo is not None or drawer not in {"square", "circle"}
+    if not need_raster:
+        if drawer == "square":
+            svg_eye_drawers = {
+                "circle": svg_moduledrawers.SvgPathCircleDrawer,
+                "square": svg_moduledrawers.SvgPathSquareDrawer,
+                "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
+                    size_ratio=Decimal("0.8")
+                ),
+            }
+            eye = svg_eye_drawers.get(
+                eye_drawer, svg_moduledrawers.SvgPathCircleDrawer
+            )()
+            img = qr.make_image(
+                image_factory=qrcode.image.svg.SvgPathImage,
+                fill_color=fill_color,
+                back_color=back_color,
+                eye_drawer=eye,
+            )
+        else:  # drawer == "circle"
+            svg_eye_drawers = {
+                "circle": svg_moduledrawers.SvgPathCircleDrawer,
+                "square": svg_moduledrawers.SvgPathSquareDrawer,
+                "gapped_square": lambda: svg_moduledrawers.SvgPathSquareDrawer(
+                    size_ratio=Decimal("0.8")
+                ),
+            }
+            eye = svg_eye_drawers.get(
+                eye_drawer, svg_moduledrawers.SvgPathCircleDrawer
+            )()
+            img = qr.make_image(
+                image_factory=qrcode.image.svg.SvgPathImage,
+                module_drawer=svg_moduledrawers.SvgPathCircleDrawer(),
+                eye_drawer=eye,
+                fill_color=fill_color,
+                back_color=back_color,
+            )
         root = _strip_ns(ET.fromstring(img.to_string()))
         ns_key = "{http://www.w3.org/2000/xmlns/}svg"
         if ns_key in root.attrib:
@@ -136,7 +138,9 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
         return ET.tostring(root, encoding="unicode")
 
     drawer_cls = {
+        "square": moduledrawers.SquareModuleDrawer,
         "gapped_square": moduledrawers.GappedSquareModuleDrawer,
+        "circle": moduledrawers.CircleModuleDrawer,
         "rounded": moduledrawers.RoundedModuleDrawer,
         "vertical_bars": moduledrawers.VerticalBarsDrawer,
         "horizontal_bars": moduledrawers.HorizontalBarsDrawer,
@@ -162,6 +166,14 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
     if bg[3] == 255 and fg[3] == 255:
         bg = bg[:3]
         fg = fg[:3]
+    embed_kwargs = {}
+    if logo:
+        path = LOGOS_DIR / logo
+        if path.exists():
+            embed_kwargs = {
+                "embedded_image_path": str(path),
+                "embedded_image_ratio": float(_env("QR_LOGO_SCALE", "0.25")),
+            }
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
@@ -170,6 +182,7 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
             back_color=bg,
             front_color=fg,
         ),
+        **embed_kwargs,
     )
     buffer = BytesIO()
     img.save(buffer, format="PNG")
