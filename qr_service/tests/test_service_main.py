@@ -112,6 +112,36 @@ def test_generate_with_logo(monkeypatch, tmp_path):
         assert image is not None
 
 
+def test_generate_with_svg_logo(monkeypatch, tmp_path):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    logo_dir = tmp_path / "logos"
+    logo_dir.mkdir()
+    path = logo_dir / "logo.svg"
+    path.write_text(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'>"
+        "<rect width='10' height='10' fill='red'/></svg>"
+    )
+    monkeypatch.setattr(qr_module, "LOGOS_DIR", logo_dir)
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1, "logo": "logo.svg"})
+        assert resp.status_code == 200
+        svg = resp.json()["items"][0]["svg"]
+        root = ET.fromstring(svg)
+        inner = root.find("{http://www.w3.org/2000/svg}svg")
+        assert inner is not None
+        ns = {"svg": "http://www.w3.org/2000/svg", "xlink": "http://www.w3.org/1999/xlink"}
+        image = inner.find("svg:image", ns)
+        assert image is not None
+        href = image.get("{http://www.w3.org/1999/xlink}href")
+        data = base64.b64decode(href.split(",", 1)[1])
+        embedded = Image.open(BytesIO(data)).convert("RGB")
+        assert (255, 0, 0) in embedded.getdata()
+
+
 def test_generate_with_template_and_offset(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_TEMPLATE_OFFSET", "0.4")

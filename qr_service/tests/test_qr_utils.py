@@ -184,6 +184,26 @@ def test_generate_svg_embeds_logo(monkeypatch, tmp_path):
     assert (255, 0, 0) in embedded.getdata()
 
 
+def test_generate_svg_embeds_svg_logo(monkeypatch, tmp_path):
+    logo_dir = tmp_path / "logos"
+    logo_dir.mkdir()
+    svg_logo = logo_dir / "logo.svg"
+    svg_logo.write_text(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'>"
+        "<rect width='10' height='10' fill='red'/></svg>"
+    )
+    monkeypatch.setattr(qr_module, "LOGOS_DIR", logo_dir)
+    svg = generate_svg("data", logo="logo.svg")
+    root = ET.fromstring(svg)
+    ns = {"svg": "http://www.w3.org/2000/svg", "xlink": "http://www.w3.org/1999/xlink"}
+    image = root.find("svg:image", ns)
+    assert image is not None
+    href = image.get("{http://www.w3.org/1999/xlink}href")
+    data = base64.b64decode(href.split(",", 1)[1])
+    embedded = Image.open(BytesIO(data)).convert("RGB")
+    assert (255, 0, 0) in embedded.getdata()
+
+
 def test_raster_scale_increases_resolution(monkeypatch):
     monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
     monkeypatch.setenv("QR_RASTER_SCALE", "5")

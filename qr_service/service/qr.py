@@ -166,14 +166,25 @@ def generate_svg(
     if bg[3] == 255 and fg[3] == 255:
         bg = bg[:3]
         fg = fg[:3]
-    embed_kwargs = {}
+    embed_kwargs: dict[str, object] = {}
     if logo:
         path = LOGOS_DIR / logo
         if path.exists():
-            embed_kwargs = {
-                "embedded_image_path": str(path),
-                "embedded_image_ratio": float(_env("QR_LOGO_SCALE", "0.25")),
-            }
+            ratio = float(_env("QR_LOGO_SCALE", "0.25"))
+            if path.suffix.lower() == ".svg":
+                from cairosvg import svg2png  # type: ignore
+
+                png_bytes = svg2png(url=str(path))
+                embedded_image = Image.open(BytesIO(png_bytes))
+                embed_kwargs = {
+                    "embedded_image": embedded_image,
+                    "embedded_image_ratio": ratio,
+                }
+            else:
+                embed_kwargs = {
+                    "embedded_image_path": str(path),
+                    "embedded_image_ratio": ratio,
+                }
     img = qr.make_image(
         image_factory=StyledPilImage,
         module_drawer=drawer_cls(),
