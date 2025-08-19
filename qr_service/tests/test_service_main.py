@@ -51,6 +51,26 @@ def test_generate_endpoint(monkeypatch):
         assert len(z.namelist()) == 2
 
 
+def test_generate_precomputes_suffixes(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    seq = iter(["aa", "bb"])
+    monkeypatch.setattr(main, "random_suffix", lambda n: next(seq))
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 2})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["preview"]["suffix"] == "aa"
+        resp2 = client.get(f"/download/{data['download_id']}")
+        z = zipfile.ZipFile(BytesIO(resp2.content))
+        names = sorted(n[:-4] for n in z.namelist())
+        assert names == ["aa", "bb"]
+
+
 def test_generate_with_template(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")

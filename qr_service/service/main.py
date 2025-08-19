@@ -7,7 +7,8 @@ from pydantic import BaseModel
 import uuid
 import zipfile
 from io import BytesIO
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -62,8 +63,7 @@ class GenerateRequest(BaseModel):
 ZIPS: dict[str, bytes] = {}
 
 
-def _generate_single(base_url: str, tpl):
-    suffix = random_suffix(RANDOM_LEN)
+def _generate_single(base_url: str, tpl, suffix: str):
     url = f"{base_url}/{suffix}"
     inner_svg = generate_svg(url, background_color="transparent" if tpl else None)
     if tpl:
@@ -83,8 +83,10 @@ def generate(req: GenerateRequest):
         except FileNotFoundError:
             raise HTTPException(status_code=400, detail="Template not found")
 
-    with ThreadPoolExecutor() as ex:
-        items = list(ex.map(lambda _: _generate_single(base_url, tpl), range(req.count)))
+    suffixes = [random_suffix(RANDOM_LEN) for _ in range(req.count)]
+    worker = partial(_generate_single, base_url, tpl)
+    with ProcessPoolExecutor() as ex:
+        items = list(ex.map(worker, suffixes))
 
     if not items:
         raise HTTPException(status_code=400, detail="No items generated")
