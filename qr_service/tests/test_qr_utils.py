@@ -2,7 +2,10 @@ import base64
 import xml.etree.ElementTree as ET
 from io import BytesIO
 
+import pytest
 from PIL import Image, ImageColor
+
+import qr_service.service.qr as qr_module
 
 from qr_service.service.qr import (
     random_suffix,
@@ -194,6 +197,18 @@ def test_apply_template_centers_qr():
     size = float(inner_svg.get("width"))
     assert float(inner_svg.get("x")) == (width - size) / 2
     assert float(inner_svg.get("y")) == (height - size) / 2
+
+
+def test_apply_template_vertical_offset(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    path = tmp_path / "10test.png"
+    Image.new("RGB", (500, 500), color="white").save(path)
+    inner = generate_svg("data")
+    svg = apply_template(inner, path.name)
+    root = ET.fromstring(svg)
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    assert float(inner_svg.get("y")) == pytest.approx(50.0)
 
 
 def test_apply_template_respects_scale(monkeypatch):

@@ -1,6 +1,7 @@
 import base64
 import math
 import os
+import re
 import uuid
 import xml.etree.ElementTree as ET
 
@@ -212,6 +213,10 @@ def apply_template(svg: str, template: str) -> str:
         img.save(buffer, format="PNG")
     data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
 
+    # Determine optional vertical offset based on filename prefix
+    m = re.match(r"([+-]?\d+)", path.name)
+    offset_pct = int(m.group(1)) / 100.0 if m else 0.0
+
     outer = ET.Element(
         "svg",
         width=str(width),
@@ -231,7 +236,7 @@ def apply_template(svg: str, template: str) -> str:
         },
     )
     inner.set("x", str((width - size) / 2))
-    inner.set("y", str((height - size) / 2))
+    inner.set("y", str((height - size) / 2 - height * offset_pct))
     outer.append(inner)
     return ET.tostring(outer, encoding="unicode")
 
