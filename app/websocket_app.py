@@ -80,12 +80,6 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
 
     msg = json.dumps(
         {
-            "server_key": b64encode(
-                server_public_key.public_bytes(
-                    encoding=serialization.Encoding.Raw,
-                        format=serialization.PublicFormat.Raw,
-                    )
-                ).decode(),
             "claim_code": claim_code,
             "claim_url": claim_url,
             "machine_id": machine_id,
@@ -94,9 +88,6 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     )
     msg_signature = signing_key.sign(msg.encode(), padding.PKCS1v15(), hashes.SHA256())
     msg += "|" + msg_signature.hex()
-
-    logger.info("Message signed:", msg.encode())
-    logger.info("Message signature:", msg_signature.encode())
 
     logger.info(f"Sending setup response message: {msg}")
     await websocket.send_text(msg)
