@@ -65,7 +65,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
 
     signing_key = get_signing_key()
 
-    logging.info(f"Shared secret: {b64encode(shared_secret).decode()}")
+    logging.info(f"Shared secret: {shared_secret.hex()}")
 
     db_claim = models.MachineClaim(
         machine_id=machine_id,
