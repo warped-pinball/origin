@@ -83,24 +83,10 @@ async def default_authenticator(
 
 def ws_signed_endpoint(
     *,
-    authenticator: Callable[[Dict[str, Any], Optional[str], Optional[str], Optional[str], Session], Awaitable[bool]] = default_authenticator
+    authenticator: Callable[[Dict[str, Any], Optional[str], Optional[str], Optional[str], Session], Awaitable[bool]]
 ):
-    """
-    Decorator for WebSocket endpoints that:
-      - Accepts the connection
-      - Receives text
-      - Parses JSON + optional auth fields
-      - Authenticates (hook)
-      - Invokes the handler to get a dict response
-      - Signs the compact JSON with RSA (PKCS1v15/SHA256)
-      - Sends '<json>|<base64(signature)>'
-      - Closes the socket
-
-    The wrapped handler signature must be:
-        async def handler(*, websocket: WebSocket, db: Session, payload: Dict[str, Any], client_id: Optional[str], challenge: Optional[str], hmac_value: Optional[str]) -> Dict[str, Any]
-    """
     def decorator(handler: Callable[..., Awaitable[Dict[str, Any]]]):
-        @wraps(handler)
+        # DO NOT use @wraps(handler): it would copy the handler's signature and drop the Depends default
         async def wrapper(websocket: WebSocket, db: Session = Depends(get_db)):
             await websocket.accept()
             try:
@@ -114,7 +100,6 @@ def ws_signed_endpoint(
                     await websocket.close()
                     return
 
-                # Invoke the concrete handler; must return a dict
                 response_obj = await handler(
                     websocket=websocket,
                     db=db,
@@ -124,18 +109,13 @@ def ws_signed_endpoint(
                     hmac_value=hmac_value,
                 )
 
-                # Compact JSON so the client verifies the exact bytes
+                # Compact JSON and sign
                 response_json = json.dumps(response_obj, separators=(",", ":"))
-
-                # Sign with RSA PKCS#1 v1.5 + SHA-256, then base64-encode the signature
                 signing_key = get_signing_key()
                 signature = signing_key.sign(response_json.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256())
                 signature_b64 = b64encode(signature).decode("ascii")
 
-                # Send JSON + '|' + base64(signature)
-                full_msg = response_json + "|" + signature_b64
-                logger.info("Sending signed response: %s", full_msg)
-                await websocket.send_text(full_msg)
+                await websocket.send_text(response_json + "|" + signature_b64)
             except Exception as e:
                 logger.exception("WebSocket error: %s", e)
             finally:
@@ -143,6 +123,9 @@ def ws_signed_endpoint(
                     await websocket.close()
                 except Exception:
                     pass
+
+        # optional: keep the original name for nicer logs, but DO NOT copy __signature__
+        wrapper.__name__ = getattr(handler, "__name__", "ws_handler")
         return wrapper
     return decorator
 
@@ -223,3 +206,4 @@ async def ws_setup_handler(
 #TODO base64 encode everything we can
 #TODO add any commands we want to send back 
 #TODO keep websocket open?
+#TODO store things as base64 not hex (like machine id)
