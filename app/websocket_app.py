@@ -131,7 +131,7 @@ def ws_signed_endpoint(
 
 
 @app.websocket("/ws/setup")
-@ws_signed_endpoint()
+@ws_signed_endpoint(authenticator=default_authenticator)
 async def ws_setup_handler(
     *,
     websocket: WebSocket,
