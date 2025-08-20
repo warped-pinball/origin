@@ -5,11 +5,15 @@ import secrets
 import json
 from base64 import b64decode, b64encode
 from functools import lru_cache
+import logging
 
 from fastapi import FastAPI, WebSocket, Depends
 from cryptography.hazmat.primitives.asymmetric import x25519, padding
 from cryptography.hazmat.primitives import hashes, serialization
 from sqlalchemy.orm import Session
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from .database import init_db, get_db
 from . import models
@@ -38,6 +42,9 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
     try:
         payload = await websocket.receive_text()
+
+        logger.info(f"Received setup payload: {payload}")
+
         parts = payload.split("|")
         # in the case of setup we do not care about the challenge, machine id or hmac
         payload = json.loads(parts[0])
@@ -88,5 +95,6 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     )
     msg_signature = signing_key.sign(msg.encode(), hashes.SHA256())
     msg += "|" + b64encode(msg_signature).decode()
+    logger.info(f"Sending setup response message: {msg}")
     await websocket.send_text(msg)
     await websocket.close()
