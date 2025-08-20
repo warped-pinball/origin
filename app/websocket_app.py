@@ -65,6 +65,8 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
 
     signing_key = get_signing_key()
 
+    logging.info("Shared secret:", b64encode(shared_secret).decode())
+
     db_claim = models.MachineClaim(
         machine_id=machine_id,
         claim_code=claim_code,
@@ -80,6 +82,10 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
 
     msg = json.dumps(
         {
+            "server_key": b64encode(server_public_key.public_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw
+            )).decode(),
             "claim_code": claim_code,
             "claim_url": claim_url,
             "machine_id": machine_id,
