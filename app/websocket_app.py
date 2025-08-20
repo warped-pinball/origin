@@ -96,7 +96,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     msg += "|" + msg_signature.hex()
 
     logger.info("Message signed:", msg.encode())
-    logger.info("Message signature:", msg_signature)
+    logger.info("Message signature:", msg_signature.encode())
 
     logger.info(f"Sending setup response message: {msg}")
     await websocket.send_text(msg)
