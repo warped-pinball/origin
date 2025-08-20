@@ -60,7 +60,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     server_private_key = x25519.X25519PrivateKey.generate()
     server_public_key = server_private_key.public_key()
     shared_secret = server_private_key.exchange(client_public_key)
-    machine_id = str(uuid.uuid4())
+    machine_id = str(uuid.uuid4()).replace("-", "")
     claim_code = generate_code()
 
     signing_key = get_signing_key()
@@ -98,3 +98,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     logger.info(f"Sending setup response message: {msg}")
     await websocket.send_text(msg)
     await websocket.close()
+
+#TODO break out a generic "handle request" function which will sign all messages
+#TODO include "next challenge" in all responses
+#TODO base64 encode everything we can
