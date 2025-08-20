@@ -64,7 +64,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     claim_code = generate_code()
 
     signing_key = get_signing_key()
-    secret_signature = signing_key.sign(shared_secret, hashes.SHA256())
+    secret_signature = signing_key.sign(shared_secret, padding.PKCS1v15(), hashes.SHA256())
 
     db_claim = models.MachineClaim(
         machine_id=machine_id,
@@ -93,7 +93,7 @@ async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
             "secret_signature": b64encode(secret_signature).decode(),
         }
     )
-    msg_signature = signing_key.sign(msg.encode(), hashes.SHA256())
+    msg_signature = signing_key.sign(msg.encode(), padding.PKCS1v15(), hashes.SHA256())
     msg += "|" + b64encode(msg_signature).decode()
     logger.info(f"Sending setup response message: {msg}")
     await websocket.send_text(msg)
