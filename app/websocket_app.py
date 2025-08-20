@@ -2,6 +2,7 @@ import os
 import uuid
 import string
 import secrets
+import json
 from base64 import b64decode, b64encode
 from functools import lru_cache
 
@@ -32,11 +33,15 @@ def generate_code(length: int = 8) -> str:
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
-@app.websocket("/ws/claim")
-async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
+@app.websocket("/ws/setup")
+async def ws_setup(websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
     try:
-        payload = await websocket.receive_json()
+        payload = await websocket.receive_text()
+        parts = payload.split("|")
+        # in the case of setup we do not care about the challenge, machine id or hmac
+        payload = json.loads(parts[0])
+
         client_key_b64 = payload["client_key"]
         client_game_title = payload.get("game_title", "Unknown Game")
         client_public_bytes = b64decode(client_key_b64)
@@ -52,7 +57,7 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
     claim_code = generate_code()
 
     signing_key = get_signing_key()
-    signature = signing_key.sign(shared_secret, padding.PKCS1v15(), hashes.SHA256())
+    secret_signature = signing_key.sign(shared_secret, padding.PKCS1v15(), hashes.SHA256())
 
     db_claim = models.MachineClaim(
         machine_id=machine_id,
@@ -67,18 +72,21 @@ async def ws_claim(websocket: WebSocket, db: Session = Depends(get_db)):
     host = os.environ.get("PUBLIC_HOST_URL", "")
     claim_url = f"{host}/claim?code={claim_code}"
 
-    await websocket.send_json(
+    msg = json.dumps(
         {
             "server_key": b64encode(
                 server_public_key.public_bytes(
                     encoding=serialization.Encoding.Raw,
-                    format=serialization.PublicFormat.Raw,
-                )
-            ).decode(),
+                        format=serialization.PublicFormat.Raw,
+                    )
+                ).decode(),
             "claim_code": claim_code,
             "claim_url": claim_url,
             "machine_id": machine_id,
-            "signature": signature.hex(),
+            "secret_signature": b64encode(secret_signature).decode(),
         }
     )
+    msg_signature = signing_key.sign(msg.encode(), padding.PKCS1v15(), hashes.SHA256())
+    msg += "|" + b64encode(msg_signature).decode()
+    await websocket.send_text(msg)
     await websocket.close()
