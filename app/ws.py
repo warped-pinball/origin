@@ -81,16 +81,8 @@ class WSConnection:
     ) -> Tuple[str, Dict[str, Any], Optional[str], Optional[str], Optional[str]]:
         text = await self.websocket.receive_text()
         return parse_client_message(text)
-
-    async def send_text(self, text: str):
-        await self.websocket.send_text(text)
-
-    async def send_json(self, route: str, obj: Dict[str, Any], sign: bool = True):
-        if sign:
-            await self.send_text(sign_message(route, obj))
-        else:
-            payload_json = json.dumps(obj, separators=(",", ":"))
-            await self.send_text(f"{route}|{payload_json}")
+    async def send_json(self, route: str, obj: Dict[str, Any]):
+        await self.websocket.send_text(sign_message(route, obj))
 
 
 class ConnectionManager:
@@ -152,30 +144,21 @@ class ConnectionManager:
         async with self._lock:
             return len(self._conns)
 
-    async def send_text(self, machine_uuid_hex: str, text: str):
+    async def send_json(self, machine_uuid_hex: str, route: str, obj: Dict[str, Any]):
         async with self._lock:
             conn = self._conns.get(machine_uuid_hex)
         if conn is None:
             raise RuntimeError(
                 "No active connection for machine {}".format(machine_uuid_hex)
             )
-        await conn.websocket.send_text(text)
+        await conn.websocket.send_text(sign_message(route, obj))
 
-    async def send_json(
-        self, machine_uuid_hex: str, route: str, obj: Dict[str, Any], sign: bool = True
-    ):
-        if sign:
-            await self.send_text(machine_uuid_hex, sign_message(route, obj))
-        else:
-            payload_json = json.dumps(obj, separators=(",", ":"))
-            await self.send_text(machine_uuid_hex, f"{route}|{payload_json}")
-
-    async def broadcast_json(self, route: str, obj: Dict[str, Any], sign: bool = True):
+    async def broadcast_json(self, route: str, obj: Dict[str, Any]):
         async with self._lock:
             keys = list(self._conns.keys())
         for k in keys:
             try:
-                await self.send_json(k, route, obj, sign=sign)
+                await self.send_json(k, route, obj)
             except Exception as e:
                 logger.info("Broadcast to %s failed: %s", k, e)
                 await self.disconnect(k)

@@ -2,7 +2,8 @@ import base64
 import os
 import json
 
-from cryptography.hazmat.primitives.asymmetric import x25519, rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding, x25519, rsa
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     NoEncryption,
@@ -36,6 +37,13 @@ def test_machine_claim_flow(client, ws_client, db_session):
         route, payload, signature = raw.split("|", 2)
         assert route == "handshake"
         data = json.loads(payload)
+        message = f"{route}|{payload}".encode("utf-8")
+        priv.public_key().verify(
+            base64.b64decode(signature),
+            message,
+            padding.PKCS1v15(),
+            hashes.SHA256(),
+        )
         data["signature"] = signature
 
     assert {
