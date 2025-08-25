@@ -55,6 +55,13 @@ class MachineClaim(Base):
     claimed = Column(Boolean, default=False, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
 
+class MachineChallenge(Base):
+    __tablename__ = 'machine_challenges'
+    challenge = Column(String, primary_key=True, index=True)
+    machine_id = Column(String, index=True, nullable=False)
+    issued_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    used = Column(Boolean, default=False, nullable=False)
+
 class Score(Base):
     __tablename__ = 'scores'
     id = Column(Integer, primary_key=True, index=True)

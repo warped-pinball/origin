@@ -1,5 +1,6 @@
 import base64
 import os
+import json
 
 from cryptography.hazmat.primitives.asymmetric import x25519, rsa
 from cryptography.hazmat.primitives.serialization import (
@@ -10,7 +11,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from app import models
-from app.websocket_app import generate_code
+from app.ws import generate_code
 
 
 def test_machine_claim_flow(client, ws_client, db_session):
@@ -28,9 +29,14 @@ def test_machine_claim_flow(client, ws_client, db_session):
 
     os.environ["PUBLIC_HOST_URL"] = "https://example.com"
 
-    with ws_client.websocket_connect("/ws/claim") as ws:
-        ws.send_json({"client_key": client_key})
-        data = ws.receive_json()
+    with ws_client.websocket_connect("/ws/setup") as ws:
+        msg = json.dumps({"client_key": client_key})
+        ws.send_text(f"handshake|{msg}")
+        raw = ws.receive_text()
+        route, payload, signature = raw.split("|", 2)
+        assert route == "handshake"
+        data = json.loads(payload)
+        data["signature"] = signature
 
     assert {
         "server_key",
@@ -42,10 +48,9 @@ def test_machine_claim_flow(client, ws_client, db_session):
     assert data["claim_url"] == f"https://example.com/claim?code={data['claim_code']}"
 
     # ensure record stored
+    machine_hex = base64.b64decode(data["machine_id"]).hex()
     claim = (
-        db_session.query(models.MachineClaim)
-        .filter_by(machine_id=data["machine_id"])
-        .first()
+        db_session.query(models.MachineClaim).filter_by(machine_id=machine_hex).first()
     )
     assert claim is not None
 
@@ -76,7 +81,7 @@ def test_machine_claim_flow(client, ws_client, db_session):
     assert res.status_code == 204
 
     # status should be linked
-    res = client.get(f"/api/machines/{data['machine_id']}/status")
+    res = client.get(f"/api/machines/{machine_hex}/status")
     assert res.status_code == 200
     assert res.json() == {"linked": True}
 
