@@ -1,6 +1,5 @@
 import os
 import uuid
-import json
 import logging
 from base64 import b64decode, b64encode
 from typing import Dict, Any, Tuple
@@ -16,7 +15,7 @@ from .ws import (
     ConnectionManager,
     WSConnection,
     parse_client_message,
-    sign_json,
+    sign_message,
     ws_router,
     default_authenticator,
     generate_code,
@@ -33,7 +32,9 @@ app = FastAPI(title="Origin WS")
 manager = ConnectionManager(heartbeat_interval_sec=30)
 
 
-def ws_persistent_handshake(*, authenticator=default_authenticator, require_auth: bool = True):
+def ws_persistent_handshake(
+    *, authenticator=default_authenticator, require_auth: bool = True
+):
     def decorator(handler):
         async def endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
             await websocket.accept()
@@ -41,15 +42,24 @@ def ws_persistent_handshake(*, authenticator=default_authenticator, require_auth
             try:
                 raw_text = await websocket.receive_text()
                 logger.info("Handshake received: %s", raw_text)
-                payload, client_id, challenge, hmac_value = parse_client_message(raw_text)
+                route, payload, client_id, challenge, hmac_value = parse_client_message(
+                    raw_text
+                )
+                if route != "handshake":
+                    await websocket.close()
+                    return
                 if require_auth:
-                    ok = await authenticator(payload, client_id, challenge, hmac_value, db)
+                    ok = await authenticator(
+                        payload, client_id, challenge, hmac_value, db
+                    )
                     if not ok:
                         await websocket.close()
                         return
 
-                response_obj, machine_uuid_hex, shared_secret = await handler(payload=payload, db=db)
-                await websocket.send_text(sign_json(response_obj))
+                response_obj, machine_uuid_hex, shared_secret = await handler(
+                    payload=payload, db=db
+                )
+                await websocket.send_text(sign_message("handshake", response_obj))
 
                 conn = WSConnection(websocket, machine_uuid_hex, shared_secret)
                 await manager.register(machine_uuid_hex, conn)
@@ -57,15 +67,23 @@ def ws_persistent_handshake(*, authenticator=default_authenticator, require_auth
 
                 while True:
                     try:
-                        payload, client_id, challenge, hmac_value = await conn.receive()
+                        route, payload, client_id, challenge, hmac_value = (
+                            await conn.receive()
+                        )
                     except WebSocketDisconnect:
-                        logger.info("WebSocketDisconnect for machine=%s", machine_uuid_hex)
+                        logger.info(
+                            "WebSocketDisconnect for machine=%s", machine_uuid_hex
+                        )
                         break
                     except Exception as e:
-                        logger.info("Receive error for machine=%s: %s", machine_uuid_hex, e)
+                        logger.info(
+                            "Receive error for machine=%s: %s", machine_uuid_hex, e
+                        )
                         break
 
-                    await ws_router.dispatch(conn, payload, client_id, challenge, hmac_value, db)
+                    await ws_router.dispatch(
+                        conn, route, payload, client_id, challenge, hmac_value, db
+                    )
             except Exception as e:
                 logger.exception("Handshake/connection error: %s", e)
             finally:
@@ -82,12 +100,16 @@ def ws_persistent_handshake(*, authenticator=default_authenticator, require_auth
 
 @app.websocket("/ws/setup")
 @ws_persistent_handshake(require_auth=False)
-async def ws_setup_handler(*, payload: Dict[str, Any], db: Session) -> Tuple[Dict[str, Any], str, bytes]:
+async def ws_setup_handler(
+    *, payload: Dict[str, Any], db: Session
+) -> Tuple[Dict[str, Any], str, bytes]:
     try:
         client_key_b64 = payload["client_key"]
         client_game_title = payload.get("game_title", "Unknown Game")
         client_public_bytes = b64decode(client_key_b64)
-        client_public_key = x25519.X25519PublicKey.from_public_bytes(client_public_bytes)
+        client_public_key = x25519.X25519PublicKey.from_public_bytes(
+            client_public_bytes
+        )
     except Exception as e:
         raise ValueError(f"Invalid client payload: {e}")
 

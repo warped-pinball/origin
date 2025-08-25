@@ -30,9 +30,11 @@ def test_machine_claim_flow(client, ws_client, db_session):
     os.environ["PUBLIC_HOST_URL"] = "https://example.com"
 
     with ws_client.websocket_connect("/ws/setup") as ws:
-        ws.send_json({"client_key": client_key})
+        msg = json.dumps({"client_key": client_key})
+        ws.send_text(f"handshake|{msg}")
         raw = ws.receive_text()
-        payload, signature = raw.split("|", 1)
+        route, payload, signature = raw.split("|", 2)
+        assert route == "handshake"
         data = json.loads(payload)
         data["signature"] = signature
 
@@ -48,9 +50,7 @@ def test_machine_claim_flow(client, ws_client, db_session):
     # ensure record stored
     machine_hex = base64.b64decode(data["machine_id"]).hex()
     claim = (
-        db_session.query(models.MachineClaim)
-        .filter_by(machine_id=machine_hex)
-        .first()
+        db_session.query(models.MachineClaim).filter_by(machine_id=machine_hex).first()
     )
     assert claim is not None
 
