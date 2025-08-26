@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Session
-from .. import models, schemas
-from passlib.context import CryptContext
 from typing import Optional
 import secrets
 
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+
+from .. import models, schemas
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Return True if the password matches the hashed password."""
@@ -17,6 +20,10 @@ def get_user_by_email(db: Session, email_addr: str) -> Optional[models.User]:
 
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
+
+
+def get_user_by_screen_name(db: Session, screen_name: str) -> Optional[models.User]:
+    return db.query(models.User).filter(models.User.screen_name == screen_name).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
@@ -35,7 +42,9 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     return db_user
 
 
-def authenticate_user(db: Session, email_addr: str, password: str) -> Optional[models.User]:
+def authenticate_user(
+    db: Session, email_addr: str, password: str
+) -> Optional[models.User]:
     user = get_user_by_email(db, email_addr)
     if not user:
         return None
@@ -44,7 +53,9 @@ def authenticate_user(db: Session, email_addr: str, password: str) -> Optional[m
     return user
 
 
-def update_user(db: Session, user: models.User, updates: schemas.UserUpdate) -> models.User:
+def update_user(
+    db: Session, user: models.User, updates: schemas.UserUpdate
+) -> models.User:
     for field, value in updates.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
     db.add(user)

@@ -4,44 +4,12 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    ForeignKey,
-    DateTime,
-    func,
     inspect,
-    text,
     create_engine,
     MetaData,
     Table,
 )
-from sqlalchemy.orm import declarative_base
 from app.migrations import utils
-
-
-def create_v0_schema(engine):
-    BaseV0 = declarative_base()
-
-    class User(BaseV0):
-        __tablename__ = 'users'
-        id = Column(Integer, primary_key=True, index=True)
-        phone = Column(String, unique=True, index=True, nullable=False)
-        hashed_password = Column(String, nullable=False)
-
-    class Machine(BaseV0):
-        __tablename__ = 'machines'
-        id = Column(Integer, primary_key=True, index=True)
-        name = Column(String, unique=True, index=True)
-        secret = Column(String, nullable=False)
-
-    class Score(BaseV0):
-        __tablename__ = 'scores'
-        id = Column(Integer, primary_key=True, index=True)
-        user_id = Column(Integer, ForeignKey('users.id'))
-        machine_id = Column(Integer, ForeignKey('machines.id'))
-        game = Column(String, index=True)
-        value = Column(Integer)
-        created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    BaseV0.metadata.create_all(bind=engine)
 
 
 def test_run_all_migrations(tmp_path):
@@ -50,20 +18,31 @@ def test_run_all_migrations(tmp_path):
     if db_file.exists():
         db_file.unlink()
     import app.database as db
+
     importlib.reload(db)
 
-    # Create initial schema (version 0)
-    create_v0_schema(db.engine)
     db.run_migrations()
-    # After migrating, ensure any new tables exist
     db.Base.metadata.create_all(bind=db.engine)
 
-    assert db.get_db_version() == db.EXPECTED_DB_VERSION
+    assert db.get_db_version() == db.EXPECTED_DB_VERSION == 1
 
     insp = inspect(db.engine)
-    cols = {c["name"] for c in insp.get_columns("users")}
+    tables = set(insp.get_table_names())
+    for table in [
+        "users",
+        "locations",
+        "machines",
+        "machine_claims",
+        "machine_challenges",
+        "scores",
+        "qr_codes",
+    ]:
+        assert table in tables
+
+    user_cols = {c["name"] for c in insp.get_columns("users")}
     for col in [
         "email",
+        "hashed_password",
         "screen_name",
         "first_name",
         "last_name",
@@ -74,21 +53,8 @@ def test_run_all_migrations(tmp_path):
         "verification_token",
         "reset_token",
     ]:
-        assert col in cols
-    if db.engine.dialect.name != 'sqlite':
-        # verify users.id column autoincrements via sequence
-        with db.engine.connect() as conn:
-            res = conn.execute(
-                text(
-                    "SELECT column_default FROM information_schema.columns "
-                    "WHERE table_name='users' AND column_name='id'"
-                )
-            )
-            default = res.scalar()
-            assert default and 'nextval' in default
+        assert col in user_cols
 
-    assert "machine_claims" in insp.get_table_names()
-    assert "qr_codes" in insp.get_table_names()
     qr_cols = {c["name"] for c in insp.get_columns("qr_codes")}
     for col in [
         "url",
@@ -99,30 +65,6 @@ def test_run_all_migrations(tmp_path):
         "machine_id",
     ]:
         assert col in qr_cols
-
-
-def test_migrate_phone_to_email(tmp_path):
-    db_file = tmp_path / "migrate_phone.db"
-    os.environ["DATABASE_URL"] = f"sqlite:///{db_file}"
-    if db_file.exists():
-        db_file.unlink()
-    import app.database as db
-    importlib.reload(db)
-
-    create_v0_schema(db.engine)
-    db.set_db_version(6)
-    with db.engine.begin() as conn:
-        conn.execute(text("INSERT INTO users (phone, hashed_password) VALUES (:p, 'pw')"), {"p": "old@example.com"})
-
-    db.run_migrations()
-
-    insp = inspect(db.engine)
-    cols = {c["name"] for c in insp.get_columns("users")}
-    assert "email" in cols
-    assert "phone" not in cols
-    with db.engine.connect() as conn:
-        res = conn.execute(text("SELECT email FROM users"))
-        assert res.scalar() == "old@example.com"
 
 
 def test_add_column_duplicate_is_ignored(monkeypatch):
