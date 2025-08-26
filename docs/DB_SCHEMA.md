@@ -18,14 +18,16 @@
 | challenge | VARCHAR | True | False |  | False |
 | machine_id | VARCHAR | False | False |  | False |
 | issued_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
+| used | BOOLEAN | False | False | FALSE | False |
 
 ## machine_claims
 
 | Column | Type | Primary Key | Nullable | Default | Unique |
 | --- | --- | --- | --- | --- | --- |
 | machine_id | VARCHAR | True | False |  | False |
-| claim_code | VARCHAR | False | False |  | True |
+| claim_code | VARCHAR | False | True |  | True |
 | game_title | VARCHAR | False | False |  | False |
+| shared_secret | VARCHAR | False | False |  | False |
 | claimed | BOOLEAN | False | False | FALSE | False |
 | user_id | INTEGER | False | True |  | False |
 

@@ -1,5 +1,6 @@
 import os
 import base64
+from uuid import uuid4
 from .. import models
 
 
@@ -8,9 +9,10 @@ def _encode_id(i: int) -> str:
 
 
 def _create_user_and_token(client, email="qr@example.com", screen="qruser"):
+    unique_screen = f"{screen}_{uuid4().hex[:8]}"
     client.post(
         "/api/v1/users/",
-        json={"email": email, "password": "pass", "screen_name": screen},
+        json={"email": email, "password": "pass", "screen_name": unique_screen},
     )
     res = client.post(
         "/api/v1/auth/token",
@@ -22,7 +24,7 @@ def _create_user_and_token(client, email="qr@example.com", screen="qruser"):
 def test_qr_redirects_to_machine(client, db_session):
     os.environ["PUBLIC_HOST_URL"] = "https://example.com"
     token, email = _create_user_and_token(client, "owner1@example.com", "user1")
-    machine = models.Machine(name="QRM1", secret="s")
+    machine = models.Machine(name="QRM1", shared_secret="s")
     db_session.add(machine)
     db_session.commit()
     db_session.refresh(machine)
@@ -43,7 +45,7 @@ def test_qr_requires_configuration(client, db_session):
     os.environ["PUBLIC_HOST_URL"] = "https://example.com"
     token, email = _create_user_and_token(client, "owner2@example.com", "user2")
     user = db_session.query(models.User).filter_by(email=email).first()
-    machine = models.Machine(name="QRM2", secret="s", user_id=user.id)
+    machine = models.Machine(name="QRM2", shared_secret="s", user_id=user.id)
     db_session.add(machine)
     db_session.commit()
     qr = models.QRCode(url="code2")
@@ -77,7 +79,7 @@ def test_qr_assign_endpoint(client, db_session):
     os.environ["PUBLIC_HOST_URL"] = "https://example.com"
     token, email = _create_user_and_token(client, "owner4@example.com", "user4")
     user = db_session.query(models.User).filter_by(email=email).first()
-    machine = models.Machine(name="QRM3", secret="s", user_id=user.id)
+    machine = models.Machine(name="QRM3", shared_secret="s", user_id=user.id)
     db_session.add(machine)
     db_session.commit()
     qr = models.QRCode(url="code4", user_id=user.id)
