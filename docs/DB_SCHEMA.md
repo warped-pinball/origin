@@ -51,12 +51,6 @@
 | user_id | INTEGER | False | True |  | False |
 | machine_id | INTEGER | False | True |  | False |
 
-## schema_version
-
-| Column | Type | Primary Key | Nullable | Default | Unique |
-| --- | --- | --- | --- | --- | --- |
-| version | INTEGER | False | False |  | False |
-
 ## scores
 
 | Column | Type | Primary Key | Nullable | Default | Unique |

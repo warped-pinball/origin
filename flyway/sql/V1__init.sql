@@ -71,8 +71,3 @@ CREATE TABLE IF NOT EXISTS qr_codes (
     user_id INTEGER REFERENCES users(id),
     machine_id INTEGER REFERENCES machines(id)
 );
-
--- Record schema version to skip Python migrations
-CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);
-DELETE FROM schema_version;
-INSERT INTO schema_version (version) VALUES (1);

@@ -1,38 +1,19 @@
 from __future__ import annotations
 
-import re
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import List
+import sys
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(ROOT))
+from app.flyway_utils import apply_migrations  # noqa: E402
+
 DOC_PATH = ROOT / "docs" / "DB_SCHEMA.md"
-MIGRATIONS_DIR = ROOT / "flyway" / "sql"
-
-
-def _translate_sql(sql: str) -> str:
-    """Translate Postgres-specific SQL syntax to SQLite."""
-    replacements = {
-        r"SERIAL PRIMARY KEY": "INTEGER PRIMARY KEY AUTOINCREMENT",
-        r"SERIAL": "INTEGER",
-        r"TIMESTAMPTZ": "TIMESTAMP",
-        r"NOW\(\)": "CURRENT_TIMESTAMP",
-    }
-    for pattern, repl in replacements.items():
-        sql = re.sub(pattern, repl, sql, flags=re.IGNORECASE)
-    return sql
-
-
-def _apply_migrations(engine: Engine) -> None:
-    """Apply all SQL migration scripts to the provided engine."""
-    for path in sorted(MIGRATIONS_DIR.glob("V*__*.sql")):
-        sql = _translate_sql(path.read_text())
-        with engine.begin() as conn:
-            conn.connection.executescript(sql)
 
 
 @contextmanager
@@ -41,7 +22,7 @@ def _init_temp_db() -> Engine:
     with TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "schema.db"
         engine = create_engine(f"sqlite:///{db_path}")
-        _apply_migrations(engine)
+        apply_migrations(engine)
         yield engine
 
 
@@ -49,12 +30,16 @@ def generate_schema_md() -> str:
     """Generate markdown description of the current database schema."""
     with _init_temp_db() as engine:
         insp = inspect(engine)
-        tables = sorted(t for t in insp.get_table_names() if not t.startswith("sqlite_"))
+        tables = sorted(
+            t for t in insp.get_table_names() if not t.startswith("sqlite_")
+        )
         lines: List[str] = ["# Database Schema", ""]
         for table in tables:
             lines.append(f"## {table}")
             lines.append("")
-            lines.append("| Column | Type | Primary Key | Nullable | Default | Unique |")
+            lines.append(
+                "| Column | Type | Primary Key | Nullable | Default | Unique |"
+            )
             lines.append("| --- | --- | --- | --- | --- | --- |")
             pk_cols = set(insp.get_pk_constraint(table).get("constrained_columns", []))
             unique_cols = set()
@@ -85,4 +70,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
