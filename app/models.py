@@ -2,8 +2,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Bool
 from sqlalchemy.orm import relationship
 from .database import Base
 
+
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
@@ -16,72 +17,81 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, unique=True, index=True)
     reset_token = Column(String, unique=True, index=True)
-    scores = relationship('Score', back_populates='user')
-    locations = relationship('Location', back_populates='user')
-    machines = relationship('Machine', back_populates='owner')
+    scores = relationship("Score", back_populates="user")
+    locations = relationship("Location", back_populates="user")
+    machines = relationship("Machine", back_populates="owner")
+
 
 class Location(Base):
-    __tablename__ = 'locations'
+    __tablename__ = "locations"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     address = Column(String)
     website = Column(String)
     hours = Column(String)
 
-    user = relationship('User', back_populates='locations')
-    machines = relationship('Machine', back_populates='location')
+    user = relationship("User", back_populates="locations")
+    machines = relationship("Machine", back_populates="location")
 
 
 class Machine(Base):
-    __tablename__ = 'machines'
+    __tablename__ = "machines"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     shared_secret = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    location_id = Column(Integer, ForeignKey('locations.id'))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    location_id = Column(Integer, ForeignKey("locations.id"))
 
-    owner = relationship('User', back_populates='machines')
-    location = relationship('Location', back_populates='machines')
-    scores = relationship('Score', back_populates='machine')
+    owner = relationship("User", back_populates="machines")
+    location = relationship("Location", back_populates="machines")
+    scores = relationship("Score", back_populates="machine")
 
 
 class MachineClaim(Base):
-    __tablename__ = 'machine_claims'
+    __tablename__ = "machine_claims"
     machine_id = Column(String, primary_key=True, index=True)
-    claim_code = Column(String, unique=True, index=True, nullable=False)
+    claim_code = Column(String, unique=True, index=True, nullable=True)
     client_game_title = Column("game_title", String, nullable=False)
+    shared_secret = Column(String, nullable=False)
     claimed = Column(Boolean, default=False, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey("users.id"))
+
 
 class MachineChallenge(Base):
-    __tablename__ = 'machine_challenges'
+    __tablename__ = "machine_challenges"
     challenge = Column(String, primary_key=True, index=True)
     machine_id = Column(String, index=True, nullable=False)
-    issued_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    issued_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    used = Column(Boolean, default=False, nullable=False)
+
 
 class Score(Base):
-    __tablename__ = 'scores'
+    __tablename__ = "scores"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    machine_id = Column(Integer, ForeignKey('machines.id'))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    machine_id = Column(Integer, ForeignKey("machines.id"))
     game = Column(String, index=True)
     value = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship('User', back_populates='scores')
-    machine = relationship('Machine', back_populates='scores')
+    user = relationship("User", back_populates="scores")
+    machine = relationship("Machine", back_populates="scores")
 
 
 class QRCode(Base):
-    __tablename__ = 'qr_codes'
+    __tablename__ = "qr_codes"
     id = Column(Integer, primary_key=True, index=True)
     url = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     generated_at = Column(DateTime(timezone=True))
     nfc_link = Column(String)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    machine_id = Column(Integer, ForeignKey('machines.id'))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    machine_id = Column(Integer, ForeignKey("machines.id"))
 
-    user = relationship('User')
-    machine = relationship('Machine')
+    user = relationship("User")
+    machine = relationship("Machine")

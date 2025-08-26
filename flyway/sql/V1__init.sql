@@ -16,21 +16,41 @@ CREATE TABLE IF NOT EXISTS users (
     reset_token VARCHAR UNIQUE
 );
 
+-- Locations table
+CREATE TABLE IF NOT EXISTS locations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    name VARCHAR NOT NULL,
+    address VARCHAR,
+    website VARCHAR,
+    hours VARCHAR
+);
+
 -- Machines table
 CREATE TABLE IF NOT EXISTS machines (
     id SERIAL PRIMARY KEY,
     name VARCHAR UNIQUE NOT NULL,
-    secret VARCHAR NOT NULL
+    shared_secret VARCHAR NOT NULL,
+    user_id INTEGER REFERENCES users(id),
+    location_id INTEGER REFERENCES locations(id)
 );
 
 -- Machine claims table
 CREATE TABLE IF NOT EXISTS machine_claims (
     machine_id VARCHAR PRIMARY KEY,
-    claim_code VARCHAR UNIQUE NOT NULL,
-    shared_secret VARCHAR NOT NULL,
+    claim_code VARCHAR UNIQUE,
     game_title VARCHAR NOT NULL,
+    shared_secret VARCHAR NOT NULL,
     claimed BOOLEAN NOT NULL DEFAULT FALSE,
     user_id INTEGER REFERENCES users(id)
+);
+
+-- Machine challenges table
+CREATE TABLE IF NOT EXISTS machine_challenges (
+    challenge VARCHAR PRIMARY KEY,
+    machine_id VARCHAR NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    used BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Scores table
@@ -53,8 +73,3 @@ CREATE TABLE IF NOT EXISTS qr_codes (
     user_id INTEGER REFERENCES users(id),
     machine_id INTEGER REFERENCES machines(id)
 );
-
--- Record schema version to skip Python migrations
-CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);
-DELETE FROM schema_version;
-INSERT INTO schema_version (version) VALUES (8);
