@@ -38,7 +38,7 @@ class Location(Base):
 class Machine(Base):
     __tablename__ = "machines"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    game_title = Column(String, unique=True, index=True)
     shared_secret = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     location_id = Column(Integer, ForeignKey("locations.id"))
@@ -52,10 +52,6 @@ class MachineClaim(Base):
     __tablename__ = "machine_claims"
     machine_id = Column(String, primary_key=True, index=True)
     claim_code = Column(String, unique=True, index=True, nullable=True)
-    client_game_title = Column("game_title", String, nullable=False)
-    shared_secret = Column(String, nullable=False)
-    claimed = Column(Boolean, default=False, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"))
 
 
 class MachineChallenge(Base):
@@ -65,7 +61,6 @@ class MachineChallenge(Base):
     issued_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    used = Column(Boolean, default=False, nullable=False)
 
 
 class Score(Base):

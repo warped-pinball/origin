@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS locations (
 -- Machines table
 CREATE TABLE IF NOT EXISTS machines (
     id SERIAL PRIMARY KEY,
-    name VARCHAR UNIQUE NOT NULL,
+    game_title VARCHAR NOT NULL,
     shared_secret VARCHAR NOT NULL,
     user_id INTEGER REFERENCES users(id),
     location_id INTEGER REFERENCES locations(id)
@@ -38,19 +38,14 @@ CREATE TABLE IF NOT EXISTS machines (
 -- Machine claims table
 CREATE TABLE IF NOT EXISTS machine_claims (
     machine_id VARCHAR PRIMARY KEY,
-    claim_code VARCHAR UNIQUE,
-    game_title VARCHAR NOT NULL,
-    shared_secret VARCHAR NOT NULL,
-    claimed BOOLEAN NOT NULL DEFAULT FALSE,
-    user_id INTEGER REFERENCES users(id)
+    claim_code VARCHAR UNIQUE
 );
 
 -- Machine challenges table
 CREATE TABLE IF NOT EXISTS machine_challenges (
     challenge VARCHAR PRIMARY KEY,
     machine_id VARCHAR NOT NULL,
-    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    used BOOLEAN NOT NULL DEFAULT FALSE
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Scores table
