@@ -241,10 +241,7 @@ def handle_handshake(db, websocket, message):
 
     db_claim = models.MachineClaim(
         machine_id=machine_uuid_hex,
-        claim_code=claim_code,
-        shared_secret=b64encode(shared_secret).decode("ascii"),
-        client_game_title=client_game_title,
-        claimed=False,
+        claim_code=claim_code
     )
     db.add(db_claim)
     db.commit()
