@@ -82,8 +82,6 @@ class ConnectionManager:
 connection_manager = ConnectionManager()
 app = FastAPI(title="Origin WS")
 
-routes = {"handshake": handle_handshake}
-
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
@@ -321,3 +319,5 @@ def send_claimed(db: Session, websocket: WebSocket, machine_id: str):
 
     db.delete(machineClaim)
     db.commit()
+
+routes = {"handshake": handle_handshake}
