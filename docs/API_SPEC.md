@@ -100,8 +100,8 @@ Background workers or scheduled tasks can handle leaderboard calculations, tourn
 - **Queue system**: Use a message broker (e.g., RabbitMQ or Redis) for tasks like score processing, email notifications and analytics computation.
 - **Caching**: Cache frequent leaderboard queries to reduce database load.
 - **Database migrations**: Schema changes are stored as numbered SQL files in
-  `app/migrations`. The application executes any pending files on startup so all
-  environments upgrade in lockstep.
+  `flyway/sql`. A Flyway container runs these migrations so all environments
+  upgrade in lockstep.
 - **Sharding/Replication**: Plan for read replicas once traffic grows; keep writes centralized initially.
 - **API versioning**: Prefix routes with `/v1/` (e.g., `/v1/scores/`) so future versions can coexist.
 
@@ -125,4 +125,3 @@ Build the container image with `docker build -t pinball-api:$VERSION .` and publ
 5. Draft detailed API documentation using OpenAPI/Swagger (FastAPI provides this automatically).
 
 This roadmap should provide a solid foundation for building out the full pinball tracking platform while keeping the design flexible for future growth.
-

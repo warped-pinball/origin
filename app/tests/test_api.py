@@ -1,9 +1,5 @@
-import subprocess
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from .. import models
 from ..version import __version__
-
 
 
 def test_create_user_and_login(client):
@@ -28,8 +24,7 @@ def test_create_user_and_login(client):
     assert token
 
 
-def test_create_user_duplicate_screen_name_allowed(client):
-    """Users can share the same screen name as long as emails differ."""
+def test_create_user_duplicate_screen_name_rejected(client):
     response1 = client.post(
         "/api/v1/users/",
         json={"email": "dup1@example.com", "password": "pass", "screen_name": "dupe"},
@@ -39,17 +34,26 @@ def test_create_user_duplicate_screen_name_allowed(client):
         "/api/v1/users/",
         json={"email": "dup2@example.com", "password": "pass", "screen_name": "dupe"},
     )
-    assert response2.status_code == 200
+    assert response2.status_code == 400
+    assert response2.json()["detail"] == "Screen name already registered"
 
 
 def test_create_user_duplicate_email(client):
     client.post(
         "/api/v1/users/",
-        json={"email": "dup@example.com", "password": "pass", "screen_name": "user1"},
+        json={
+            "email": "dup@example.com",
+            "password": "pass",
+            "screen_name": "dupemail1",
+        },
     )
     response = client.post(
         "/api/v1/users/",
-        json={"email": "dup@example.com", "password": "pass", "screen_name": "user2"},
+        json={
+            "email": "dup@example.com",
+            "password": "pass",
+            "screen_name": "dupemail2",
+        },
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Email already registered"
@@ -67,7 +71,11 @@ def test_login_user_not_found(client):
 def test_login_wrong_password(client):
     client.post(
         "/api/v1/users/",
-        json={"email": "user2@example.com", "password": "right", "screen_name": "u"},
+        json={
+            "email": "user2@example.com",
+            "password": "right",
+            "screen_name": "user2",
+        },
     )
     response = client.post(
         "/api/v1/auth/token",
@@ -91,7 +99,10 @@ def test_login_trailing_space(client):
 
 def test_login_unverified_user(client, db_session):
     from .. import crud, schemas
-    user = schemas.UserCreate(email="user5@example.com", password="pass", screen_name="u")
+
+    user = schemas.UserCreate(
+        email="user5@example.com", password="pass", screen_name="user5"
+    )
     crud.create_user(db_session, user)
     response = client.post(
         "/api/v1/auth/token",
@@ -103,7 +114,10 @@ def test_login_unverified_user(client, db_session):
 
 def test_verify_email_redirects(client, db_session):
     from .. import crud, schemas, models
-    user = schemas.UserCreate(email="verify@example.com", password="pass", screen_name="v")
+
+    user = schemas.UserCreate(
+        email="verify@example.com", password="pass", screen_name="v"
+    )
     created = crud.create_user(db_session, user)
     token = created.verification_token
     response = client.get(f"/api/v1/auth/verify?token={token}", follow_redirects=False)
@@ -113,7 +127,9 @@ def test_verify_email_redirects(client, db_session):
     cookie = response.headers.get("set-cookie", "")
     assert "token=" in cookie
     db_session.expire_all()
-    db_user = db_session.query(models.User).filter_by(email="verify@example.com").first()
+    db_user = (
+        db_session.query(models.User).filter_by(email="verify@example.com").first()
+    )
     assert db_user.is_verified
 
 
@@ -132,7 +148,12 @@ def test_password_reset_flow(client, db_session):
         "/api/v1/auth/password-reset/request",
         json={"email": "user4@example.com"},
     )
-    reset_token = db_session.query(models.User).filter_by(email="user4@example.com").first().reset_token
+    reset_token = (
+        db_session.query(models.User)
+        .filter_by(email="user4@example.com")
+        .first()
+        .reset_token
+    )
     client.post(
         "/api/v1/auth/password-reset/confirm",
         json={"token": reset_token, "password": "new"},

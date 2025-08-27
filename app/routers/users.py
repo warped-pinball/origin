@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     email = user.email.strip()
@@ -19,12 +20,18 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         logger.warning("Attempt to register duplicate email: %s", email)
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    if screen_name and crud.get_user_by_screen_name(db, screen_name):
+        logger.warning("Attempt to register duplicate screen name: %s", screen_name)
+        raise HTTPException(status_code=400, detail="Screen name already registered")
+
     user.email = email
     user.screen_name = screen_name
     created = crud.create_user(db, user)
     logger.info("User created: %s", created.email)
     if BREVO_API_KEY:
-        send_verification_email(created.email, created.screen_name, created.verification_token)
+        send_verification_email(
+            created.email, created.screen_name, created.verification_token
+        )
     else:
         created.is_verified = True
         created.verification_token = None
@@ -33,27 +40,34 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         db.refresh(created)
     return created
 
+
 @router.get("/me", response_model=schemas.User)
 def read_users_me(current_user: crud.models.User = Depends(get_current_user)):
     return current_user
 
 
 @router.patch("/me", response_model=schemas.User)
-def update_me(updates: schemas.UserUpdate,
-              db: Session = Depends(get_db),
-              current_user: crud.models.User = Depends(get_current_user)):
+def update_me(
+    updates: schemas.UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
     return crud.update_user(db, current_user, updates)
 
 
 @router.post("/me/password", response_model=schemas.User)
-def change_password(password_update: schemas.PasswordUpdate,
-                    db: Session = Depends(get_db),
-                    current_user: crud.models.User = Depends(get_current_user)):
+def change_password(
+    password_update: schemas.PasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
     return crud.update_user_password(db, current_user, password_update.password)
 
 
 @router.delete("/me")
-def delete_me(db: Session = Depends(get_db),
-              current_user: crud.models.User = Depends(get_current_user)):
+def delete_me(
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
     crud.delete_user(db, current_user)
     return {"detail": "Account deleted"}
