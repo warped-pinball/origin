@@ -215,7 +215,7 @@ def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: i
     except Exception as e:
         logger.warning(f"Error handling message: {e}")
 
-def handle_handshake(websocket, message):
+def handle_handshake(db, websocket, message):
     data = json.loads(message)
 
     try:
