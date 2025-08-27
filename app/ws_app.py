@@ -162,7 +162,7 @@ def authenticate_hmac(handler):
     return wrapper
 
 
-@cache()
+@cache
 def get_signing_key():
     pem = os.environ.get("RSA_PRIVATE_KEY")
     if not pem:
