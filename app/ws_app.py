@@ -80,12 +80,12 @@ class ConnectionManager:
 
 
 connection_manager = ConnectionManager()
-websocket_app = FastAPI(title="Origin WS")
+app = FastAPI(title="Origin WS")
 
 routes = {"handshake": handle_handshake}
 
 
-@websocket_app.websocket("/ws")
+@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
     try:
