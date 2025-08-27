@@ -89,6 +89,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
     try:
         while True:
             data = await websocket.receive_text()
+            logger.info(f"Received data: {data}")
             route, message = data.split("|", 1)
             if route in routes:
                 try:
