@@ -103,7 +103,7 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
 
 
 def authenticate_hmac(handler):
-    def wrapper(db, websocket: WebSocket, message: str):
+    def wrapper(db: Session, websocket: WebSocket, message: str):
         payload, hmac_value = message.rsplit("|", 1)
         data, machine_id, challenge = payload.rsplit("|", 3)
 
@@ -128,39 +128,38 @@ def authenticate_hmac(handler):
             # remove the challenge from the db
             db.delete(ch)
             db.commit()
+            send_new_challenges(db, websocket, machine_id, n=10)
             raise ValueError("Challenge expired")
-
-
 
         
         secret = b64decode(machine.shared_secret)
-        payload_json = json.dumps(payload, separators=(",", ":")).encode()
-        msg = challenge.encode() + payload_json
-        expected = hmac.new(secret, msg, hashlib.sha256).hexdigest()
+        
+        
+        expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, hmac_value):
-            return False
+            raise ValueError("Invalid HMAC")
 
-        ch.used = True
-        db.add(ch)
+        db.delete(ch)
         db.commit()
-        return True
 
+        try:
+            handler(db, websocket, data)
+        except Exception as e:
+            logger.warning(f"Error handling message: {e}")
 
+        # create new challenge
+        new_challenge = models.MachineChallenge(
+            machine_id=machine.id,
+            challenge=secrets.token_urlsafe(32),
+            issued_at=datetime.now(timezone.utc),
+        )
+        db.add(new_challenge)
+        db.commit()
 
-
-        # lookup shared secret based on machine_id
-        con = Connection(machine_id, websocket)
-        connection_manager.add(machine_id, websocket)
-        if not con.shared_secret:
-            logger.warning(f"Unknown machine_id: {machine_id}")
-            return
-
-        # verify HMAC
-        if not verify_hmac(payload, hmac_value, shared_secret):
-            logger.warning(f"Invalid HMAC for machine_id: {machine_id}")
-            return
-
-        handler(db, websocket, data)
+        try:
+            send_message(websocket, "challenge", new_challenge.challenge)
+        except Exception as e:
+            logger.warning(f"Error handling message: {e}")
 
     return wrapper
 
@@ -192,10 +191,31 @@ def send_message(websocket: WebSocket, route: str, message: Union[str, dict]):
     signature_b64 = b64encode(signature).decode("ascii")
     message += "|" + signature_b64
 
-    #TODO add challange the client can use next
-
     asyncio.create_task(websocket.send_text(message))
 
+def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: int = 10):
+
+    # get the machine from the db
+    machine = db.query(models.Machine).filter_by(id=machine_id).first()
+    if not machine:
+        logger.warning(f"Machine not found: {machine_id}")
+        return
+
+    new_challenges = []
+    for _ in range(n):
+        new_challenge = models.MachineChallenge(
+            machine_id=machine.id,
+            challenge=secrets.token_urlsafe(32),
+            issued_at=datetime.now(timezone.utc),
+        )
+        db.add(new_challenge)
+        db.commit()
+        new_challenges.append(new_challenge)
+
+    try:
+        send_message(websocket, "challenges", [challenge.challenge for challenge in new_challenges])
+    except Exception as e:
+        logger.warning(f"Error handling message: {e}")
 
 def handle_handshake(websocket, message):
     data = json.loads(message)
@@ -249,3 +269,55 @@ def handle_handshake(websocket, message):
     }
 
     send_message(websocket, "handshake", response_obj, signed=True)
+
+def handle_request_challenges(db: Session, websocket: WebSocket, message: str):
+    # generate n new challenges
+    data, machine_id = message.rsplit("|", 1)
+    data = json.loads(data)
+    n = data.get("num", 10)
+
+    send_new_challenges(db, websocket, machine_id, n)
+
+def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: int = 10):
+
+    # get the machine from the db
+    machine = db.query(models.Machine).filter_by(id=machine_id).first()
+    if not machine:
+        logger.warning(f"Machine not found: {machine_id}")
+        return
+
+    new_challenges = []
+    for _ in range(n):
+        new_challenge = models.MachineChallenge(
+            machine_id=machine.id,
+            challenge=secrets.token_urlsafe(32),
+            issued_at=datetime.now(timezone.utc),
+        )
+        db.add(new_challenge)
+        db.commit()
+        new_challenges.append(new_challenge)
+
+    try:
+        send_message(websocket, "challenges", [challenge.challenge for challenge in new_challenges])
+    except Exception as e:
+        logger.warning(f"Error handling message: {e}")
+
+def send_claimed(db: Session, websocket: WebSocket, machine_id: str):
+    # get the user for the machine from the db
+    user = db.query(models.User).filter_by(machine_id=machine_id).first()
+    if not user:
+        logger.warning(f"User not found for machine: {machine_id}")
+        return
+
+    machineClaim = db.query(models.MachineClaim).filter_by(machine_id=machine_id).first()
+    if not machineClaim:
+        logger.warning(f"Machine claim not found: {machine_id}")
+        return
+
+    try:
+        send_message(websocket, "claimed", {"user_id": user.id})
+    except Exception as e:
+        logger.warning(f"Error handling message: {e}")
+
+    db.delete(machineClaim)
+    db.commit()
