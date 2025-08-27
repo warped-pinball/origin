@@ -23,7 +23,6 @@ importlib.reload(database)  # noqa: E402
 import app.models as models  # noqa: F401,E402
 
 from ..main import app  # noqa: E402
-from ..websocket_app import app as ws_app  # noqa: E402
 from ..database import Base, get_db  # noqa: E402
 
 engine = create_engine(
@@ -43,7 +42,6 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
-ws_app.dependency_overrides[get_db] = override_get_db
 
 
 @pytest.fixture
@@ -57,8 +55,3 @@ def db_session():
     with TestingSessionLocal() as session:
         yield session
 
-
-@pytest.fixture
-def ws_client():
-    with TestClient(ws_app) as c:
-        yield c
