@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 import os
 from cryptography.hazmat.primitives.asymmetric import x25519
 from . import models
-from .database import init_db, get_db
+from .database import get_db
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
