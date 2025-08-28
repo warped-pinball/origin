@@ -35,8 +35,15 @@ class Connection:
     @property
     def shared_secret(self):
         if self._shared_secret is None:
-            # get the shared secret from the db
-            self._shared_secret = get_shared_secret(self.machine_id)
+            db = get_db()
+            self._shared_secret = (
+                db.query(models.Machine)
+                .filter(models.Machine.id == self.machine_id)
+                .first()
+                .shared_secret
+            )
+            if not self._shared_secret:
+                raise ValueError("Shared secret not found")
         return self._shared_secret
 
     @shared_secret.setter
@@ -111,7 +118,10 @@ def authenticate_hmac(handler):
 
         result = (
             db.query(models.Machine, models.MachineChallenge)
-            .join(models.MachineChallenge, models.Machine.id == models.MachineChallenge.machine_id)
+            .join(
+                models.MachineChallenge,
+                models.Machine.id == models.MachineChallenge.machine_id,
+            )
             .filter(models.Machine.id == machine_id)
             .filter(models.MachineChallenge.challenge == challenge)
             .first()
@@ -119,7 +129,7 @@ def authenticate_hmac(handler):
         if not result:
             raise ValueError("Invalid machine ID or challenge")
         machine, ch = result
-        
+
         issued_at = ch.issued_at
         if issued_at.tzinfo is None:
             issued_at = issued_at.replace(tzinfo=timezone.utc)
@@ -130,10 +140,8 @@ def authenticate_hmac(handler):
             send_new_challenges(db, websocket, machine_id, n=10)
             raise ValueError("Challenge expired")
 
-        
         secret = b64decode(machine.shared_secret)
-        
-        
+
         expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, hmac_value):
             raise ValueError("Invalid HMAC")
@@ -192,29 +200,6 @@ def send_message(websocket: WebSocket, route: str, message: Union[str, dict]):
 
     asyncio.create_task(websocket.send_text(message))
 
-def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: int = 10):
-
-    # get the machine from the db
-    machine = db.query(models.Machine).filter_by(id=machine_id).first()
-    if not machine:
-        logger.warning(f"Machine not found: {machine_id}")
-        return
-
-    new_challenges = []
-    for _ in range(n):
-        new_challenge = models.MachineChallenge(
-            machine_id=machine.id,
-            challenge=secrets.token_urlsafe(32),
-            issued_at=datetime.now(timezone.utc),
-        )
-        db.add(new_challenge)
-        db.commit()
-        new_challenges.append(new_challenge)
-
-    try:
-        send_message(websocket, "challenges", [challenge.challenge for challenge in new_challenges])
-    except Exception as e:
-        logger.warning(f"Error handling message: {e}")
 
 def handle_handshake(db, websocket, message):
     data = json.loads(message)
@@ -237,13 +222,16 @@ def handle_handshake(db, websocket, message):
     machine_uuid_hex = machine_uuid.hex
     machine_id_b64 = b64encode(machine_uuid.bytes).decode("ascii")
 
+    # create a new machine in the database
+    db_machine = models.Machine(
+        id=machine_uuid_hex, game_title=client_game_title, shared_secret=shared_secret
+    )
+    db.add(db_machine)
+
     alphabet = string.ascii_uppercase + string.digits
     claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
 
-    db_claim = models.MachineClaim(
-        machine_id=machine_uuid_hex,
-        claim_code=claim_code
-    )
+    db_claim = models.MachineClaim(machine_id=machine_uuid_hex, claim_code=claim_code)
     db.add(db_claim)
     db.commit()
 
@@ -266,15 +254,10 @@ def handle_handshake(db, websocket, message):
 
     send_message(websocket, "handshake", response_obj, signed=True)
 
-def handle_request_challenges(db: Session, websocket: WebSocket, message: str):
-    # generate n new challenges
-    data, machine_id = message.rsplit("|", 1)
-    data = json.loads(data)
-    n = data.get("num", 10)
 
-    send_new_challenges(db, websocket, machine_id, n)
-
-def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: int = 10):
+def send_new_challenges(
+    db: Session, websocket: WebSocket, machine_id: str, n: int = 10
+):
 
     # get the machine from the db
     machine = db.query(models.Machine).filter_by(id=machine_id).first()
@@ -294,9 +277,14 @@ def send_new_challenges(db: Session, websocket: WebSocket, machine_id: str, n: i
         new_challenges.append(new_challenge)
 
     try:
-        send_message(websocket, "challenges", [challenge.challenge for challenge in new_challenges])
+        send_message(
+            websocket,
+            "challenges",
+            [challenge.challenge for challenge in new_challenges],
+        )
     except Exception as e:
         logger.warning(f"Error handling message: {e}")
+
 
 def send_claimed(db: Session, websocket: WebSocket, machine_id: str):
     # get the user for the machine from the db
@@ -305,7 +293,9 @@ def send_claimed(db: Session, websocket: WebSocket, machine_id: str):
         logger.warning(f"User not found for machine: {machine_id}")
         return
 
-    machineClaim = db.query(models.MachineClaim).filter_by(machine_id=machine_id).first()
+    machineClaim = (
+        db.query(models.MachineClaim).filter_by(machine_id=machine_id).first()
+    )
     if not machineClaim:
         logger.warning(f"Machine claim not found: {machine_id}")
         return
@@ -318,4 +308,17 @@ def send_claimed(db: Session, websocket: WebSocket, machine_id: str):
     db.delete(machineClaim)
     db.commit()
 
-routes = {"handshake": handle_handshake}
+
+def handle_request_challenges(db: Session, websocket: WebSocket, message: str):
+    # generate n new challenges
+    data, machine_id = message.rsplit("|", 1)
+    data = json.loads(data)
+    n = data.get("num", 10)
+
+    send_new_challenges(db, websocket, machine_id, n)
+
+
+routes = {
+    "handshake": handle_handshake,
+    "request_challenges": handle_request_challenges,
+}

@@ -11,6 +11,7 @@ from ..email import send_password_reset_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -52,7 +53,9 @@ def verify_email(token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/password-reset/request")
-def request_password_reset(req: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
+def request_password_reset(
+    req: schemas.PasswordResetRequest, db: Session = Depends(get_db)
+):
     user = crud.get_user_by_email(db, req.email)
     if user:
         token = crud.create_reset_token(db, user)

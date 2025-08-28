@@ -73,5 +73,3 @@ services:
       origin-db:
         condition: service_healthy
     restart: "no"
-
-

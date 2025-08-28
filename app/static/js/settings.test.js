@@ -82,4 +82,3 @@ test('openLocation rejects javascript protocol in website', () => {
   assert.strictEqual(el('view-website').href, '');
   assert.strictEqual(el('view-website').textContent, '');
 });
-

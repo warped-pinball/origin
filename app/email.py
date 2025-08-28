@@ -22,7 +22,9 @@ def _logo_data_uri() -> str:
     """Return the logo image as a data URI with transparent pixels filled white."""
     path = os.path.join(os.path.dirname(__file__), "static", "img", "logo.png")
     with Image.open(path) as img:
-        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+        if img.mode in ("RGBA", "LA") or (
+            img.mode == "P" and "transparency" in img.info
+        ):
             background = Image.new("RGBA", img.size, "white")
             background.paste(img, mask=img.getchannel("A"))
             img = background
@@ -109,4 +111,3 @@ def send_password_reset_email(email: str, screen_name: str, token: str) -> None:
         link,
         "Reset your password",
     )
-

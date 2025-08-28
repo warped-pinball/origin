@@ -8,7 +8,10 @@ def auth_headers(token: str):
 
 
 def create_user_and_login(
-    client, email: str = "user@example.com", password: str = "pass", screen_name: str = "user"
+    client,
+    email: str = "user@example.com",
+    password: str = "pass",
+    screen_name: str = "user",
 ):
     client.post(
         "/api/v1/users/",
@@ -26,7 +29,9 @@ def create_user_and_login(
 
 def test_create_and_list_tournaments(client):
     tournaments_router._tournaments.clear()
-    token, user_id = create_user_and_login(client, "owner@example.com", screen_name="owner")
+    token, user_id = create_user_and_login(
+        client, "owner@example.com", screen_name="owner"
+    )
     headers = auth_headers(token)
     start_time = (datetime.utcnow() + timedelta(days=1)).isoformat()
     response = client.post(
@@ -88,9 +93,7 @@ def test_register_join_and_manage(client):
     )
     assert join_resp.status_code == 200
 
-    manage = client.get(
-        f"/api/v1/tournaments/{t['id']}", headers=headers_owner
-    )
+    manage = client.get(f"/api/v1/tournaments/{t['id']}", headers=headers_owner)
     assert manage.status_code == 200
     data = manage.json()
     assert data["registered_users"] == [participant_id]
@@ -139,21 +142,15 @@ def test_list_tournaments_with_filters(client):
     create("In20", 20)
     create("In40", 40)
 
-    resp_today = client.get(
-        "/api/v1/tournaments/?filter=today", headers=headers
-    )
+    resp_today = client.get("/api/v1/tournaments/?filter=today", headers=headers)
     assert resp_today.status_code == 200
     assert [t["name"] for t in resp_today.json()] == ["Today"]
 
-    resp_week = client.get(
-        "/api/v1/tournaments/?filter=next7", headers=headers
-    )
+    resp_week = client.get("/api/v1/tournaments/?filter=next7", headers=headers)
     assert resp_week.status_code == 200
     assert [t["name"] for t in resp_week.json()] == ["Today", "In5"]
 
-    resp_month = client.get(
-        "/api/v1/tournaments/?filter=next30", headers=headers
-    )
+    resp_month = client.get("/api/v1/tournaments/?filter=next30", headers=headers)
     assert resp_month.status_code == 200
     assert {t["name"] for t in resp_month.json()} == {
         "Today",
@@ -161,9 +158,7 @@ def test_list_tournaments_with_filters(client):
         "In20",
     }
 
-    resp_all = client.get(
-        "/api/v1/tournaments/?filter=all", headers=headers
-    )
+    resp_all = client.get("/api/v1/tournaments/?filter=all", headers=headers)
     assert resp_all.status_code == 200
     assert {t["name"] for t in resp_all.json()} == {
         "Today",
@@ -207,4 +202,3 @@ def test_tournaments_require_authentication(client):
     t = create_resp.json()
     reg_resp = client.post(f"/api/v1/tournaments/{t['id']}/register")
     assert reg_resp.status_code == 401
-

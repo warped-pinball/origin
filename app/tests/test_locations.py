@@ -16,6 +16,3 @@ def create_user_and_login(client):
     )
     assert res.status_code == 200
     return res.json()["access_token"]
-
-
-

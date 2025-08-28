@@ -54,4 +54,3 @@ def client():
 def db_session():
     with TestingSessionLocal() as session:
         yield session
-
