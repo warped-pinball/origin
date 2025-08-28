@@ -1,6 +1,3 @@
-import pytest
-
-
 def auth_headers(token: str):
     return {"Authorization": f"Bearer {token}"}
 
