@@ -21,6 +21,10 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
     ]:
         assert table in tables
 
+    # ensure legacy tables were removed
+    for table in ["machines_old", "scores_old", "qr_codes_old"]:
+        assert table not in tables
+
     user_cols = {c["name"] for c in insp.get_columns("users")}
     for col in [
         "email",
