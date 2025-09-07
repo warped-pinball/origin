@@ -37,7 +37,7 @@ class Location(Base):
 
 class Machine(Base):
     __tablename__ = "machines"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     game_title = Column(String, unique=True, index=True)
     shared_secret = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -67,7 +67,7 @@ class Score(Base):
     __tablename__ = "scores"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    machine_id = Column(Integer, ForeignKey("machines.id"))
+    machine_id = Column(String, ForeignKey("machines.id"))
     game = Column(String, index=True)
     value = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -86,7 +86,7 @@ class QRCode(Base):
     generated_at = Column(DateTime(timezone=True))
     nfc_link = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
-    machine_id = Column(Integer, ForeignKey("machines.id"))
+    machine_id = Column(String, ForeignKey("machines.id"))
 
     user = relationship("User")
     machine = relationship("Machine")
