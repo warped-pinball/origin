@@ -179,8 +179,23 @@ def get_signing_key():
     return serialization.load_pem_private_key(pem.encode(), password=None)
 
 
-def send_message(websocket: WebSocket, route: str, message: Union[str, dict]):
-    # Convert message to JSON string if it's not already a string
+def send_message(
+    websocket: WebSocket, route: str, message: Union[str, dict], *, signed: bool = False
+):
+    """Send a message to the websocket.
+
+    Parameters
+    ----------
+    websocket: WebSocket
+        The websocket connection.
+    route: str
+        Route name prepended to the message payload.
+    message: Union[str, dict]
+        Payload to send; dictionaries are JSON-encoded.
+    signed: bool, optional
+        Whether to append an RSA signature to the payload. Defaults to False.
+    """
+
     if not isinstance(message, str):
         try:
             message = json.dumps(message, separators=(",", ":"))
@@ -188,17 +203,17 @@ def send_message(websocket: WebSocket, route: str, message: Union[str, dict]):
             logger.warning(f"Failed to serialize message: {message}")
             return
 
-    # Sign if requested
-    signing_key = get_signing_key()
-    signature = signing_key.sign(
-        message.encode("utf-8"),
-        padding.PKCS1v15(),
-        hashes.SHA256(),
-    )
-    signature_b64 = b64encode(signature).decode("ascii")
-    message += "|" + signature_b64
+    if signed:
+        signing_key = get_signing_key()
+        signature = signing_key.sign(
+            message.encode("utf-8"),
+            padding.PKCS1v15(),
+            hashes.SHA256(),
+        )
+        signature_b64 = b64encode(signature).decode("ascii")
+        message += "|" + signature_b64
 
-    asyncio.create_task(websocket.send_text(message))
+    asyncio.create_task(websocket.send_text(f"{route}|{message}"))
 
 
 def handle_handshake(db, websocket, message):
@@ -218,13 +233,15 @@ def handle_handshake(db, websocket, message):
     server_public_key = server_private_key.public_key()
 
     shared_secret = server_private_key.exchange(client_public_key)
+    shared_secret_b64 = b64encode(shared_secret).decode("ascii")
     machine_uuid = uuid.uuid4()
     machine_uuid_hex = machine_uuid.hex
     machine_id_b64 = b64encode(machine_uuid.bytes).decode("ascii")
 
-    # create a new machine in the database
     db_machine = models.Machine(
-        id=machine_uuid_hex, game_title=client_game_title, shared_secret=shared_secret
+        id=machine_uuid_hex,
+        game_title=client_game_title,
+        shared_secret=shared_secret_b64,
     )
     db.add(db_machine)
 

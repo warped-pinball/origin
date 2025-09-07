@@ -18,7 +18,6 @@
 | challenge | VARCHAR | True | False |  | False |
 | machine_id | VARCHAR | False | False |  | False |
 | issued_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
-| used | BOOLEAN | False | False | FALSE | False |
 
 ## machine_claims
 
@@ -26,17 +25,13 @@
 | --- | --- | --- | --- | --- | --- |
 | machine_id | VARCHAR | True | False |  | False |
 | claim_code | VARCHAR | False | True |  | True |
-| game_title | VARCHAR | False | False |  | False |
-| shared_secret | VARCHAR | False | False |  | False |
-| claimed | BOOLEAN | False | False | FALSE | False |
-| user_id | INTEGER | False | True |  | False |
 
 ## machines
 
 | Column | Type | Primary Key | Nullable | Default | Unique |
 | --- | --- | --- | --- | --- | --- |
-| id | INTEGER | True | False |  | False |
-| name | VARCHAR | False | False |  | True |
+| id | VARCHAR | True | False |  | False |
+| game_title | VARCHAR | False | False |  | False |
 | shared_secret | VARCHAR | False | False |  | False |
 | user_id | INTEGER | False | True |  | False |
 | location_id | INTEGER | False | True |  | False |
@@ -51,7 +46,7 @@
 | generated_at | TIMESTAMP | False | True |  | False |
 | nfc_link | VARCHAR | False | True |  | False |
 | user_id | INTEGER | False | True |  | False |
-| machine_id | INTEGER | False | True |  | False |
+| machine_id | VARCHAR | False | True |  | False |
 
 ## scores
 
@@ -59,7 +54,7 @@
 | --- | --- | --- | --- | --- | --- |
 | id | INTEGER | True | False |  | False |
 | user_id | INTEGER | False | True |  | False |
-| machine_id | INTEGER | False | True |  | False |
+| machine_id | VARCHAR | False | True |  | False |
 | game | VARCHAR | False | True |  | False |
 | value | INTEGER | False | True |  | False |
 | created_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
