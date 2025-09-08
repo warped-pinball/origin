@@ -1,18 +1,19 @@
 import json
-from base64 import b64encode, b64decode
-from cryptography.hazmat.primitives.asymmetric import x25519
+from base64 import b64decode, b64encode
 from cryptography.hazmat.primitives import serialization
-from app import models, ws_app
+from cryptography.hazmat.primitives.asymmetric import x25519
+
+from app import models, mqtt_app
 
 
-class DummyWebSocket:
-    async def send_text(self, message: str) -> None:  # pragma: no cover - stub
+class DummyMQTTClient:
+    def publish(self, topic, message):  # pragma: no cover - stub
         pass
 
 
 def test_handle_handshake_creates_machine(db_session, monkeypatch):
     """Ensure handshake creates a machine with string ID and shared secret."""
-    monkeypatch.setattr(ws_app, "send_message", lambda *args, **kwargs: None)
+    monkeypatch.setattr(mqtt_app, "send_message", lambda *args, **kwargs: None)
 
     client_private = x25519.X25519PrivateKey.generate()
     client_public = client_private.public_key()
@@ -25,7 +26,7 @@ def test_handle_handshake_creates_machine(db_session, monkeypatch):
         ).decode("ascii"),
         "game_title": "TestGame",
     }
-    ws_app.handle_handshake(db_session, DummyWebSocket(), json.dumps(message_data))
+    mqtt_app.handle_handshake(db_session, DummyMQTTClient(), json.dumps(message_data))
 
     machine = db_session.query(models.Machine).first()
     assert machine is not None
