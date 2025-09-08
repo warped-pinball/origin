@@ -11,7 +11,6 @@ services:
     restart: unless-stopped
     ports:
       - 8000
-      - 8001:8001
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -19,6 +18,7 @@ services:
       POSTGRES_DB: postgres
       SECRET_KEY: 9829uhf087w4hiou4whsdd
       PUBLIC_HOST_URL: https://origin-beta.doze.dev
+      MQTT_BROKER_HOST: mqtt-broker
       # PEM encoded key for signing machine claim handshakes
       RSA_PRIVATE_KEY: |
         -----BEGIN PRIVATE KEY-----
@@ -30,6 +30,8 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+      mqtt-broker:
+        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.http.routers.origin-beta.rule=Host(`origin-beta.doze.dev`)"
@@ -38,6 +40,12 @@ services:
       - "flame.name=Origin Beta"
       - "flame.url=https://origin-beta.doze.dev"
       - "flame.icon=mdi:gamepad-variant"
+
+  mqtt-broker:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    ports:
+      - 1883:1883
 
   qr-service:
     build:
