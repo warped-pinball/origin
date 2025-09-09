@@ -25,3 +25,7 @@ def list_my_machines(
     current_user: crud.models.User = Depends(get_current_user),
 ):
     return crud.get_machines_for_user(db, current_user.id)
+
+@router.post("/handshake", response_model=schemas.Machine_Handshake)
+def handshake(payload:dict):
+    pass

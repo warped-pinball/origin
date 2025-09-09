@@ -54,6 +54,13 @@ class Machine(MachineBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class MachineResponse(BaseModel):
+    signature: str
+
+class MachineHandshake(BaseModel):
+    id: str
+    server_public_key: str
+
 
 class LocationBase(BaseModel):
     name: str
