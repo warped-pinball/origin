@@ -37,4 +37,3 @@ test('shareTournament', async (t) => {
     assert.strictEqual(occurrences, 1);
   });
 });
-

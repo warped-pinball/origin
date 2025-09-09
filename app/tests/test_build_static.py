@@ -20,4 +20,3 @@ def test_minify_service_worker_keeps_name(tmp_path: Path):
     assert min_js.name == "service-worker.js"
     assert min_js.exists()
     assert len(min_js.read_text()) < len("self.addEventListener('install', () => {});")
-

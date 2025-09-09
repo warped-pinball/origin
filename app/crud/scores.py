@@ -11,7 +11,9 @@ def create_score(db: Session, score: schemas.ScoreCreate) -> models.Score:
     return db_score
 
 
-def get_top_scores(db: Session, game: str, limit: int = 10, offset: int = 0) -> List[models.Score]:
+def get_top_scores(
+    db: Session, game: str, limit: int = 10, offset: int = 0
+) -> List[models.Score]:
     return (
         db.query(models.Score)
         .filter(models.Score.game == game)

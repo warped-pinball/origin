@@ -13,8 +13,12 @@ API_BASE = os.environ.get("PUBLIC_API_URL", "")
 
 def _render(template_name: str):
     async def render(request: Request):
-        return templates.TemplateResponse(request, template_name, {"version": __version__, "api_base": API_BASE})
+        return templates.TemplateResponse(
+            request, template_name, {"version": __version__, "api_base": API_BASE}
+        )
+
     return render
+
 
 PAGE_TEMPLATES = {
     "/": "index.html",

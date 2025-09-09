@@ -20,8 +20,7 @@ def test_verification_email_link(monkeypatch):
         in captured["text"]
     )
     assert (
-        '<a href="https://example.com/api/v1/auth/verify?token=tok"'
-        in captured["html"]
+        '<a href="https://example.com/api/v1/auth/verify?token=tok"' in captured["html"]
     )
     assert "Verify your account" in captured["html"]
     assert 'src="data:image/png;base64,' in captured["html"]
@@ -46,10 +45,7 @@ def test_password_reset_email_link(monkeypatch):
         "Reset your password: https://example.com/reset-password?token=tok"
         in captured["text"]
     )
-    assert (
-        '<a href="https://example.com/reset-password?token=tok"'
-        in captured["html"]
-    )
+    assert '<a href="https://example.com/reset-password?token=tok"' in captured["html"]
     assert "Reset your password" in captured["html"]
     assert "If you didn't request this" in captured["html"]
     assert 'src="data:image/png;base64,' in captured["html"]

@@ -3,10 +3,12 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 
 
-def create_machine(db: Session, machine: schemas.MachineCreate, user_id: int) -> models.Machine:
+def create_machine(
+    db: Session, machine: schemas.MachineCreate, user_id: int
+) -> models.Machine:
     db_machine = models.Machine(
         name=machine.name,
-        secret=machine.secret,
+        shared_secret=machine.secret,
         user_id=user_id,
         location_id=machine.location_id,
     )

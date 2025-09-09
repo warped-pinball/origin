@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Build static assets and mirror the app directory into an isolated output directory."""
-import gzip
 import json
 import pathlib
 import shutil
@@ -13,13 +12,12 @@ import rjsmin
 APP_DIR = pathlib.Path("app")
 BUILD_DIR = pathlib.Path("build")
 
+
 def copy_app(source: pathlib.Path, target: pathlib.Path) -> None:
     if target.exists():
         shutil.rmtree(target)
-    shutil.copytree(
-        source,
-        target
-    )
+    shutil.copytree(source, target)
+
 
 def minify_js(path: pathlib.Path) -> pathlib.Path:
     """Minify JavaScript files.
@@ -36,10 +34,12 @@ def minify_js(path: pathlib.Path) -> pathlib.Path:
         path.unlink()
     return dest
 
+
 def minify_css(path: pathlib.Path) -> pathlib.Path:
     content = rcssmin.cssmin(path.read_text())
     path.write_text(content)
     return path
+
 
 def minify_html(path: pathlib.Path) -> pathlib.Path:
     content = htmlmin.minify(
@@ -50,10 +50,12 @@ def minify_html(path: pathlib.Path) -> pathlib.Path:
     path.write_text(content)
     return path
 
+
 def minify_json(path: pathlib.Path) -> pathlib.Path:
     data = json.loads(path.read_text())
     path.write_text(json.dumps(data, separators=(",", ":")))
     return path
+
 
 MINIFIERS: dict[str, Callable[[pathlib.Path], pathlib.Path]] = {
     ".js": minify_js,
@@ -62,12 +64,14 @@ MINIFIERS: dict[str, Callable[[pathlib.Path], pathlib.Path]] = {
     ".json": minify_json,
 }
 
+
 def minify_all(build_dir: pathlib.Path) -> None:
     for path in build_dir.rglob("*"):
         if not path.is_file():
             continue
         if path.suffix in MINIFIERS and not path.name.endswith(".min.js"):
             new_path = MINIFIERS[path.suffix](path)
+
 
 def build_static(
     source_dir: pathlib.Path = APP_DIR,
@@ -76,8 +80,10 @@ def build_static(
     copy_app(source_dir, build_dir)
     minify_all(build_dir)
 
+
 def main() -> None:
     build_static()
+
 
 if __name__ == "__main__":
     main()

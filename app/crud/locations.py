@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 
 
-def create_location(db: Session, user_id: int, location: schemas.LocationCreate) -> models.Location:
+def create_location(
+    db: Session, user_id: int, location: schemas.LocationCreate
+) -> models.Location:
     db_location = models.Location(user_id=user_id, **location.model_dump())
     db.add(db_location)
     db.commit()
@@ -19,7 +21,9 @@ def get_location(db: Session, location_id: int) -> Optional[models.Location]:
     return db.query(models.Location).filter(models.Location.id == location_id).first()
 
 
-def set_machine_location(db: Session, machine: models.Machine, location_id: int) -> models.Machine:
+def set_machine_location(
+    db: Session, machine: models.Machine, location_id: int
+) -> models.Machine:
     machine.location_id = location_id
     db.add(machine)
     db.commit()

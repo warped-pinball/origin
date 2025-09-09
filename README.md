@@ -11,7 +11,7 @@ This repository contains the Origin backend API built with FastAPI and a simple 
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000` and the WebSocket at `ws://localhost:8001`.
+The API will be available at `http://localhost:8000` and the MQTT broker at `mqtt://localhost:1883`.
 
 ### Configuration
 
@@ -20,21 +20,21 @@ By default the application connects to the Postgres instance defined in
 `DATABASE_URL` environment variable or by setting `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
 
-Additional settings control email delivery and machine claims:
+Additional settings control email delivery, machine claims and MQTT broker connection:
 
 - `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`: enable transactional email for account verification and password resets.
 - `PUBLIC_HOST_URL`: public base URL used for claim and email links.
+- `MQTT_BROKER_HOST`, `MQTT_BROKER_PORT`: host and port of the MQTT broker (default `localhost:1883`).
 
-The service listens on port `8000` for HTTP and `8001` for WebSocket traffic.
-Ensure both ports are reachable or forwarded by your reverse proxy.
+The service listens on port `8000` for HTTP traffic and connects to the MQTT broker for message exchange.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
 RSA key pair and obtaining email API credentials.
 
 ### Database Migrations
 
-Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql`, and a dedicated Flyway image built from this directory is published to GHCR. Docker Compose pulls the prebuilt image so the migrations are baked into the container and no external volume is required. The container waits for Postgres to become available and updates the `schema_version` table so the app skips its internal Python migrations. When adding a new numbered SQL file, rebuild and push the Flyway image.
+Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql`, and a dedicated Flyway image built from this directory is published to GHCR. Docker Compose pulls the prebuilt image so the migrations are baked into the container and no external volume is required. The container waits for Postgres to become available and applies migrations before the app starts. When adding a new numbered SQL file, rebuild and push the Flyway image.
 
 ## Progressive Web App
 

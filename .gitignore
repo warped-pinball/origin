@@ -8,3 +8,4 @@ venv/
 test.db
 node_modules/
 build/
+.vscode/settings.json

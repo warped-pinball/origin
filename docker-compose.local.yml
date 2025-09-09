@@ -13,7 +13,6 @@ services:
     restart: unless-stopped
     ports:
       - "9000:8000"  # HTTP
-      - "9001:8001"  # WebSocket
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -21,6 +20,7 @@ services:
       POSTGRES_DB: postgres
       SECRET_KEY: 9829uhf087w4hiou4whsdd
       PUBLIC_HOST_URL: http://localhost:9000
+      MQTT_BROKER_HOST: mosquitto
       # PEM encoded key for signing machine claim handshakes
       RSA_PRIVATE_KEY: |
         -----BEGIN PRIVATE KEY-----
@@ -32,6 +32,8 @@ services:
     depends_on:
       flyway:
         condition: service_completed_successfully
+      mosquitto:
+        condition: service_started
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.http.routers.origin.rule=Host(`origin.beta.doze.dev`)"
@@ -40,6 +42,12 @@ services:
       - "flame.name=Origin Beta"
       - "flame.url=https://origin.beta.doze.dev"
       - "flame.icon=mdi:gamepad-variant"
+
+  mosquitto:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    ports:
+      - "9001:1883"
 
   qr-service:
     build:
@@ -73,5 +81,3 @@ services:
       origin-db:
         condition: service_healthy
     restart: "no"
-
-
