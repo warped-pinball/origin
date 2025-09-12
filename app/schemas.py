@@ -66,8 +66,11 @@ class MachineResponse(BaseModel):
     signature: str
 
 class MachineHandshake(BaseModel):
-    id: str
+    machine_id: str
+    claim_url: str
     server_public_key: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LocationBase(BaseModel):
