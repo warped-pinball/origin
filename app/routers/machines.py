@@ -71,11 +71,10 @@ def machines_checkin(request: Request, db: Session = Depends(get_db)):
 @router.post("/handshake", response_model=schemas.MachineHandshake)
 def handshake(
     request: Request,
-    client_public_key_b64: str,
-    game_title: str,
+    handshake: schemas.MachineHandshakeRequest,
     db: Session = Depends(get_db),
 ):
-    client_public_key_bytes = base64.b64decode(client_public_key_b64)
+    client_public_key_bytes = base64.b64decode(handshake.client_public_key_b64)
     client_public_key = x25519.X25519PublicKey.from_public_bytes(
         client_public_key_bytes
     )
@@ -91,12 +90,18 @@ def handshake(
     alphabet = string.ascii_letters + string.digits
     claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
 
+    shared_secret_b64 = base64.b64encode(shared_secret).decode("ascii")
+
+    db_machine = crud.models.Machine(
+        id=machine_uuid_hex,
+        game_title=handshake.game_title,
+        shared_secret=shared_secret_b64,
+    )
+    db.add(db_machine)
+
     db_claim = crud.models.MachineClaim(
         machine_id=machine_uuid_hex,
         claim_code=claim_code,
-        shared_secret=base64.b64encode(shared_secret).decode("ascii"),
-        client_game_title=game_title,
-        claimed=False,
     )
     db.add(db_claim)
     db.commit()

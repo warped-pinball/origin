@@ -62,13 +62,25 @@ class Machine(MachineBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MachineResponse(BaseModel):
     signature: str
 
+
+class MachineHandshakeRequest(BaseModel):
+    """Payload sent by devices to initiate a handshake."""
+
+    client_public_key_b64: str
+    game_title: str
+
+
 class MachineHandshake(BaseModel):
+    """Response returned to devices after a successful handshake."""
+
     machine_id: str
     claim_url: str
-    server_public_key: str
+    claim_code: str
+    server_key: str
 
     model_config = ConfigDict(from_attributes=True)
 
