@@ -14,6 +14,9 @@ from .. import crud, schemas
 from ..auth import get_current_user
 from ..database import get_db
 from ..utils.signing import sign_json_response
+import hmac
+import hashlib
+from typing import NamedTuple
 
 router = APIRouter(prefix="/machines", tags=["machines"])
 
@@ -70,63 +73,146 @@ def machines_checkin(request: Request, db: Session = Depends(get_db)):
         request=request, payload=payload, shared_secret=shared_secret, status_code=200
     )
 
-
-@router.get("/claim_status", response_model=schemas.MachineClaimStatus)
-def claim_status(
+# Route to allow machines to request n new challenges
+@router.post("/api/v1/challenges")
+def request_challenges(
     request: Request,
+    n: int = 1,
     db: Session = Depends(get_db)
 ):
-    """Check the status of a machine claim."""
+    """Generate and return n new challenges for the authenticated machine."""
+    if n < 1 or n > 100:
+        raise HTTPException(status_code=400, detail="n must be between 1 and 10")
+
     shared_secret = get_shared_secret_from_request(request, db)
 
-    #TODO authenticate the request properly
-
-    # Find the claim associated with this machine
     mid_b64 = request.headers.get("X-Machine-ID")
     machine_id_bytes = base64.b64decode(mid_b64, validate=True)
     machine_hex = machine_id_bytes.hex()
-    claim = crud.models.MachineClaim
-    claim_record = db.query(claim).filter(claim.machine_id == machine_hex).first()
-    if not claim_record:
-        # Create a new unclaimed record if none exists
-        new_claim_record = crud.models.MachineClaim(
-            machine_id=machine_hex,
-            claim_code=None,
-            user_id=None
-        )
-        db.add(new_claim_record)
-        db.commit()
-        db.refresh(new_claim_record)
-        logger.info(f"Created new machine claim: {new_claim_record}")
-        claim_record = new_claim_record
 
-    payload = {}
+    # Remove any existing challenges for this machine
+    db.query(crud.models.MachineChallenge).filter_by(machine_id=machine_hex).delete()
+    db.commit()
+
+    challenges = []
+    for _ in range(n):
+        challenge_bytes = os.urandom(16)
+        challenge_b64 = base64.b64encode(challenge_bytes).decode("ascii")
+        challenges.append(challenge_b64)
+
+        challenge_record = crud.models.MachineChallenge(
+            challenge=challenge_b64,
+            machine_id=machine_hex,
+        )
+        db.add(challenge_record)
+    db.commit()
+
+    payload = {"challenges": challenges}
+    return sign_json_response(
+        request=request, payload=payload, shared_secret=shared_secret, status_code=200
+    )
+
+class MachineAuth(NamedTuple):
+    id_hex: str
+    shared_secret: bytes
+
+async def authenticate_machine(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> MachineAuth:
+    """
+    Dependency that:
+      - Extracts X-Machine-ID
+      - Retrieves the shared secret
+      - Verifies HMAC signature over (path + server_challenge + body)
+    Returns MachineAuth(id_hex, shared_secret) on success.
+    """
+    mid_b64 = request.headers.get("X-Machine-ID")
+    sig_header = request.headers.get("X-Signature")
+    challenge_b64 = request.headers.get("X-Server-Challenge")
+
+    if not (mid_b64 and sig_header and challenge_b64):
+        raise HTTPException(status_code=401, detail="Missing auth headers")
+
+    if not sig_header.startswith("v1="):
+        raise HTTPException(status_code=401, detail="Bad signature version")
+    provided_sig = sig_header[3:]
+
+    try:
+        machine_id_bytes = base64.b64decode(mid_b64, validate=True)
+        server_challenge = base64.b64decode(challenge_b64, validate=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Bad header encoding")
+
+    machine_hex = machine_id_bytes.hex()
+
+    rec = crud.get_machine_secret_by_id_hex(db, machine_hex)
+    if rec is None or not rec.shared_secret_b64:
+        raise HTTPException(status_code=401, detail="Unknown machine")
+
+    try:
+        shared_secret = base64.b64decode(rec.shared_secret_b64, validate=True)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Server stored secret decode error")
+
+    body = await request.body()
+    # The client signs the raw URL string it used. We assume path only.
+    signed_path = request.url.path.encode("utf-8")
+    msg = signed_path + server_challenge + body
+    expected_sig = hmac.new(shared_secret, msg, hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected_sig, provided_sig):
+        raise HTTPException(status_code=401, detail="Bad signature")
+
+    return MachineAuth(id_hex=machine_hex, shared_secret=shared_secret)
+
+
+@router.get("/claim_status", response_model=schemas.MachineClaimStatus)
+async def claim_status(
+    request: Request,
+    auth: MachineAuth = Depends(authenticate_machine),
+    db: Session = Depends(get_db),
+):
+    """Check the status of a machine claim (authenticated)."""
+    claim_model = crud.models.MachineClaim
+    claim_record = (
+        db.query(claim_model).filter(claim_model.machine_id == auth.id_hex).first()
+    )
+    if not claim_record:
+        # Create an unclaimed placeholder if none exists
+        claim_record = claim_model(machine_id=auth.id_hex, claim_code=None, user_id=None)
+        db.add(claim_record)
+        db.commit()
+        db.refresh(claim_record)
+        logger.info(f"Created new machine claim: {claim_record}")
+
     if claim_record.user_id:
-        user = db.query(crud.models.User).filter(crud.models.User.id == claim_record.user_id).first()
-        username = user.username if user else None
-        payload={
+        user = (
+            db.query(crud.models.User)
+            .filter(crud.models.User.id == claim_record.user_id)
+            .first()
+        )
+        payload = {
             "is_claimed": True,
             "claim_url": None,
-            "username": username
+            "username": user.username if user else None,
         }
     elif claim_record.claim_code:
         host = os.environ.get("PUBLIC_HOST_URL", "")
         claim_url = f"{host}/claim?code={claim_record.claim_code}"
-        payload={
+        payload = {
             "is_claimed": False,
             "claim_url": claim_url,
-            "username": None
+            "username": None,
         }
     else:
-        logger.info(f"Machine claim {claim_record.id} is in an unexpected state.")
-        logger.debug(f"Claim record details: {claim_record}")
         raise HTTPException(status_code=500, detail="Unexpected machine claim state")
 
     return sign_json_response(
         request=request,
         payload=payload,
-        shared_secret=shared_secret,
-        status_code=200
+        shared_secret=auth.shared_secret,
+        status_code=200,
     )
 
 @router.post("/handshake", response_model=schemas.MachineHandshake)
