@@ -40,14 +40,9 @@ Set `PUBLIC_HOST_URL` to the public base URL of your deployment. It is used
 when generating links for machine claims, email verification and password
 resets.
 
-## Ports and MQTT
+## Ports
 
-The API listens on port `8000` for HTTP traffic. MQTT messages are handled
-through a broker, which by default listens on port `1883`. Ensure the broker is
-reachable from the application.
-
-Configure the connection with the `MQTT_BROKER_HOST` and `MQTT_BROKER_PORT`
-environment variables. They default to `localhost` and `1883` respectively.
+The API listens on port `8000` for HTTP traffic.
 
 ## QR code service
 
