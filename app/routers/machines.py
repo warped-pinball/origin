@@ -173,32 +173,35 @@ async def claim_status(
     db: Session = Depends(get_db),
 ):
     """Check the status of a machine claim (authenticated)."""
-    claim_model = crud.models.MachineClaim
-    claim_record = (
-        db.query(claim_model).filter(claim_model.machine_id == auth.id_hex).first()
-    )
-    if not claim_record:
-        # Create an unclaimed placeholder if none exists
-        claim_record = claim_model(
-            machine_id=auth.id_hex, claim_code=None, user_id=None
-        )
-        db.add(claim_record)
-        db.commit()
-        db.refresh(claim_record)
-        logger.info(f"Created new machine claim: {claim_record}")
-
-    if claim_record.user_id:
-        user = (
-            db.query(crud.models.User)
-            .filter(crud.models.User.id == claim_record.user_id)
-            .first()
-        )
+    # Check if machine has an owner
+    machine = db.query(crud.models.Machine).filter_by(id=auth.id_hex).first()
+    if machine and machine.owner_id:
+        user = db.query(crud.models.User).filter_by(id=machine.owner_id).first()
         payload = {
             "is_claimed": True,
             "claim_url": None,
             "username": user.username if user else None,
         }
-    elif claim_record.claim_code:
+        return sign_json_response(
+            request=request,
+            payload=payload,
+            shared_secret=auth.shared_secret,
+            status_code=200,
+        )
+
+    # If no owner, check for open claim
+    claim_model = crud.models.MachineClaim
+    claim_record = (
+        db.query(claim_model)
+        .filter(
+            claim_model.machine_id == auth.id_hex,
+            claim_model.user_id is None,
+            claim_model.claim_code is not None,
+        )
+        .first()
+    )
+
+    if claim_record:
         host = os.environ.get("PUBLIC_HOST_URL", "")
         claim_url = f"{host}/claim?code={claim_record.claim_code}"
         payload = {
@@ -206,9 +209,28 @@ async def claim_status(
             "claim_url": claim_url,
             "username": None,
         }
-    else:
-        raise HTTPException(status_code=500, detail="Unexpected machine claim state")
+        return sign_json_response(
+            request=request,
+            payload=payload,
+            shared_secret=auth.shared_secret,
+            status_code=200,
+        )
 
+    # If no owner and no open claim, create a new claim
+
+    alphabet = string.ascii_letters + string.digits
+    claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
+    new_claim = claim_model(machine_id=auth.id_hex, claim_code=claim_code, user_id=None)
+    db.add(new_claim)
+    db.commit()
+    db.refresh(new_claim)
+    host = os.environ.get("PUBLIC_HOST_URL", "")
+    claim_url = f"{host}/claim?code={claim_code}"
+    payload = {
+        "is_claimed": False,
+        "claim_url": claim_url,
+        "username": None,
+    }
     return sign_json_response(
         request=request,
         payload=payload,
@@ -236,9 +258,6 @@ def handshake(
     machine_uuid_hex = machine_uuid.hex
     machine_id_b64 = base64.b64encode(machine_uuid.bytes).decode("ascii")
 
-    alphabet = string.ascii_letters + string.digits
-    claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
-
     shared_secret_b64 = base64.b64encode(shared_secret).decode("ascii")
 
     db_machine = crud.models.Machine(
@@ -248,19 +267,8 @@ def handshake(
     )
     db.add(db_machine)
 
-    db_claim = crud.models.MachineClaim(
-        machine_id=machine_uuid_hex,
-        claim_code=claim_code,
-    )
-    db.add(db_claim)
-    db.commit()
-
-    host = os.environ.get("PUBLIC_HOST_URL", "")
-    claim_url = f"{host}/claim?code={claim_code}"
-
     payload = {
         "machine_id": machine_id_b64,
-        "claim_url": claim_url,
         "server_key": base64.b64encode(
             server_public_key.public_bytes(
                 encoding=serialization.Encoding.Raw,

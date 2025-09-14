@@ -77,7 +77,6 @@ class MachineHandshake(BaseModel):
     """Response returned to devices after a successful handshake."""
 
     machine_id: str
-    claim_url: str
     server_key: str
 
     model_config = ConfigDict(from_attributes=True)

@@ -39,11 +39,12 @@ class Location(Base):
 class Machine(Base):
     __tablename__ = "machines"
     id = Column(String, primary_key=True, index=True)
-    game_title = Column(String, unique=True, index=True)
-    shared_secret = Column(String, nullable=False)
+    game_title = Column(String, unique=False, index=True)
+    shared_secret = Column(String, unique=True, nullable=False)
     location_id = Column(Integer, ForeignKey("locations.id"))
 
-    owner = relationship("User", back_populates="machines")
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    owner = relationship("User", back_populates="machines", foreign_keys=[owner_id])
     location = relationship("Location", back_populates="machines")
     scores = relationship("Score", back_populates="machine")
 
