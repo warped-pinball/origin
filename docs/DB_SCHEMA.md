@@ -75,4 +75,3 @@
 | is_verified | BOOLEAN | False | True | FALSE | False |
 | verification_token | VARCHAR | False | True |  | True |
 | reset_token | VARCHAR | False | True |  | True |
-

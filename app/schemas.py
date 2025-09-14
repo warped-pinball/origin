@@ -82,11 +82,11 @@ class MachineHandshake(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class MachineClaimStatus(BaseModel):
     is_claimed: bool = True
     claim_url: Optional[str] = None
     username: Optional[str] = None
-
 
 
 class LocationBase(BaseModel):

@@ -69,7 +69,9 @@ def sign_json_response(
     Raises HTTPException if the client challenge header is missing or invalid.
     """
     if not isinstance(shared_secret, (bytes, bytearray)) or len(shared_secret) == 0:
-        raise HTTPException(status_code=500, detail="Shared secret unavailable for signing")
+        raise HTTPException(
+            status_code=500, detail="Shared secret unavailable for signing"
+        )
 
     b64_chal = request.headers.get("X-Client-Challenge")
     if not b64_chal:
@@ -93,4 +95,9 @@ def sign_json_response(
     sig_b64 = base64.b64encode(signature).decode("ascii")
 
     headers = {"X-Signature": sig_b64}
-    return Response(content=body_bytes, media_type="application/json", headers=headers, status_code=status_code)
+    return Response(
+        content=body_bytes,
+        media_type="application/json",
+        headers=headers,
+        status_code=status_code,
+    )

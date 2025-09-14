@@ -73,13 +73,10 @@ def machines_checkin(request: Request, db: Session = Depends(get_db)):
         request=request, payload=payload, shared_secret=shared_secret, status_code=200
     )
 
+
 # Route to allow machines to request n new challenges
 @router.post("/api/v1/challenges")
-def request_challenges(
-    request: Request,
-    n: int = 1,
-    db: Session = Depends(get_db)
-):
+def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_db)):
     """Generate and return n new challenges for the authenticated machine."""
     if n < 1 or n > 100:
         raise HTTPException(status_code=400, detail="n must be between 1 and 10")
@@ -112,9 +109,11 @@ def request_challenges(
         request=request, payload=payload, shared_secret=shared_secret, status_code=200
     )
 
+
 class MachineAuth(NamedTuple):
     id_hex: str
     shared_secret: bytes
+
 
 async def authenticate_machine(
     request: Request,
@@ -180,7 +179,9 @@ async def claim_status(
     )
     if not claim_record:
         # Create an unclaimed placeholder if none exists
-        claim_record = claim_model(machine_id=auth.id_hex, claim_code=None, user_id=None)
+        claim_record = claim_model(
+            machine_id=auth.id_hex, claim_code=None, user_id=None
+        )
         db.add(claim_record)
         db.commit()
         db.refresh(claim_record)
@@ -214,6 +215,7 @@ async def claim_status(
         shared_secret=auth.shared_secret,
         status_code=200,
     )
+
 
 @router.post("/handshake", response_model=schemas.MachineHandshake)
 def handshake(
