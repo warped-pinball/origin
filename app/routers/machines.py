@@ -75,7 +75,7 @@ def machines_checkin(request: Request, db: Session = Depends(get_db)):
 
 
 # Route to allow machines to request n new challenges
-@router.post("/api/v1/challenges")
+@router.post("/challenges")
 def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_db)):
     """Generate and return n new challenges for the authenticated machine."""
     if n < 1 or n > 100:
