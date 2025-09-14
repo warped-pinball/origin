@@ -11,7 +11,7 @@ This repository contains the Origin backend API built with FastAPI and a simple 
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000` and the MQTT broker at `mqtt://localhost:1883`.
+The API will be available at `http://localhost:8000`.
 
 ### Configuration
 
@@ -20,14 +20,13 @@ By default the application connects to the Postgres instance defined in
 `DATABASE_URL` environment variable or by setting `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
 
-Additional settings control email delivery, machine claims and MQTT broker connection:
+Additional settings control email delivery and machine claims:
 
 - `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`: enable transactional email for account verification and password resets.
 - `PUBLIC_HOST_URL`: public base URL used for claim and email links.
-- `MQTT_BROKER_HOST`, `MQTT_BROKER_PORT`: host and port of the MQTT broker (default `localhost:1883`).
 
-The service listens on port `8000` for HTTP traffic and connects to the MQTT broker for message exchange.
+The service listens on port `8000` for HTTP traffic.
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
 RSA key pair and obtaining email API credentials.

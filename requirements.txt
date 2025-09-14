@@ -10,7 +10,6 @@ pydantic
 jinja2
 httpx
 cryptography
-paho-mqtt
 htmlmin
 rcssmin
 rjsmin
