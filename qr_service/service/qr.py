@@ -14,6 +14,8 @@ from PIL import ImageColor, Image
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers, colormasks
 from qrcode.image.styles.moduledrawers import svg as svg_moduledrawers
+import random
+import string
 
 
 # Ensure generated SVG elements use the desired namespaces without unexpected prefixes
@@ -39,11 +41,10 @@ TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
 def random_suffix(length: int) -> str:
-    data = ""
-    while len(data) < length:
-        b = uuid.uuid4().bytes
-        data += base64.urlsafe_b64encode(b).decode().rstrip("=")
-    return data[:length]
+    if length <= 0:
+        return ""
+    alphabet = string.ascii_letters + string.digits
+    return "".join(random.choice(alphabet) for _ in range(length))
 
 
 def generate_svg(data: str, background_color: str | None = None) -> str:

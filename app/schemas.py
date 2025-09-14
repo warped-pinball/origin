@@ -51,7 +51,6 @@ class MachineBase(BaseModel):
 
 class MachineCreate(MachineBase):
     secret: str
-
     location_id: Optional[int] = None
 
 
@@ -79,10 +78,15 @@ class MachineHandshake(BaseModel):
 
     machine_id: str
     claim_url: str
-    claim_code: str
     server_key: str
 
     model_config = ConfigDict(from_attributes=True)
+
+class MachineClaimStatus(BaseModel):
+    is_claimed: bool = True
+    claim_url: Optional[str] = None
+    username: Optional[str] = None
+
 
 
 class LocationBase(BaseModel):

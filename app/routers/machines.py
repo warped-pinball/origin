@@ -3,6 +3,7 @@ import os
 import secrets
 import string
 import uuid
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -15,6 +16,8 @@ from ..database import get_db
 from ..utils.signing import sign_json_response
 
 router = APIRouter(prefix="/machines", tags=["machines"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=schemas.Machine)
@@ -68,6 +71,64 @@ def machines_checkin(request: Request, db: Session = Depends(get_db)):
     )
 
 
+@router.get("/claim_status", response_model=schemas.MachineClaimStatus)
+def claim_status(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Check the status of a machine claim."""
+    shared_secret = get_shared_secret_from_request(request, db)
+
+    #TODO authenticate the request properly
+
+    # Find the claim associated with this machine
+    mid_b64 = request.headers.get("X-Machine-ID")
+    machine_id_bytes = base64.b64decode(mid_b64, validate=True)
+    machine_hex = machine_id_bytes.hex()
+    claim = crud.models.MachineClaim
+    claim_record = db.query(claim).filter(claim.machine_id == machine_hex).first()
+    if not claim_record:
+        # Create a new unclaimed record if none exists
+        new_claim_record = crud.models.MachineClaim(
+            machine_id=machine_hex,
+            claim_code=None,
+            user_id=None
+        )
+        db.add(new_claim_record)
+        db.commit()
+        db.refresh(new_claim_record)
+        logger.info(f"Created new machine claim: {new_claim_record}")
+        claim_record = new_claim_record
+
+    payload = {}
+    if claim_record.user_id:
+        user = db.query(crud.models.User).filter(crud.models.User.id == claim_record.user_id).first()
+        username = user.username if user else None
+        payload={
+            "is_claimed": True,
+            "claim_url": None,
+            "username": username
+        }
+    elif claim_record.claim_code:
+        host = os.environ.get("PUBLIC_HOST_URL", "")
+        claim_url = f"{host}/claim?code={claim_record.claim_code}"
+        payload={
+            "is_claimed": False,
+            "claim_url": claim_url,
+            "username": None
+        }
+    else:
+        logger.info(f"Machine claim {claim_record.id} is in an unexpected state.")
+        logger.debug(f"Claim record details: {claim_record}")
+        raise HTTPException(status_code=500, detail="Unexpected machine claim state")
+
+    return sign_json_response(
+        request=request,
+        payload=payload,
+        shared_secret=shared_secret,
+        status_code=200
+    )
+
 @router.post("/handshake", response_model=schemas.MachineHandshake)
 def handshake(
     request: Request,
@@ -112,7 +173,6 @@ def handshake(
     payload = {
         "machine_id": machine_id_b64,
         "claim_url": claim_url,
-        "claim_code": claim_code,
         "server_key": base64.b64encode(
             server_public_key.public_bytes(
                 encoding=serialization.Encoding.Raw,

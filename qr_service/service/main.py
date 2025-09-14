@@ -95,7 +95,7 @@ def generate(req: GenerateRequest):
     with zipfile.ZipFile(zip_buffer, "w") as zf:
         for item in items:
             zf.writestr(f"{item['suffix']}.svg", item["svg"])
-    zip_id = uuid.uuid4().hex
+    zip_id = uuid.uuid1().hex
     ZIPS[zip_id] = zip_buffer.getvalue()
 
     preview = items[0]
