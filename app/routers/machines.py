@@ -160,6 +160,9 @@ async def authenticate_machine(
     expected_sig = hmac.new(shared_secret, msg, hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(expected_sig, provided_sig):
+        logger.warning(
+            f"Bad signature for machine {mid_b64}: expected {expected_sig}, got {provided_sig}"
+        )
         raise HTTPException(status_code=401, detail="Bad signature")
 
     return MachineAuth(id_b64=mid_b64, shared_secret=shared_secret)
