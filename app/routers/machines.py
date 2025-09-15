@@ -53,7 +53,7 @@ def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
 
     rec = crud.get_machine(db, mid_b64)
     if rec is None or not rec.shared_secret:
-        raise HTTPException(status_code=401, detail="Unknown machine")
+        raise HTTPException(status_code=401, detail=f"Unknown machine {mid_b64}")
 
     try:
         return base64.b64decode(rec.shared_secret, validate=True)
