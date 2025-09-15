@@ -124,7 +124,8 @@ async def authenticate_machine(
     Dependency that:
       - Extracts X-Machine-ID
       - Retrieves the shared secret
-      - Verifies HMAC signature over (path + server_challenge + body)
+      - Verifies HMAC (SHA-256) signature over (path + server_challenge + body)
+        Signature header format: X-Signature: v1=<base64(hmac_digest)>
     Returns MachineAuth(id_b64, shared_secret) on success.
     """
     mid_b64 = request.headers.get("X-Machine-ID")
@@ -136,11 +137,12 @@ async def authenticate_machine(
 
     if not sig_header.startswith("v1="):
         raise HTTPException(status_code=401, detail="Bad signature version")
-    provided_sig = sig_header[3:]
+    provided_sig_b64 = sig_header[3:]
 
     try:
         base64.b64decode(mid_b64, validate=True)
         server_challenge_bytes = base64.b64decode(challenge_b64, validate=True)
+        provided_sig_bytes = base64.b64decode(provided_sig_b64, validate=True)
     except Exception:
         raise HTTPException(status_code=400, detail="Bad header encoding")
 
@@ -154,14 +156,14 @@ async def authenticate_machine(
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
 
     body = await request.body()
-    # The client signs the raw URL string it used. We assume path only.
     signed_path = request.url.path.encode("utf-8")
     msg = signed_path + server_challenge_bytes + body
-    expected_sig = hmac.new(shared_secret, msg, hashlib.sha256).hexdigest()
+    expected_sig_bytes = hmac.new(shared_secret, msg, hashlib.sha256).digest()
 
-    if not hmac.compare_digest(expected_sig, provided_sig):
+    if not hmac.compare_digest(expected_sig_bytes, provided_sig_bytes):
+        expected_b64 = base64.b64encode(expected_sig_bytes).decode("ascii")
         logger.warning(
-            f"Bad signature for machine {mid_b64}: expected {expected_sig}, got {provided_sig}"
+            f"Bad signature for machine {mid_b64}: expected {expected_b64}, got {provided_sig_b64}"
         )
         raise HTTPException(status_code=401, detail="Bad signature")
 
