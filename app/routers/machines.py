@@ -48,17 +48,16 @@ def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
     if not mid_b64:
         raise HTTPException(status_code=400, detail="Missing X-Machine-ID header")
     try:
-        machine_id_bytes = base64.b64decode(mid_b64, validate=True)
+        base64.b64decode(mid_b64, validate=True)
     except Exception:
         raise HTTPException(status_code=400, detail="Bad X-Machine-ID")
 
-    machine_hex = machine_id_bytes.hex()
-    rec = crud.get_machine_secret_by_id_hex(db, machine_hex)
-    if rec is None or not rec.shared_secret_b64:
+    rec = crud.get_machine(db, mid_b64)
+    if rec is None or not rec.shared_secret:
         raise HTTPException(status_code=401, detail="Unknown machine")
 
     try:
-        return base64.b64decode(rec.shared_secret_b64, validate=True)
+        return base64.b64decode(rec.shared_secret, validate=True)
     except Exception:
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
 
