@@ -179,7 +179,7 @@ async def claim_status(
 ):
     """Check the status of a machine claim (authenticated)."""
     # Check if machine has an owner
-    machine = db.query(crud.models.Machine).filter_by(id=auth.id_hex).first()
+    machine = db.query(crud.models.Machine).filter_by(id=auth.id_b64).first()
     if machine and machine.user_id:
         user = db.query(crud.models.User).filter_by(id=machine.user_id).first()
         payload = {
@@ -199,7 +199,7 @@ async def claim_status(
     claim_record = (
         db.query(claim_model)
         .filter(
-            claim_model.machine_id == auth.id_hex,
+            claim_model.machine_id == auth.id_b64,
             claim_model.user_id is None,
             claim_model.claim_code is not None,
         )
@@ -225,7 +225,7 @@ async def claim_status(
 
     alphabet = string.ascii_letters + string.digits
     claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
-    new_claim = claim_model(machine_id=auth.id_hex, claim_code=claim_code, user_id=None)
+    new_claim = claim_model(machine_id=auth.id_b64, claim_code=claim_code, user_id=None)
     db.add(new_claim)
     db.commit()
     db.refresh(new_claim)
