@@ -169,8 +169,8 @@ async def claim_status(
     """Check the status of a machine claim (authenticated)."""
     # Check if machine has an owner
     machine = db.query(crud.models.Machine).filter_by(id=auth.id_hex).first()
-    if machine and machine.owner_id:
-        user = db.query(crud.models.User).filter_by(id=machine.owner_id).first()
+    if machine and machine.user_id:
+        user = db.query(crud.models.User).filter_by(id=machine.user_id).first()
         payload = {
             "is_claimed": True,
             "claim_url": None,
