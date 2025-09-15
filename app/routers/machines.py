@@ -165,7 +165,7 @@ async def authenticate_machine(
     return MachineAuth(id_b64=mid_b64, shared_secret=shared_secret)
 
 
-@router.get("/claim_status", response_model=schemas.MachineClaimStatus)
+@router.post("/claim_status", response_model=schemas.MachineClaimStatus)
 async def claim_status(
     request: Request,
     auth: MachineAuth = Depends(authenticate_machine),
