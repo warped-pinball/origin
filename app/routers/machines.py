@@ -73,10 +73,15 @@ def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
 
 # Route to allow machines to request n new challenges
 @router.post("/challenges")
-def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_db)):
+def request_challenges(
+    request: Request,
+    body: schemas.MachineChallengesRequest,
+    db: Session = Depends(get_db),
+):
     """Generate and return n new challenges for the authenticated machine."""
+    n = body.n
     if n < 1 or n > 100:
-        raise HTTPException(status_code=400, detail="n must be between 1 and 10")
+        raise HTTPException(status_code=400, detail="n must be between 1 and 100")
 
     shared_secret = get_shared_secret_from_request(request, db)
 
@@ -100,6 +105,7 @@ def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_d
     db.commit()
 
     payload = {"challenges": challenges}
+    logger.info(f"Generated {n} challenges for machine {mid_b64}: {payload}")
     return sign_json_response(
         request=request, payload=payload, shared_secret=shared_secret, status_code=200
     )

@@ -73,6 +73,10 @@ class MachineHandshakeRequest(BaseModel):
     game_title: str
 
 
+class MachineChallengesRequest(BaseModel):
+    n: int = 1  # number of challenges to generate
+
+
 class MachineHandshake(BaseModel):
     """Response returned to devices after a successful handshake."""
 
