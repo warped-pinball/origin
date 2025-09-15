@@ -82,6 +82,8 @@ class MachineHandshake(BaseModel):
 
     machine_id: str
     server_key: str
+    claim_code: str
+    claim_url: str
 
     model_config = ConfigDict(from_attributes=True)
 

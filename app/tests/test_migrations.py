@@ -14,7 +14,6 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
         "users",
         "locations",
         "machines",
-        "machine_claims",
         "machine_challenges",
         "scores",
         "qr_codes",
@@ -51,3 +50,14 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
         "machine_id",
     ]:
         assert col in qr_cols
+
+    machine_cols = {c["name"] for c in insp.get_columns("machines")}
+    for col in [
+        "id",
+        "game_title",
+        "shared_secret",
+        "user_id",
+        "location_id",
+        "claim_code",
+    ]:
+        assert col in machine_cols

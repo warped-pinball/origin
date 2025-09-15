@@ -21,6 +21,12 @@ router = APIRouter(prefix="/machines", tags=["machines"])
 logger = logging.getLogger(__name__)
 
 
+def generate_claim_code(length: int = 8) -> str:
+    """Generate a random claim code using upper/lower letters and digits."""
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
 # @router.post("/", response_model=schemas.Machine)
 # def register_machine(
 #     machine: schemas.MachineCreate,
@@ -180,12 +186,15 @@ async def claim_status(
     """Check the status of a machine claim (authenticated)."""
     # Check if machine has an owner
     machine = db.query(crud.models.Machine).filter_by(id=auth.id_b64).first()
-    if machine and machine.user_id:
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    if machine.user_id:
         user = db.query(crud.models.User).filter_by(id=machine.user_id).first()
         payload = {
             "is_claimed": True,
             "claim_url": None,
-            "username": user.username if user else None,
+            "username": (user.screen_name if user else None),
         }
         return sign_json_response(
             request=request,
@@ -194,21 +203,10 @@ async def claim_status(
             status_code=200,
         )
 
-    # If no owner, check for open claim
-    claim_model = crud.models.MachineClaim
-    claim_record = (
-        db.query(claim_model)
-        .filter(
-            claim_model.machine_id == auth.id_b64,
-            claim_model.user_id is None,
-            claim_model.claim_code is not None,
-        )
-        .first()
-    )
-
-    if claim_record:
-        host = os.environ.get("PUBLIC_HOST_URL", "")
-        claim_url = f"{host}/claim?code={claim_record.claim_code}"
+    # If no owner, check for existing claim code
+    host = os.environ.get("PUBLIC_HOST_URL", "")
+    if machine.claim_code:
+        claim_url = f"{host}/claim?code={machine.claim_code}"
         payload = {
             "is_claimed": False,
             "claim_url": claim_url,
@@ -221,15 +219,11 @@ async def claim_status(
             status_code=200,
         )
 
-    # If no owner and no open claim, create a new claim
-
-    alphabet = string.ascii_letters + string.digits
-    claim_code = "".join(secrets.choice(alphabet) for _ in range(8))
-    new_claim = claim_model(machine_id=auth.id_b64, claim_code=claim_code, user_id=None)
-    db.add(new_claim)
+    # If no owner and no claim code, create a new claim code
+    claim_code = generate_claim_code()
+    machine.claim_code = claim_code
     db.commit()
-    db.refresh(new_claim)
-    host = os.environ.get("PUBLIC_HOST_URL", "")
+    db.refresh(machine)
     claim_url = f"{host}/claim?code={claim_code}"
     payload = {
         "is_claimed": False,
@@ -264,10 +258,12 @@ def handshake(
     machine_id_b64 = base64.b64encode(machine_id).decode("ascii")
     shared_secret_b64 = base64.b64encode(shared_secret).decode("ascii")
 
+    claim_code = generate_claim_code()
     db_machine = crud.models.Machine(
         id=machine_id_b64,
         game_title=handshake.game_title,
         shared_secret=shared_secret_b64,
+        claim_code=claim_code,
     )
     db.add(db_machine)
     db.commit()
@@ -277,6 +273,8 @@ def handshake(
         f"Registered new machine {db_machine.id} for game {db_machine.game_title}"
     )
 
+    host = os.environ.get("PUBLIC_HOST_URL", "")
+    claim_url = f"{host}/claim?code={claim_code}"
     payload = {
         "machine_id": machine_id_b64,
         "server_key": base64.b64encode(
@@ -285,6 +283,8 @@ def handshake(
                 format=serialization.PublicFormat.Raw,
             )
         ).decode("ascii"),
+        "claim_code": claim_code,
+        "claim_url": claim_url,
     }
     return sign_json_response(
         request=request, payload=payload, shared_secret=shared_secret, status_code=200
