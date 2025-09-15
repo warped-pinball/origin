@@ -20,7 +20,7 @@ class User(Base):
     reset_token = Column(String, unique=True, index=True)
     scores = relationship("Score", back_populates="user")
     locations = relationship("Location", back_populates="user")
-    machines = relationship("Machine", back_populates="owner")
+    machines = relationship("Machine", back_populates="user")
 
 
 class Location(Base):
