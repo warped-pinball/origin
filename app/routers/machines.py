@@ -2,7 +2,6 @@ import base64
 import os
 import secrets
 import string
-import uuid
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -248,18 +247,23 @@ def handshake(
     server_public_key = server_private_key.public_key()
     shared_secret = server_private_key.exchange(client_public_key)
 
-    machine_uuid = uuid.uuid4()
-    machine_uuid_hex = machine_uuid.hex
-    machine_id_b64 = base64.b64encode(machine_uuid.bytes).decode("ascii")
-
+    # generate 16 random bytes for machine ID
+    machine_id = os.urandom(16)
+    machine_id_b64 = base64.b64encode(machine_id).decode("ascii")
     shared_secret_b64 = base64.b64encode(shared_secret).decode("ascii")
 
     db_machine = crud.models.Machine(
-        id=machine_uuid_hex,
+        id=machine_id_b64,
         game_title=handshake.game_title,
         shared_secret=shared_secret_b64,
     )
     db.add(db_machine)
+    db.commit()
+    db.refresh(db_machine)
+
+    logger.info(
+        f"Registered new machine {db_machine.id} for game {db_machine.game_title}"
+    )
 
     payload = {
         "machine_id": machine_id_b64,
