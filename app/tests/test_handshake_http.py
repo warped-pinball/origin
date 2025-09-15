@@ -39,6 +39,13 @@ def test_handshake_accepts_json_body(client, monkeypatch, db_session):
     data = resp.json()
     assert {"machine_id", "claim_url", "server_key", "claim_code"} <= data.keys()
 
-    db_session.query(models.MachineClaim).delete()
+    machine = (
+        db_session.query(models.Machine)
+        .filter(models.Machine.id == data["machine_id"])
+        .one()
+    )
+    assert machine.claim_code == data["claim_code"]
+    assert data["claim_code"] in data["claim_url"]
+
     db_session.query(models.Machine).delete()
     db_session.commit()

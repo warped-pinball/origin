@@ -19,13 +19,6 @@
 | machine_id | VARCHAR | False | False |  | False |
 | issued_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
 
-## machine_claims
-
-| Column | Type | Primary Key | Nullable | Default | Unique |
-| --- | --- | --- | --- | --- | --- |
-| machine_id | VARCHAR | True | False |  | False |
-| claim_code | VARCHAR | False | True |  | True |
-
 ## machines
 
 | Column | Type | Primary Key | Nullable | Default | Unique |
@@ -35,6 +28,7 @@
 | shared_secret | VARCHAR | False | False |  | False |
 | user_id | INTEGER | False | True |  | False |
 | location_id | INTEGER | False | True |  | False |
+| claim_code | VARCHAR | False | True |  | True |
 
 ## qr_codes
 
@@ -75,3 +69,4 @@
 | is_verified | BOOLEAN | False | True | FALSE | False |
 | verification_token | VARCHAR | False | True |  | True |
 | reset_token | VARCHAR | False | True |  | True |
+

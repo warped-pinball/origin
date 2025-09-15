@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
-import uuid
 
 
 class User(Base):
@@ -44,24 +43,10 @@ class Machine(Base):
     location_id = Column(Integer, ForeignKey("locations.id"))
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    claim_code = Column(String, unique=True, index=True, nullable=True)
     user = relationship("User", back_populates="machines", foreign_keys=[user_id])
     location = relationship("Location", back_populates="machines")
     scores = relationship("Score", back_populates="machine")
-
-
-class MachineClaim(Base):
-    __tablename__ = "machine_claims"
-    id = Column(
-        String(36),
-        primary_key=True,
-        index=True,
-        nullable=False,
-        default=lambda: str(uuid.uuid1()),
-    )
-    machine_id = Column(String, ForeignKey("machines.id"), index=True, nullable=False)
-    claim_code = Column(String, unique=True, index=True, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-
 
 class MachineChallenge(Base):
     __tablename__ = "machine_challenges"
