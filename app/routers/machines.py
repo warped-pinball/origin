@@ -11,7 +11,6 @@ from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives import serialization
 
 from .. import crud, schemas
-from ..auth import get_current_user
 from ..database import get_db
 from ..utils.signing import sign_json_response
 import hmac
@@ -23,24 +22,24 @@ router = APIRouter(prefix="/machines", tags=["machines"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=schemas.Machine)
-def register_machine(
-    machine: schemas.MachineCreate,
-    db: Session = Depends(get_db),
-    current_user: crud.models.User = Depends(get_current_user),
-):
-    existing = crud.get_machine_by_name(db, machine.name)
-    if existing:
-        raise HTTPException(status_code=400, detail="Machine already registered")
-    return crud.create_machine(db, machine, current_user.id)
+# @router.post("/", response_model=schemas.Machine)
+# def register_machine(
+#     machine: schemas.MachineCreate,
+#     db: Session = Depends(get_db),
+#     current_user: crud.models.User = Depends(get_current_user),
+# ):
+#     existing = crud.get_machine_by_name(db, machine.name)
+#     if existing:
+#         raise HTTPException(status_code=400, detail="Machine already registered")
+#     return crud.create_machine(db, machine, current_user.id)
 
 
-@router.get("/me", response_model=list[schemas.Machine])
-def list_my_machines(
-    db: Session = Depends(get_db),
-    current_user: crud.models.User = Depends(get_current_user),
-):
-    return crud.get_machines_for_user(db, current_user.id)
+# @router.get("/me", response_model=list[schemas.Machine])
+# def list_my_machines(
+#     db: Session = Depends(get_db),
+#     current_user: crud.models.User = Depends(get_current_user),
+# ):
+#     return crud.get_machines_for_user(db, current_user.id)
 
 
 def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
@@ -64,14 +63,14 @@ def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
 
 
-@router.post("/checkin")
-def machines_checkin(request: Request, db: Session = Depends(get_db)):
-    """Respond to a machine check-in with a signed payload."""
-    payload = {"messages": [{"type": "claimed"}]}
-    shared_secret = get_shared_secret_from_request(request, db)
-    return sign_json_response(
-        request=request, payload=payload, shared_secret=shared_secret, status_code=200
-    )
+# @router.post("/checkin")
+# def machines_checkin(request: Request, db: Session = Depends(get_db)):
+#     """Respond to a machine check-in with a signed payload."""
+#     payload = {"messages": [{"type": "claimed"}]}
+#     shared_secret = get_shared_secret_from_request(request, db)
+#     return sign_json_response(
+#         request=request, payload=payload, shared_secret=shared_secret, status_code=200
+#     )
 
 
 # Route to allow machines to request n new challenges
@@ -84,11 +83,9 @@ def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_d
     shared_secret = get_shared_secret_from_request(request, db)
 
     mid_b64 = request.headers.get("X-Machine-ID")
-    machine_id_bytes = base64.b64decode(mid_b64, validate=True)
-    machine_hex = machine_id_bytes.hex()
 
     # Remove any existing challenges for this machine
-    db.query(crud.models.MachineChallenge).filter_by(machine_id=machine_hex).delete()
+    db.query(crud.models.MachineChallenge).filter_by(machine_id=mid_b64).delete()
     db.commit()
 
     challenges = []
@@ -99,7 +96,7 @@ def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_d
 
         challenge_record = crud.models.MachineChallenge(
             challenge=challenge_b64,
-            machine_id=machine_hex,
+            machine_id=mid_b64,
         )
         db.add(challenge_record)
     db.commit()
@@ -111,7 +108,7 @@ def request_challenges(request: Request, n: int = 1, db: Session = Depends(get_d
 
 
 class MachineAuth(NamedTuple):
-    id_hex: str
+    id_b64: str
     shared_secret: bytes
 
 
@@ -124,7 +121,7 @@ async def authenticate_machine(
       - Extracts X-Machine-ID
       - Retrieves the shared secret
       - Verifies HMAC signature over (path + server_challenge + body)
-    Returns MachineAuth(id_hex, shared_secret) on success.
+    Returns MachineAuth(id_b64, shared_secret) on success.
     """
     mid_b64 = request.headers.get("X-Machine-ID")
     sig_header = request.headers.get("X-Signature")
@@ -138,32 +135,30 @@ async def authenticate_machine(
     provided_sig = sig_header[3:]
 
     try:
-        machine_id_bytes = base64.b64decode(mid_b64, validate=True)
-        server_challenge = base64.b64decode(challenge_b64, validate=True)
+        base64.b64decode(mid_b64, validate=True)
+        server_challenge_bytes = base64.b64decode(challenge_b64, validate=True)
     except Exception:
         raise HTTPException(status_code=400, detail="Bad header encoding")
 
-    machine_hex = machine_id_bytes.hex()
-
-    rec = crud.get_machine_secret_by_id_hex(db, machine_hex)
-    if rec is None or not rec.shared_secret_b64:
+    rec = crud.get_machine(db, mid_b64)
+    if rec is None or not rec.shared_secret:
         raise HTTPException(status_code=401, detail="Unknown machine")
 
     try:
-        shared_secret = base64.b64decode(rec.shared_secret_b64, validate=True)
+        shared_secret = base64.b64decode(rec.shared_secret, validate=True)
     except Exception:
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
 
     body = await request.body()
     # The client signs the raw URL string it used. We assume path only.
     signed_path = request.url.path.encode("utf-8")
-    msg = signed_path + server_challenge + body
+    msg = signed_path + server_challenge_bytes + body
     expected_sig = hmac.new(shared_secret, msg, hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(expected_sig, provided_sig):
         raise HTTPException(status_code=401, detail="Bad signature")
 
-    return MachineAuth(id_hex=machine_hex, shared_secret=shared_secret)
+    return MachineAuth(id_b64=mid_b64, shared_secret=shared_secret)
 
 
 @router.get("/claim_status", response_model=schemas.MachineClaimStatus)

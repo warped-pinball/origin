@@ -18,7 +18,7 @@ def create_machine(
     return db_machine
 
 
-def get_machine(db: Session, machine_id: int) -> Optional[models.Machine]:
+def get_machine(db: Session, machine_id: str) -> Optional[models.Machine]:
     return db.query(models.Machine).filter(models.Machine.id == machine_id).first()
 
 
