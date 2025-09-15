@@ -156,7 +156,7 @@ async def authenticate_machine(
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
 
     body = await request.body()
-    signed_path = request.url.path.encode("utf-8")
+    signed_path = request.url.path.lstrip("/").encode("utf-8")
     msg = signed_path + server_challenge_bytes + body
     logging.info(f"Authenticating machine {mid_b64}: msg={msg}")
     expected_sig_bytes = hmac.new(shared_secret, msg, hashlib.sha256).digest()
