@@ -43,8 +43,8 @@ class Machine(Base):
     shared_secret = Column(String, unique=True, nullable=False)
     location_id = Column(Integer, ForeignKey("locations.id"))
 
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    owner = relationship("User", back_populates="machines", foreign_keys=[owner_id])
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user = relationship("User", back_populates="machines", foreign_keys=[user_id])
     location = relationship("Location", back_populates="machines")
     scores = relationship("Score", back_populates="machine")
 
