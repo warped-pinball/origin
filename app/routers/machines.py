@@ -158,7 +158,7 @@ async def authenticate_machine(
     body = await request.body()
     signed_path = request.url.path.encode("utf-8")
     msg = signed_path + server_challenge_bytes + body
-    logging.debug(f"Authenticating machine {mid_b64}: msg={msg}")
+    logging.info(f"Authenticating machine {mid_b64}: msg={msg}")
     expected_sig_bytes = hmac.new(shared_secret, msg, hashlib.sha256).digest()
 
     if not hmac.compare_digest(expected_sig_bytes, provided_sig_bytes):
