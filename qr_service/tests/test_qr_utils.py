@@ -263,12 +263,32 @@ def test_prepare_svg_variants_applies_filter_and_scaling(monkeypatch):
     assert defs is not None
     filt = defs.find("svg:filter", ns)
     assert filt is not None
+    composites = filt.findall("svg:feComposite", ns)
+    operators = {node.get("operator") for node in composites}
+    assert "out" in operators and "over" in operators
+    assert "atop" not in operators
     morph = filt.find("svg:feMorphology", ns)
     assert morph is not None
     radius = float(morph.get("radius"))
     view = final_root.get("viewBox").split()
     units_per_in = float(view[2]) / 2.5
     assert radius == pytest.approx(units_per_in * 0.05)
+    sat_nodes = [
+        node
+        for node in filt.findall("svg:feColorMatrix", ns)
+        if node.get("type") == "saturate"
+    ]
+    assert sat_nodes, "Expected saturate color matrix when saturation boost is set"
+    eroded_color = next(
+        (
+            node
+            for node in composites
+            if node.get("result") == "erodedColor"
+        ),
+        None,
+    )
+    assert eroded_color is not None
+    assert eroded_color.get("in") == sat_nodes[0].get("result")
 
     before_root = ET.fromstring(before_svg)
     assert before_root.get("width").endswith("in")
