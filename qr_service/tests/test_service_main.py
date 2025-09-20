@@ -29,6 +29,7 @@ def test_fallback_imports_service_qr(tmp_path, monkeypatch):
 def test_generate_endpoint(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_PRINT_WIDTH_IN", "2.5")
+    monkeypatch.setenv("QR_PREVIEW_SCALE", "0.5")
     for mod in ["qr_service.service.main"]:
         sys.modules.pop(mod, None)
     import qr_service.service.main as main
@@ -40,15 +41,63 @@ def test_generate_endpoint(monkeypatch):
         assert "preview" in data and "download_id" in data
         item = data["preview"]
         assert item["url"].startswith("https://example.com/")
-        root = ET.fromstring(item["svg"])
-        assert root.get("width") == "2.5in"
-        assert root.get("height").endswith("in")
+        assert "before_svg" in item and "after_svg" in item
+
+        after_root = ET.fromstring(item["after_svg"])
+        assert after_root.get("width").endswith("in")
+        assert float(after_root.get("width")[:-2]) == pytest.approx(1.25)
+
+        before_root = ET.fromstring(item["before_svg"])
+        assert before_root.get("width").endswith("in")
 
         # test download
         resp2 = client.get(f"/download/{data['download_id']}")
         assert resp2.status_code == 200
         z = zipfile.ZipFile(BytesIO(resp2.content))
         assert len(z.namelist()) == 2
+        content = z.read(z.namelist()[0]).decode()
+        final_root = ET.fromstring(content)
+        assert final_root.get("width") == "2.5in"
+        assert final_root.get("height").endswith("in")
+
+
+def test_generate_applies_post_processing(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com")
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "2.0")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post(
+            "/generate",
+            json={
+                "count": 1,
+                "saturation_boost": 0.4,
+                "erosion_inches": 0.05,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        preview = data["preview"]
+        after_root = ET.fromstring(preview["after_svg"])
+        ns = {"svg": "http://www.w3.org/2000/svg"}
+        group = after_root.find("svg:g", ns)
+        assert group is not None and "filter" in group.attrib
+
+        resp2 = client.get(f"/download/{data['download_id']}")
+        assert resp2.status_code == 200
+        z = zipfile.ZipFile(BytesIO(resp2.content))
+        final_content = z.read(z.namelist()[0]).decode()
+        final_root = ET.fromstring(final_content)
+        defs = final_root.find("svg:defs", ns)
+        assert defs is not None
+        morph = final_root.find(".//svg:feMorphology", ns)
+        assert morph is not None
+        radius = float(morph.get("radius"))
+        view = final_root.get("viewBox").split()
+        units_per_in = float(view[2]) / 2.0
+        assert radius == pytest.approx(units_per_in * 0.05)
 
 
 def test_generate_precomputes_suffixes(monkeypatch):
@@ -82,8 +131,8 @@ def test_generate_with_template(monkeypatch):
     with TestClient(main.app) as client:
         resp = client.post("/generate", json={"count": 1, "template": "white.png"})
         assert resp.status_code == 200
-        svg = resp.json()["preview"]["svg"]
-        root = ET.fromstring(svg)
+        preview = resp.json()["preview"]
+        root = ET.fromstring(preview["after_svg"])
         assert not root.findall("{http://www.w3.org/2000/svg}text")
         inner = root.find("{http://www.w3.org/2000/svg}svg")
         assert inner is not None
@@ -121,8 +170,7 @@ def test_generate_with_template_and_offset(monkeypatch):
     with TestClient(main.app) as client:
         resp = client.post("/generate", json={"count": 1, "template": "white.png"})
         assert resp.status_code == 200
-        svg = resp.json()["preview"]["svg"]
-        root = ET.fromstring(svg)
+        root = ET.fromstring(resp.json()["preview"]["after_svg"])
         inner = root.find("{http://www.w3.org/2000/svg}svg")
         assert inner is not None
         h = float(root.get("height"))
@@ -160,3 +208,5 @@ def test_index_contains_controls(monkeypatch):
         assert "count" in text
         assert "Download" in text
         assert "template" in text
+        assert "Saturation" in text
+        assert "Erode" in text

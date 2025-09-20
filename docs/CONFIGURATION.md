@@ -52,6 +52,8 @@ environment variables:
 - `QR_BASE_URL` – base URL used to build the links encoded in the QR codes.
 - `QR_RANDOM_LEN` – length of the random, URL-safe suffix appended to each
   generated link (default `8`).
+- `QR_ERROR_CORRECTION` – QR error-correction level (`L`, `M`, `Q` or `H`;
+  default `M`). Higher levels improve resilience but reduce capacity.
 - `QR_CODE_COLOR` – fill colour of the QR modules (default `#000000`).
 - `QR_CODE_BACKGROUND_COLOR` – background colour behind the QR code (default
   `#ffffff`).
@@ -62,6 +64,8 @@ environment variables:
   `300`).
 - `QR_PRINT_WIDTH_IN` – width of the framed QR code when printing, in inches
   (default `2.0`). Height scales proportionally.
+- `QR_PREVIEW_SCALE` – multiplier applied to the preview SVG dimensions used in
+  the web UI (default `1.0`).
 - `QR_FRAME_PADDING_MODULES` – spacing between the QR code and its frame in
   module widths (default `2`).
 - `QR_FRAME_CORNER_RADIUS` – radius of the rounded frame corners in pixels
@@ -74,6 +78,10 @@ environment variables:
   centre of the code.
 - `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.
   `0.2` for 20%).
+- `QR_TEMPLATE_SCALE` – multiplier applied to template artwork dimensions
+  before positioning the QR code (default `1.0`).
+- `QR_TEMPLATE_OFFSET` – vertical centre offset for the QR code when used with
+  templates, expressed as a fraction of the template height (default `0.5`).
 - `QR_MODULE_DRAWER` – style used for the QR modules. Valid values are
   `square` (default), `gapped_square`, `circle`, `rounded`, `vertical_bars` and
   `horizontal_bars`.
