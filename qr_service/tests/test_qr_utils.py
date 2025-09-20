@@ -13,6 +13,7 @@ from qr_service.service.qr import (
     add_frame,
     apply_template,
     TEMPLATES_DIR,
+    prepare_svg_variants,
 )
 
 
@@ -248,3 +249,61 @@ def test_add_frame_sets_print_dimensions(monkeypatch):
     outer_h = float(view[3])
     expected_height = 3.5 * outer_h / outer_w
     assert abs(float(root.get("height")[:-2]) - expected_height) < 1e-6
+
+
+def test_prepare_svg_variants_applies_filter_and_scaling(monkeypatch):
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "2.5")
+    monkeypatch.setenv("QR_PREVIEW_SCALE", "0.5")
+    base = add_frame(generate_svg("data"))
+    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.3, 0.05)
+
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    final_root = ET.fromstring(final_svg)
+    defs = final_root.find("svg:defs", ns)
+    assert defs is not None
+    filt = defs.find("svg:filter", ns)
+    assert filt is not None
+    morph = filt.find("svg:feMorphology", ns)
+    assert morph is not None
+    radius = float(morph.get("radius"))
+    view = final_root.get("viewBox").split()
+    units_per_in = float(view[2]) / 2.5
+    assert radius == pytest.approx(units_per_in * 0.05)
+
+    before_root = ET.fromstring(before_svg)
+    assert before_root.get("width").endswith("in")
+    assert float(before_root.get("width")[:-2]) == pytest.approx(1.25)
+
+    after_root = ET.fromstring(after_svg)
+    group = after_root.find("svg:g", ns)
+    assert group is not None and group.get("filter").startswith("url(#post_")
+
+
+def test_prepare_svg_variants_saturation_only():
+    base = add_frame(generate_svg("data"))
+    final_svg, _, after_svg = prepare_svg_variants(base, 0.2, 0.0)
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    final_root = ET.fromstring(final_svg)
+    defs = final_root.find("svg:defs", ns)
+    assert defs is not None
+    filt = defs.find("svg:filter", ns)
+    assert filt is not None
+    # Saturation-only filters should not create morphology nodes
+    assert not filt.findall("svg:feMorphology", ns)
+    color_matrix = [node for node in filt.findall("svg:feColorMatrix", ns) if node.get("type") == "saturate"]
+    assert color_matrix, "Expected saturate color matrix"
+
+    after_root = ET.fromstring(after_svg)
+    group = after_root.find("svg:g", ns)
+    assert group is not None
+
+
+def test_prepare_svg_variants_no_changes_returns_original():
+    base = add_frame(generate_svg("data"))
+    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.0, 0.0)
+    ns = {"svg": "http://www.w3.org/2000/svg"}
+    final_root = ET.fromstring(final_svg)
+    group = final_root.find("svg:g", ns)
+    assert group is None or "filter" not in group.attrib
+    assert before_svg != ""
+    assert after_svg != ""

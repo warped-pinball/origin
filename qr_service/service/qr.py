@@ -1,6 +1,10 @@
 import base64
+import copy
 import math
 import os
+import random
+import re
+import string
 import uuid
 import xml.etree.ElementTree as ET
 
@@ -14,8 +18,6 @@ from PIL import ImageColor, Image
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles import moduledrawers, colormasks
 from qrcode.image.styles.moduledrawers import svg as svg_moduledrawers
-import random
-import string
 
 
 # Ensure generated SVG elements use the desired namespaces without unexpected prefixes
@@ -34,6 +36,87 @@ def _strip_ns(elem: ET.Element) -> ET.Element:
         if "}" in e.tag:
             e.tag = e.tag.split("}", 1)[1]
     return elem
+
+
+_DIMENSION_RE = re.compile(r"^\s*([+-]?(?:\d+\.?\d*|\d*\.\d+))(?:\s*)([a-z%]*)\s*$", re.IGNORECASE)
+
+
+def _env_float(key: str, default: float) -> float:
+    try:
+        return float(os.environ.get(key, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
+def _format_float(value: float) -> str:
+    return (f"{value:.6f}".rstrip("0").rstrip(".")) or "0"
+
+
+def _parse_dimension(value: str | None) -> tuple[float, str]:
+    if not value:
+        return 0.0, ""
+    match = _DIMENSION_RE.match(value)
+    if not match:
+        return 0.0, ""
+    number = float(match.group(1))
+    unit = match.group(2)
+    return number, unit
+
+
+def _format_dimension(value: float, unit: str) -> str:
+    return f"{_format_float(value)}{unit}" if unit else _format_float(value)
+
+
+def _viewbox_size(root: ET.Element) -> tuple[float | None, float | None]:
+    view = root.attrib.get("viewBox")
+    if not view:
+        return None, None
+    parts = view.replace(",", " ").split()
+    if len(parts) != 4:
+        return None, None
+    try:
+        return float(parts[2]), float(parts[3])
+    except ValueError:
+        return None, None
+
+
+def _units_per_inch(root: ET.Element) -> float:
+    width_attr = root.attrib.get("width")
+    width_val, width_unit = _parse_dimension(width_attr)
+    if width_unit.lower() == "in" and width_val > 0:
+        width_in = width_val
+    else:
+        width_in = _env_float("QR_PRINT_WIDTH_IN", 2.0)
+    if width_in <= 0:
+        return 0.0
+    view_w, _ = _viewbox_size(root)
+    if view_w is None:
+        return 0.0
+    return view_w / width_in
+
+
+def _apply_preview_scale(root: ET.Element, scale: float) -> None:
+    if scale == 1.0:
+        return
+    if scale <= 0:
+        return
+    width_val, width_unit = _parse_dimension(root.attrib.get("width"))
+    height_val, height_unit = _parse_dimension(root.attrib.get("height"))
+    if width_val:
+        root.set("width", _format_dimension(width_val * scale, width_unit))
+    if height_val:
+        root.set("height", _format_dimension(height_val * scale, height_unit))
+
+
+def _ensure_namespaces(root: ET.Element) -> None:
+    if "xmlns" not in root.attrib:
+        root.set("xmlns", "http://www.w3.org/2000/svg")
+
+
+def _parse_svg_root(svg: str) -> ET.Element:
+    root = _strip_ns(ET.fromstring(svg))
+    _ensure_namespaces(root)
+    return root
 
 
 SVG_SIZE = int(_env("QR_CODE_SIZE", "300"))
@@ -365,3 +448,131 @@ def add_frame(svg: str) -> str:
     outer.set("height", f"{outer_h * scale}in")
 
     return ET.tostring(outer, encoding="unicode")
+
+
+def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches: float) -> None:
+    sat_factor = max(0.0, 1.0 + saturation_boost)
+    units_per_in = _units_per_inch(root)
+    radius_units = max(0.0, erosion_inches * units_per_in) if units_per_in else 0.0
+
+    if sat_factor == 1.0 and radius_units == 0.0:
+        return
+
+    defs = None
+    for child in root:
+        if child.tag == "defs":
+            defs = child
+            break
+    if defs is None:
+        defs = ET.Element("defs")
+        root.insert(0, defs)
+
+    filter_id = f"post_{uuid.uuid4().hex[:8]}"
+    filter_attrs = {"id": filter_id, "filterUnits": "userSpaceOnUse"}
+    view_w, view_h = _viewbox_size(root)
+    if view_w is not None and view_h is not None:
+        filter_attrs.update(
+            {
+                "x": "0",
+                "y": "0",
+                "width": _format_float(view_w),
+                "height": _format_float(view_h),
+            }
+        )
+
+    filter_elem = ET.SubElement(defs, "filter", filter_attrs)
+
+    current_in = "SourceGraphic"
+    if sat_factor != 1.0:
+        ET.SubElement(
+            filter_elem,
+            "feColorMatrix",
+            {
+                "in": "SourceGraphic",
+                "type": "saturate",
+                "values": _format_float(sat_factor),
+                "result": "sat",
+            },
+        )
+        current_in = "sat"
+
+    final_in = current_in
+    if radius_units > 0.0:
+        ET.SubElement(
+            filter_elem,
+            "feColorMatrix",
+            {
+                "in": current_in,
+                "type": "luminanceToAlpha",
+                "result": "lum",
+            },
+        )
+        comp = ET.SubElement(
+            filter_elem, "feComponentTransfer", {"in": "lum", "result": "dark"}
+        )
+        ET.SubElement(comp, "feFuncA", {"type": "table", "tableValues": "1 0"})
+        ET.SubElement(
+            filter_elem,
+            "feMorphology",
+            {
+                "in": "dark",
+                "operator": "erode",
+                "radius": _format_float(radius_units),
+                "result": "eroded",
+            },
+        )
+        ET.SubElement(
+            filter_elem,
+            "feComposite",
+            {
+                "in": current_in,
+                "in2": "eroded",
+                "operator": "in",
+                "result": "erodedColor",
+            },
+        )
+        final_in = "erodedColor"
+
+    ET.SubElement(
+        filter_elem,
+        "feComposite",
+        {
+            "in": final_in,
+            "in2": "SourceGraphic",
+            "operator": "atop",
+        },
+    )
+
+    content = [child for child in list(root) if child.tag != "defs"]
+    for child in content:
+        root.remove(child)
+    group = ET.SubElement(root, "g", {"filter": f"url(#{filter_id})"})
+    group.extend(content)
+
+
+def prepare_svg_variants(
+    svg: str, saturation_boost: float, erosion_inches: float
+) -> tuple[str, str, str]:
+    """Return final SVG plus before/after previews with post-processing applied."""
+
+    base_root = _parse_svg_root(svg)
+    final_root = copy.deepcopy(base_root)
+    _apply_post_filter(final_root, saturation_boost, erosion_inches)
+    _ensure_namespaces(final_root)
+    final_svg = ET.tostring(final_root, encoding="unicode")
+
+    preview_scale = _env_float("QR_PREVIEW_SCALE", 1.0)
+    if preview_scale <= 0:
+        preview_scale = 1.0
+
+    before_root = copy.deepcopy(base_root)
+    _apply_preview_scale(before_root, preview_scale)
+    _ensure_namespaces(before_root)
+    before_svg = ET.tostring(before_root, encoding="unicode")
+
+    after_root = copy.deepcopy(final_root)
+    _apply_preview_scale(after_root, preview_scale)
+    _ensure_namespaces(after_root)
+    after_svg = ET.tostring(after_root, encoding="unicode")
+
+    return final_svg, before_svg, after_svg
