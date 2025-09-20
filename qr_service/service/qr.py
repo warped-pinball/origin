@@ -482,7 +482,7 @@ def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches
 
     filter_elem = ET.SubElement(defs, "filter", filter_attrs)
 
-    current_in = "SourceGraphic"
+    color_in = "SourceGraphic"
     if sat_factor != 1.0:
         ET.SubElement(
             filter_elem,
@@ -494,23 +494,23 @@ def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches
                 "result": "sat",
             },
         )
-        current_in = "sat"
+        color_in = "sat"
 
-    final_in = current_in
+    final_in = color_in
     if radius_units > 0.0:
         ET.SubElement(
             filter_elem,
             "feColorMatrix",
             {
-                "in": current_in,
+                "in": "SourceGraphic",
                 "type": "luminanceToAlpha",
                 "result": "lum",
             },
         )
-        comp = ET.SubElement(
+        dark = ET.SubElement(
             filter_elem, "feComponentTransfer", {"in": "lum", "result": "dark"}
         )
-        ET.SubElement(comp, "feFuncA", {"type": "table", "tableValues": "1 0"})
+        ET.SubElement(dark, "feFuncA", {"type": "table", "tableValues": "1 0"})
         ET.SubElement(
             filter_elem,
             "feMorphology",
@@ -518,28 +518,48 @@ def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches
                 "in": "dark",
                 "operator": "erode",
                 "radius": _format_float(radius_units),
-                "result": "eroded",
+                "result": "erodedMask",
             },
         )
         ET.SubElement(
             filter_elem,
             "feComposite",
             {
-                "in": current_in,
-                "in2": "eroded",
+                "in": color_in,
+                "in2": "erodedMask",
                 "operator": "in",
                 "result": "erodedColor",
             },
         )
-        final_in = "erodedColor"
+        ET.SubElement(
+            filter_elem,
+            "feComposite",
+            {
+                "in": "SourceGraphic",
+                "in2": "erodedMask",
+                "operator": "out",
+                "result": "erodedBackground",
+            },
+        )
+        ET.SubElement(
+            filter_elem,
+            "feComposite",
+            {
+                "in": "erodedBackground",
+                "in2": "erodedColor",
+                "operator": "over",
+                "result": "erodedResult",
+            },
+        )
+        final_in = "erodedResult"
 
     ET.SubElement(
         filter_elem,
-        "feComposite",
+        "feBlend",
         {
             "in": final_in,
-            "in2": "SourceGraphic",
-            "operator": "atop",
+            "in2": final_in,
+            "mode": "normal",
         },
     )
 
