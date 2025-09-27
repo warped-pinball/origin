@@ -184,11 +184,14 @@ def test_apply_template_centers_qr():
     assert not root.findall("{http://www.w3.org/2000/svg}text")
     inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
     assert inner_svg is not None
-    width = float(root.get("width"))
-    height = float(root.get("height"))
+    view = [float(v) for v in root.get("viewBox").split()]
+    width = view[2]
+    height = view[3]
     size = float(inner_svg.get("width"))
     assert float(inner_svg.get("x")) == (width - size) / 2
     assert float(inner_svg.get("y")) == (height - size) / 2
+    assert root.get("width").endswith("in")
+    assert root.get("height").endswith("in")
 
 
 def test_apply_template_vertical_offset(monkeypatch, tmp_path):
@@ -206,13 +209,21 @@ def test_apply_template_vertical_offset(monkeypatch, tmp_path):
 
 def test_apply_template_respects_scale(monkeypatch):
     monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.5")
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "1.5")
     inner = generate_svg("data")
     svg = apply_template(inner, "white.png")
     root = ET.fromstring(svg)
     with Image.open(TEMPLATES_DIR / "white.png") as img:
         orig_w, orig_h = img.size
-    assert float(root.get("width")) == orig_w * 0.5
-    assert float(root.get("height")) == orig_h * 0.5
+    view = [float(v) for v in root.get("viewBox").split()]
+    width = view[2]
+    height = view[3]
+    assert width == orig_w * 0.5
+    assert height == orig_h * 0.5
+    assert root.get("width") == "1.5in"
+    assert root.get("height").endswith("in")
+    expected_height_in = 1.5 * (height / width)
+    assert float(root.get("height")[:-2]) == pytest.approx(expected_height_in)
 
 
 def test_apply_template_has_no_cut_line_border():

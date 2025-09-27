@@ -136,6 +136,7 @@ def test_generate_with_template(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
     monkeypatch.setenv("QR_MODULE_DRAWER", "rounded")
     monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.5")
+    monkeypatch.setenv("QR_PRINT_WIDTH_IN", "1.5")
     for mod in ["qr_service.service.main"]:
         sys.modules.pop(mod, None)
     import qr_service.service.main as main
@@ -143,16 +144,20 @@ def test_generate_with_template(monkeypatch):
     with TestClient(main.app) as client:
         resp = client.post("/generate", json={"count": 1, "template": "white.png"})
         assert resp.status_code == 200
-        preview = resp.json()["preview"]
+        payload = resp.json()
+        preview = payload["preview"]
         root = ET.fromstring(preview["after_svg"])
         assert not root.findall("{http://www.w3.org/2000/svg}text")
         inner = root.find("{http://www.w3.org/2000/svg}svg")
         assert inner is not None
-        w = float(root.get("width"))
-        h = float(root.get("height"))
+        view = [float(v) for v in root.get("viewBox").split()]
+        w = view[2]
+        h = view[3]
         size = float(inner.get("width"))
         assert float(inner.get("x")) == (w - size) / 2
         assert float(inner.get("y")) == (h - size) / 2
+        assert root.get("width") == "1.5in"
+        assert root.get("height").endswith("in")
         assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in root.iter())
 
         with Image.open(TEMPLATES_DIR / "white.png") as img:
@@ -172,6 +177,13 @@ def test_generate_with_template(monkeypatch):
         assert img.mode == "RGBA"
         assert img.getchannel("A").getextrema()[0] == 0
 
+        resp2 = client.get(f"/download/{payload['download_id']}")
+        assert resp2.status_code == 200
+        archive = zipfile.ZipFile(BytesIO(resp2.content))
+        final_root = ET.fromstring(archive.read(archive.namelist()[0]).decode())
+        assert final_root.get("width") == "1.5in"
+        assert final_root.get("height").endswith("in")
+
 
 def test_generate_with_template_and_offset(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
@@ -186,7 +198,7 @@ def test_generate_with_template_and_offset(monkeypatch):
         root = ET.fromstring(resp.json()["preview"]["after_svg"])
         inner = root.find("{http://www.w3.org/2000/svg}svg")
         assert inner is not None
-        h = float(root.get("height"))
+        h = float(root.get("viewBox").split()[3])
         size = float(inner.get("height"))
         assert float(inner.get("y")) == pytest.approx(h * 0.4 - size / 2)
         assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in root.iter())
