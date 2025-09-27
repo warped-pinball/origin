@@ -316,8 +316,6 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
     height = tpl["height"]
     data_uri = tpl["data_uri"]
     offset_pct = tpl["offset_pct"]
-    cut_corner_radius = float(_env("QR_CUT_CORNER_RADIUS", "20"))
-
     outer = ET.Element(
         "svg",
         width=str(width),
@@ -339,20 +337,6 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
     inner.set("x", str((width - size) / 2))
     inner.set("y", str(height * offset_pct - size / 2))
     outer.append(inner)
-    inset = 2
-    ET.SubElement(
-        outer,
-        "rect",
-        x=str(inset),
-        y=str(inset),
-        width=str(width - 2 * inset),
-        height=str(height - 2 * inset),
-        fill="none",
-        stroke="#ff0000",
-        rx=str(cut_corner_radius),
-        ry=str(cut_corner_radius),
-        **{"stroke-width": "1"},
-    )
     return ET.tostring(outer, encoding="unicode")
 
 
@@ -373,8 +357,6 @@ def add_frame(svg: str) -> str:
     padding = padding_modules * module_px
     frame_corner_radius = float(_env("QR_FRAME_CORNER_RADIUS", "10"))
     code_corner_radius = float(_env("QR_CODE_CORNER_RADIUS", str(frame_corner_radius)))
-    cut_corner_radius = float(_env("QR_CUT_CORNER_RADIUS", "20"))
-
     inner_w, inner_h = size + 2 * padding, size + 2 * padding
     outer_w, outer_h = inner_w + 40, inner_h + 80
 
@@ -428,20 +410,6 @@ def add_frame(svg: str) -> str:
                 "{http://www.w3.org/1999/xlink}href": logo_href,
             },
         )
-    ET.SubElement(
-        outer,
-        "rect",
-        x="2",
-        y="2",
-        width=str(outer_w - 4),
-        height=str(outer_h - 4),
-        fill="none",
-        stroke=_env("QR_FRAME_COLOR", "#ff0000"),
-        rx=str(cut_corner_radius),
-        ry=str(cut_corner_radius),
-        **{"stroke-width": "1"},
-    )
-
     print_width_in = float(_env("QR_PRINT_WIDTH_IN", "2.0"))
     scale = print_width_in / outer_w
     outer.set("width", f"{print_width_in}in")
@@ -450,12 +418,10 @@ def add_frame(svg: str) -> str:
     return ET.tostring(outer, encoding="unicode")
 
 
-def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches: float) -> None:
+def _apply_post_filter(root: ET.Element, saturation_boost: float) -> None:
     sat_factor = max(0.0, 1.0 + saturation_boost)
-    units_per_in = _units_per_inch(root)
-    radius_units = max(0.0, erosion_inches * units_per_in) if units_per_in else 0.0
 
-    if sat_factor == 1.0 and radius_units == 0.0:
+    if sat_factor == 1.0:
         return
 
     defs = None
@@ -482,84 +448,13 @@ def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches
 
     filter_elem = ET.SubElement(defs, "filter", filter_attrs)
 
-    color_in = "SourceGraphic"
-    if sat_factor != 1.0:
-        ET.SubElement(
-            filter_elem,
-            "feColorMatrix",
-            {
-                "in": "SourceGraphic",
-                "type": "saturate",
-                "values": _format_float(sat_factor),
-                "result": "sat",
-            },
-        )
-        color_in = "sat"
-
-    final_in = color_in
-    if radius_units > 0.0:
-        ET.SubElement(
-            filter_elem,
-            "feColorMatrix",
-            {
-                "in": "SourceGraphic",
-                "type": "luminanceToAlpha",
-                "result": "lum",
-            },
-        )
-        dark = ET.SubElement(
-            filter_elem, "feComponentTransfer", {"in": "lum", "result": "dark"}
-        )
-        ET.SubElement(dark, "feFuncA", {"type": "table", "tableValues": "1 0"})
-        ET.SubElement(
-            filter_elem,
-            "feMorphology",
-            {
-                "in": "dark",
-                "operator": "erode",
-                "radius": _format_float(radius_units),
-                "result": "erodedMask",
-            },
-        )
-        ET.SubElement(
-            filter_elem,
-            "feComposite",
-            {
-                "in": color_in,
-                "in2": "erodedMask",
-                "operator": "in",
-                "result": "erodedColor",
-            },
-        )
-        ET.SubElement(
-            filter_elem,
-            "feComposite",
-            {
-                "in": "SourceGraphic",
-                "in2": "erodedMask",
-                "operator": "out",
-                "result": "erodedBackground",
-            },
-        )
-        ET.SubElement(
-            filter_elem,
-            "feComposite",
-            {
-                "in": "erodedBackground",
-                "in2": "erodedColor",
-                "operator": "over",
-                "result": "erodedResult",
-            },
-        )
-        final_in = "erodedResult"
-
     ET.SubElement(
         filter_elem,
-        "feBlend",
+        "feColorMatrix",
         {
-            "in": final_in,
-            "in2": final_in,
-            "mode": "normal",
+            "in": "SourceGraphic",
+            "type": "saturate",
+            "values": _format_float(sat_factor),
         },
     )
 
@@ -571,13 +466,13 @@ def _apply_post_filter(root: ET.Element, saturation_boost: float, erosion_inches
 
 
 def prepare_svg_variants(
-    svg: str, saturation_boost: float, erosion_inches: float
+    svg: str, saturation_boost: float
 ) -> tuple[str, str, str]:
     """Return final SVG plus before/after previews with post-processing applied."""
 
     base_root = _parse_svg_root(svg)
     final_root = copy.deepcopy(base_root)
-    _apply_post_filter(final_root, saturation_boost, erosion_inches)
+    _apply_post_filter(final_root, saturation_boost)
     _ensure_namespaces(final_root)
     final_svg = ET.tostring(final_root, encoding="unicode")
 

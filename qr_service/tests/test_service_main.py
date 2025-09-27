@@ -59,6 +59,7 @@ def test_generate_endpoint(monkeypatch):
         final_root = ET.fromstring(content)
         assert final_root.get("width") == "2.5in"
         assert final_root.get("height").endswith("in")
+        assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in final_root.iter())
 
 
 def test_generate_applies_post_processing(monkeypatch):
@@ -74,7 +75,6 @@ def test_generate_applies_post_processing(monkeypatch):
             json={
                 "count": 1,
                 "saturation_boost": 0.4,
-                "erosion_inches": 0.05,
             },
         )
         assert resp.status_code == 200
@@ -93,11 +93,23 @@ def test_generate_applies_post_processing(monkeypatch):
         defs = final_root.find("svg:defs", ns)
         assert defs is not None
         morph = final_root.find(".//svg:feMorphology", ns)
-        assert morph is not None
-        radius = float(morph.get("radius"))
-        view = final_root.get("viewBox").split()
-        units_per_in = float(view[2]) / 2.0
-        assert radius == pytest.approx(units_per_in * 0.05)
+        assert morph is None
+        color_matrix = final_root.find(".//svg:feColorMatrix", ns)
+        assert color_matrix is not None
+        assert color_matrix.get("type") == "saturate"
+
+
+def test_generate_url_does_not_force_slash(monkeypatch):
+    monkeypatch.setenv("QR_BASE_URL", "https://example.com/?token=")
+    for mod in ["qr_service.service.main"]:
+        sys.modules.pop(mod, None)
+    import qr_service.service.main as main
+
+    with TestClient(main.app) as client:
+        resp = client.post("/generate", json={"count": 1})
+        assert resp.status_code == 200
+        data = resp.json()["preview"]
+        assert data["url"] == f"https://example.com/?token={data['suffix']}"
 
 
 def test_generate_precomputes_suffixes(monkeypatch):
@@ -141,6 +153,7 @@ def test_generate_with_template(monkeypatch):
         size = float(inner.get("width"))
         assert float(inner.get("x")) == (w - size) / 2
         assert float(inner.get("y")) == (h - size) / 2
+        assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in root.iter())
 
         with Image.open(TEMPLATES_DIR / "white.png") as img:
             orig_w, orig_h = img.size
@@ -176,6 +189,7 @@ def test_generate_with_template_and_offset(monkeypatch):
         h = float(root.get("height"))
         size = float(inner.get("height"))
         assert float(inner.get("y")) == pytest.approx(h * 0.4 - size / 2)
+        assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in root.iter())
 
 
 def test_generate_respects_random_len(monkeypatch):
@@ -209,4 +223,4 @@ def test_index_contains_controls(monkeypatch):
         assert "Download" in text
         assert "template" in text
         assert "Saturation" in text
-        assert "Erode" in text
+        assert "Erode" not in text
