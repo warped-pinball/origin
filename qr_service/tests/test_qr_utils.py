@@ -83,11 +83,10 @@ def test_add_frame_removes_namespace_prefixes():
 def test_add_frame_env_customizations(monkeypatch):
     monkeypatch.setenv("QR_CODE_BACKGROUND_COLOR", "#abcdef")
     monkeypatch.setenv("QR_FRAME_BACKGROUND_COLOR", "#111111")
-    monkeypatch.setenv("QR_FRAME_COLOR", "#222222")
     svg = add_frame(generate_svg("data"))
     assert "#abcdef" in svg
     assert "#111111" in svg
-    assert "#222222" in svg
+    assert "#ff0000" not in svg
 
 
 def test_add_frame_padding_and_style(monkeypatch):
@@ -97,25 +96,20 @@ def test_add_frame_padding_and_style(monkeypatch):
     rects = root.findall("{http://www.w3.org/2000/svg}rect")
     inner_rect = [r for r in rects if r.get("x") == "20" and r.get("y") == "40"][0]
     assert float(inner_rect.get("width")) > 300
-    border = [r for r in rects if r.get("stroke")][0]
-    assert border.get("stroke-width") == "1"
-    assert "stroke-dasharray" not in border.attrib
-    assert border.get("rx") == border.get("ry")
+    assert all(r.get("stroke") in (None, "none") for r in rects)
 
 
 def test_separate_corner_radii(monkeypatch):
     monkeypatch.setenv("QR_FRAME_CORNER_RADIUS", "10")
     monkeypatch.setenv("QR_CODE_CORNER_RADIUS", "5")
-    monkeypatch.setenv("QR_CUT_CORNER_RADIUS", "15")
     svg = add_frame(generate_svg("data"))
     root = ET.fromstring(svg)
     rects = root.findall("{http://www.w3.org/2000/svg}rect")
     outer_rect = [r for r in rects if r.get("x") == "0" and r.get("y") == "0"][0]
     inner_rect = [r for r in rects if r.get("x") == "20" and r.get("y") == "40"][0]
-    cut_rect = [r for r in rects if r.get("x") == "2" and r.get("y") == "2"][0]
     assert float(outer_rect.get("rx")) == 10
     assert float(inner_rect.get("rx")) == 5
-    assert float(cut_rect.get("rx")) == 15
+    assert not any(r.get("x") == "2" and r.get("y") == "2" for r in rects)
 
 
 def test_logo_included(monkeypatch):
@@ -221,22 +215,13 @@ def test_apply_template_respects_scale(monkeypatch):
     assert float(root.get("height")) == orig_h * 0.5
 
 
-def test_apply_template_adds_cut_line_border():
+def test_apply_template_has_no_cut_line_border():
     inner = generate_svg("data")
     svg = apply_template(inner, "white.png")
     root = ET.fromstring(svg)
     ns = {"svg": "http://www.w3.org/2000/svg"}
-    border = [r for r in root.findall("svg:rect", ns) if r.get("stroke") == "#ff0000"]
-    assert border, "border rect not found"
-    border = border[0]
-    width = float(root.get("width"))
-    height = float(root.get("height"))
-    x = float(border.get("x"))
-    y = float(border.get("y"))
-    assert float(border.get("width")) == pytest.approx(width - 2 * x)
-    assert float(border.get("height")) == pytest.approx(height - 2 * y)
-    assert border.get("fill") == "none"
-    assert border.get("rx") == border.get("ry")
+    border = [r for r in root.findall("svg:rect", ns) if r.get("stroke")]
+    assert not border
 
 
 def test_add_frame_sets_print_dimensions(monkeypatch):
@@ -255,7 +240,7 @@ def test_prepare_svg_variants_applies_filter_and_scaling(monkeypatch):
     monkeypatch.setenv("QR_PRINT_WIDTH_IN", "2.5")
     monkeypatch.setenv("QR_PREVIEW_SCALE", "0.5")
     base = add_frame(generate_svg("data"))
-    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.3, 0.05)
+    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.3)
 
     ns = {"svg": "http://www.w3.org/2000/svg"}
     final_root = ET.fromstring(final_svg)
@@ -263,32 +248,14 @@ def test_prepare_svg_variants_applies_filter_and_scaling(monkeypatch):
     assert defs is not None
     filt = defs.find("svg:filter", ns)
     assert filt is not None
-    composites = filt.findall("svg:feComposite", ns)
-    operators = {node.get("operator") for node in composites}
-    assert "out" in operators and "over" in operators
-    assert "atop" not in operators
-    morph = filt.find("svg:feMorphology", ns)
-    assert morph is not None
-    radius = float(morph.get("radius"))
-    view = final_root.get("viewBox").split()
-    units_per_in = float(view[2]) / 2.5
-    assert radius == pytest.approx(units_per_in * 0.05)
+    assert not filt.findall("svg:feMorphology", ns)
+    assert not filt.findall("svg:feComposite", ns)
     sat_nodes = [
         node
         for node in filt.findall("svg:feColorMatrix", ns)
         if node.get("type") == "saturate"
     ]
     assert sat_nodes, "Expected saturate color matrix when saturation boost is set"
-    eroded_color = next(
-        (
-            node
-            for node in composites
-            if node.get("result") == "erodedColor"
-        ),
-        None,
-    )
-    assert eroded_color is not None
-    assert eroded_color.get("in") == sat_nodes[0].get("result")
 
     before_root = ET.fromstring(before_svg)
     assert before_root.get("width").endswith("in")
@@ -301,16 +268,21 @@ def test_prepare_svg_variants_applies_filter_and_scaling(monkeypatch):
 
 def test_prepare_svg_variants_saturation_only():
     base = add_frame(generate_svg("data"))
-    final_svg, _, after_svg = prepare_svg_variants(base, 0.2, 0.0)
+    final_svg, _, after_svg = prepare_svg_variants(base, 0.2)
     ns = {"svg": "http://www.w3.org/2000/svg"}
     final_root = ET.fromstring(final_svg)
     defs = final_root.find("svg:defs", ns)
     assert defs is not None
     filt = defs.find("svg:filter", ns)
     assert filt is not None
-    # Saturation-only filters should not create morphology nodes
+    # Saturation-only filters should not create morphology or composite nodes
     assert not filt.findall("svg:feMorphology", ns)
-    color_matrix = [node for node in filt.findall("svg:feColorMatrix", ns) if node.get("type") == "saturate"]
+    assert not filt.findall("svg:feComposite", ns)
+    color_matrix = [
+        node
+        for node in filt.findall("svg:feColorMatrix", ns)
+        if node.get("type") == "saturate"
+    ]
     assert color_matrix, "Expected saturate color matrix"
 
     after_root = ET.fromstring(after_svg)
@@ -320,7 +292,7 @@ def test_prepare_svg_variants_saturation_only():
 
 def test_prepare_svg_variants_no_changes_returns_original():
     base = add_frame(generate_svg("data"))
-    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.0, 0.0)
+    final_svg, before_svg, after_svg = prepare_svg_variants(base, 0.0)
     ns = {"svg": "http://www.w3.org/2000/svg"}
     final_root = ET.fromstring(final_svg)
     group = final_root.find("svg:g", ns)

@@ -61,23 +61,23 @@ class GenerateRequest(BaseModel):
     count: int = 1
     template: str | None = None
     saturation_boost: float = 0.0
-    erosion_inches: float = 0.0
 
 
 ZIPS: dict[str, bytes] = {}
 
 
-def _generate_single(
-    base_url: str, tpl, saturation_boost: float, erosion_inches: float, suffix: str
-):
-    url = f"{base_url}/{suffix}"
+def _generate_single(base_url: str, tpl, saturation_boost: float, suffix: str):
+    if base_url.endswith(("/", "?", "=", "&", "#")):
+        url = f"{base_url}{suffix}"
+    else:
+        url = f"{base_url}/{suffix}"
     inner_svg = generate_svg(url, background_color="transparent" if tpl else None)
     if tpl:
         svg = apply_template_prepared(inner_svg, tpl)
     else:
         svg = add_frame(inner_svg)
     final_svg, before_preview, after_preview = prepare_svg_variants(
-        svg, saturation_boost, erosion_inches
+        svg, saturation_boost
     )
     return {
         "suffix": suffix,
@@ -104,7 +104,6 @@ def generate(req: GenerateRequest):
         base_url,
         tpl,
         req.saturation_boost,
-        req.erosion_inches,
     )
     with ProcessPoolExecutor() as ex:
         items = list(ex.map(worker, suffixes))
@@ -163,7 +162,6 @@ body{{font-family:sans-serif;margin:2rem}}
   <label>Count<input id='count' type='number' min='1' value='1'/></label>
   <label>Template<select id='template'><option value=''>None</option>{opts}</select></label>
   <label>Saturation boost<input id='saturation' type='number' step='0.1' value='0'/></label>
-  <label>Erode (in)<input id='erosion' type='number' step='0.01' value='0'/></label>
   <button id='generate'>Generate</button>
   <button id='download' disabled>Download</button>
 </div>
@@ -178,8 +176,7 @@ async function generate(){{
  const count=parseInt(document.getElementById('count').value,10)||0;
  const template=document.getElementById('template').value;
  const saturation=parseFloat(document.getElementById('saturation').value)||0;
- const erosion=parseFloat(document.getElementById('erosion').value)||0;
- if(count<=0)return;
+  if(count<=0)return;
  const before=document.getElementById('preview-before');
  const after=document.getElementById('preview-after');
  const meta=document.getElementById('preview-meta');
@@ -188,7 +185,7 @@ async function generate(){{
  meta.textContent='';
  downloadId='';
  document.getElementById('download').disabled=true;
- const payload={{count,template,saturation_boost:saturation,erosion_inches:erosion}};
+ const payload={{count,template,saturation_boost:saturation}};
  const r=await fetch('/generate',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});
  if(!r.ok){{
   alert('Generation failed');

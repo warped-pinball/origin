@@ -50,6 +50,8 @@ The standalone QR code generator can be customised through the following
 environment variables:
 
 - `QR_BASE_URL` – base URL used to build the links encoded in the QR codes.
+  A trailing slash is only inserted automatically when the base URL does not
+  already end with a separator such as `/`, `?`, `=`, `&` or `#`.
 - `QR_RANDOM_LEN` – length of the random, URL-safe suffix appended to each
   generated link (default `8`).
 - `QR_ERROR_CORRECTION` – QR error-correction level (`L`, `M`, `Q` or `H`;
@@ -59,7 +61,6 @@ environment variables:
   `#ffffff`).
 - `QR_FRAME_BACKGROUND_COLOR` – colour of the surrounding frame (default
   `#0a0a0a`).
-- `QR_FRAME_COLOR` – colour of the dashed outer border (default `#ff0000`).
 - `QR_CODE_SIZE` – width and height of the generated code in pixels (default
   `300`).
 - `QR_PRINT_WIDTH_IN` – width of the framed QR code when printing, in inches
@@ -72,8 +73,6 @@ environment variables:
   (default `10`).
 - `QR_CODE_CORNER_RADIUS` – radius of the QR code background corners in pixels
   (default same as `QR_FRAME_CORNER_RADIUS`).
-- `QR_CUT_CORNER_RADIUS` – radius of the cut line corners in pixels (default
-  `20`).
 - `QR_LOGO_IMAGE` – optional logo image (URL or data URI) to place in the
   centre of the code.
 - `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.
