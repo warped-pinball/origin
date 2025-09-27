@@ -95,6 +95,22 @@ def _units_per_inch(root: ET.Element) -> float:
     return view_w / width_in
 
 
+def _apply_print_dimensions(root: ET.Element, view_width: float, view_height: float) -> None:
+    """Set the rendered size of an SVG based on the print width setting."""
+
+    if view_width <= 0:
+        return
+
+    print_width_in = _env_float("QR_PRINT_WIDTH_IN", 2.0)
+    if print_width_in <= 0:
+        return
+
+    scale = print_width_in / view_width
+    root.set("width", f"{_format_float(print_width_in)}in")
+    if view_height > 0:
+        root.set("height", f"{_format_float(view_height * scale)}in")
+
+
 def _apply_preview_scale(root: ET.Element, scale: float) -> None:
     if scale == 1.0:
         return
@@ -337,6 +353,7 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
     inner.set("x", str((width - size) / 2))
     inner.set("y", str(height * offset_pct - size / 2))
     outer.append(inner)
+    _apply_print_dimensions(outer, float(width), float(height))
     return ET.tostring(outer, encoding="unicode")
 
 
@@ -410,10 +427,7 @@ def add_frame(svg: str) -> str:
                 "{http://www.w3.org/1999/xlink}href": logo_href,
             },
         )
-    print_width_in = float(_env("QR_PRINT_WIDTH_IN", "2.0"))
-    scale = print_width_in / outer_w
-    outer.set("width", f"{print_width_in}in")
-    outer.set("height", f"{outer_h * scale}in")
+    _apply_print_dimensions(outer, float(outer_w), float(outer_h))
 
     return ET.tostring(outer, encoding="unicode")
 
