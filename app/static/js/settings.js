@@ -3,6 +3,10 @@
   let currentLocationId = null;
   let currentLocation = null;
 
+  function getMachineLabel(machine) {
+    return machine.name || machine.game_title || machine.id || 'Machine';
+  }
+
   async function loadLocations() {
     try {
       const res = await OriginApi.getLocations();
@@ -57,7 +61,8 @@
         list.innerHTML = '';
         machines.forEach(m => {
           const li = document.createElement('li');
-          li.textContent = m.name + ' ';
+          const label = getMachineLabel(m);
+          li.textContent = label + ' ';
           const sel = document.createElement('select');
           sel.className = 'machine-location';
           sel.dataset.machine = m.id;
@@ -193,7 +198,8 @@
         machines.forEach(m => {
           if (editable) {
             const li = document.createElement('li');
-            li.textContent = m.name + ' ';
+            const label = getMachineLabel(m);
+            li.textContent = label + ' ';
             const cb = document.createElement('input');
             cb.type = 'checkbox';
             cb.checked = m.location_id === currentLocationId;
@@ -204,7 +210,7 @@
             list.appendChild(li);
           } else if (m.location_id === currentLocationId) {
             const li = document.createElement('li');
-            li.textContent = m.name;
+            li.textContent = getMachineLabel(m);
             list.appendChild(li);
           }
         });
@@ -226,6 +232,7 @@
   global.openLocation = openLocation;
   global.enableLocationEdit = enableLocationEdit;
   global.loadLocations = loadLocations;
+  global.loadMachines = loadMachines;
   global.__setCachedLocations = locs => { cachedLocations = locs; };
 
   document.addEventListener('DOMContentLoaded', initSettings);
