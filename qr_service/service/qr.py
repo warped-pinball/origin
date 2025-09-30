@@ -296,40 +296,49 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-def _prepare_raster_template(path: Path, scale: float) -> tuple[float, float, str]:
+def _prepare_raster_template(
+    path: Path, scale: float
+) -> tuple[float, float, str, float]:
     """Prepare a raster template for embedding as a data URI."""
 
     with Image.open(path) as img:
-        width, height = img.size
+        orig_width, orig_height = img.size
+        width, height = orig_width, orig_height
         if scale != 1.0:
-            width = max(1, int(width * scale))
-            height = max(1, int(height * scale))
+            width = max(1, int(orig_width * scale))
+            height = max(1, int(orig_height * scale))
             img = img.resize((width, height), Image.LANCZOS)
         buffer = BytesIO()
         img.save(buffer, format="PNG")
     data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
-    return float(width), float(height), data_uri
+    actual_scale = float(width) / orig_width if orig_width else 1.0
+    return float(width), float(height), data_uri, actual_scale
 
 
-def _prepare_svg_template(path: Path, scale: float) -> tuple[float, float, str]:
+def _prepare_svg_template(
+    path: Path, scale: float
+) -> tuple[float, float, str, float]:
     """Prepare an SVG template for embedding as a data URI."""
 
     data = path.read_bytes()
     root = ET.fromstring(data)
 
     view_w, view_h = _viewbox_size(root)
+    base_width: float
+    base_height: float
     if view_w is not None and view_h is not None and view_w > 0 and view_h > 0:
-        width = view_w
-        height = view_h
+        base_width = view_w
+        base_height = view_h
     else:
-        width, _ = _parse_dimension(root.attrib.get("width"))
-        height, _ = _parse_dimension(root.attrib.get("height"))
-        if width <= 0 or height <= 0:
+        base_width, _ = _parse_dimension(root.attrib.get("width"))
+        base_height, _ = _parse_dimension(root.attrib.get("height"))
+        if base_width <= 0 or base_height <= 0:
             raise ValueError("SVG template must define dimensions or a viewBox")
-    width *= scale
-    height *= scale
+    width = base_width * scale
+    height = base_height * scale
     data_uri = "data:image/svg+xml;base64," + base64.b64encode(data).decode()
-    return width, height, data_uri
+    actual_scale = width / base_width if base_width else 1.0
+    return width, height, data_uri, actual_scale
 
 
 def prepare_template(template: str) -> dict:
@@ -339,9 +348,9 @@ def prepare_template(template: str) -> dict:
     scale = float(_env("QR_TEMPLATE_SCALE", "1.0"))
 
     if path.suffix.lower() == ".svg":
-        width, height, data_uri = _prepare_svg_template(path, scale)
+        width, height, data_uri, actual_scale = _prepare_svg_template(path, scale)
     else:
-        width, height, data_uri = _prepare_raster_template(path, scale)
+        width, height, data_uri, actual_scale = _prepare_raster_template(path, scale)
 
     try:
         offset_pct = float(_env("QR_TEMPLATE_OFFSET", "0.5"))
@@ -353,22 +362,43 @@ def prepare_template(template: str) -> dict:
         "height": height,
         "data_uri": data_uri,
         "offset_pct": offset_pct,
+        "scale": actual_scale,
     }
 
 
 def apply_template_prepared(svg: str, tpl: dict) -> str:
     """Apply a preloaded template to an inner SVG."""
     inner = _strip_ns(ET.fromstring(svg))
-    size = int(inner.attrib.get("width", str(SVG_SIZE)))
+    try:
+        size = float(inner.attrib.get("width", str(SVG_SIZE)))
+    except (TypeError, ValueError):
+        size = float(SVG_SIZE)
 
-    width = tpl["width"]
-    height = tpl["height"]
+    width = float(tpl["width"])
+    height = float(tpl["height"])
     data_uri = tpl["data_uri"]
     offset_pct = tpl["offset_pct"]
+    template_scale = tpl.get("scale", 1.0)
+    try:
+        template_scale = float(template_scale)
+    except (TypeError, ValueError):
+        template_scale = 1.0
+
+    scaled_size = size * template_scale
+    max_size = min(width, height) if width > 0 and height > 0 else scaled_size
+    if max_size > 0:
+        scaled_size = min(scaled_size, max_size)
+    if scaled_size <= 0:
+        scaled_size = size
+
+    inner.set("width", _format_float(scaled_size))
+    inner.set("height", _format_float(scaled_size))
+    size = scaled_size
+
     outer = ET.Element(
         "svg",
-        width=str(width),
-        height=str(height),
+        width=_format_float(width),
+        height=_format_float(height),
         viewBox=f"0 0 {width} {height}",
         xmlns="http://www.w3.org/2000/svg",
     )
@@ -378,8 +408,8 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
         {
             "x": "0",
             "y": "0",
-            "width": str(width),
-            "height": str(height),
+            "width": _format_float(width),
+            "height": _format_float(height),
             "{http://www.w3.org/1999/xlink}href": data_uri,
         },
     )

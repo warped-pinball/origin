@@ -14,6 +14,7 @@ from qr_service.service.qr import (
     apply_template,
     TEMPLATES_DIR,
     prepare_svg_variants,
+    SVG_SIZE,
 )
 
 
@@ -224,6 +225,24 @@ def test_apply_template_respects_scale(monkeypatch):
     assert root.get("height").endswith("in")
     expected_height_in = 1.5 * (height / width)
     assert float(root.get("height")[:-2]) == pytest.approx(expected_height_in)
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    expected_size = SVG_SIZE * 0.5
+    assert float(inner_svg.get("width")) == pytest.approx(expected_size)
+    assert float(inner_svg.get("height")) == pytest.approx(expected_size)
+    assert float(inner_svg.get("x")) == pytest.approx((width - expected_size) / 2)
+    assert float(inner_svg.get("y")) == pytest.approx((height - expected_size) / 2)
+
+
+def test_prepare_raster_template_reports_scale(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    path = tmp_path / "img.png"
+    Image.new("RGB", (200, 100), color="white").save(path)
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.25")
+    tpl = qr_module.prepare_template(path.name)
+    assert tpl["width"] == 50.0
+    assert tpl["height"] == 25.0
+    assert tpl["scale"] == pytest.approx(0.25)
 
 
 def test_apply_template_has_no_cut_line_border():
@@ -247,6 +266,7 @@ def test_prepare_template_handles_svg(monkeypatch, tmp_path):
     assert tpl["data_uri"].startswith("data:image/svg+xml;base64,")
     assert tpl["width"] == pytest.approx(200.0)
     assert tpl["height"] == pytest.approx(100.0)
+    assert tpl["scale"] == pytest.approx(1.0)
 
 
 def test_apply_template_with_svg_background(monkeypatch, tmp_path):
@@ -269,6 +289,34 @@ def test_apply_template_with_svg_background(monkeypatch, tmp_path):
     view = [float(v) for v in root.get("viewBox").split()]
     assert view[2] == pytest.approx(150.0)
     assert view[3] == pytest.approx(250.0)
+
+
+def test_apply_template_scales_qr_with_svg_background(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    svg_path = tmp_path / "background.svg"
+    svg_path.write_text(
+        """
+        <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="#ffffff" />
+        </svg>
+        """.strip()
+    )
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.25")
+    inner = generate_svg("data")
+    svg = apply_template(inner, svg_path.name)
+    root = ET.fromstring(svg)
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    view = [float(v) for v in root.get("viewBox").split()]
+    width = view[2]
+    height = view[3]
+    expected_size = min(SVG_SIZE * 0.25, width, height)
+    assert width == pytest.approx(50.0)
+    assert height == pytest.approx(50.0)
+    assert float(inner_svg.get("width")) == pytest.approx(expected_size)
+    assert float(inner_svg.get("height")) == pytest.approx(expected_size)
+    assert float(inner_svg.get("x")) == pytest.approx((width - expected_size) / 2)
+    assert float(inner_svg.get("y")) == pytest.approx((height - expected_size) / 2)
 
 
 def test_svg_template_uses_viewbox_units(monkeypatch, tmp_path):
