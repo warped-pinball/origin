@@ -8,6 +8,7 @@ from .routers import (
     auth,
     users,
     machines,
+    machine_ownership,
     scores,
     claim,
     tournaments,
@@ -66,6 +67,7 @@ app.include_router(pages.router)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(machines.router, prefix="/api/v1")
+app.include_router(machine_ownership.router, prefix="/api/v1")
 app.include_router(scores.router, prefix="/api/v1")
 app.include_router(locations.router, prefix="/api/v1")
 app.include_router(claim.router)

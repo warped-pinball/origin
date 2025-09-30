@@ -8,39 +8,102 @@
     <link rel="icon" type="image/png" href="/static/img/logo.png">
   </head>
   <body>
-    <main class="container">
+    <section id="auth-status" class="container">
+      <p id="auth-message">Checking login status…</p>
+    </section>
+    <main id="claim-main" class="container" style="display:none;">
       <h1>Claim {{ game_title }}</h1>
       <p>Machine ID: {{ machine_id }}</p>
       <p>Code: {{ code }}</p>
       <p id="status"></p>
-      <button id="claim-btn">Claim</button>
+      <button id="claim-btn" disabled>Claim</button>
     </main>
     <script>
       const code = {{ code | tojson }};
-      document.getElementById('claim-btn').addEventListener('click', async () => {
-        const token = localStorage.getItem('token');
+      const claimMain = document.getElementById('claim-main');
+      const authStatus = document.getElementById('auth-status');
+      const authMessage = document.getElementById('auth-message');
+      const statusEl = document.getElementById('status');
+      const claimButton = document.getElementById('claim-btn');
+
+      function redirectToLogin() {
+        const next = encodeURIComponent(location.pathname + location.search);
+        location.href = '/?next=' + next;
+      }
+
+      async function ensureLoggedIn() {
+        let token;
+        try {
+          token = localStorage.getItem('token');
+        } catch (err) {
+          token = null;
+        }
+        if (!token) {
+          redirectToLogin();
+          return null;
+        }
+        try {
+          const res = await fetch('/api/v1/users/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (res.status === 401) {
+            localStorage.removeItem('token');
+            redirectToLogin();
+            return null;
+          }
+          if (!res.ok) {
+            if (authMessage) authMessage.textContent = 'Unable to verify your session. Please try again.';
+            return null;
+          }
+        } catch (err) {
+          if (authMessage) authMessage.textContent = 'Unable to verify your session. Please try again.';
+          return null;
+        }
+        claimMain.style.display = 'block';
+        if (authStatus) authStatus.style.display = 'none';
+        claimButton.disabled = false;
+        return token;
+      }
+
+      async function finalizeClaim() {
+        let token;
+        try {
+          token = localStorage.getItem('token');
+        } catch (err) {
+          token = null;
+        }
+        if (!token) {
+          redirectToLogin();
+          return;
+        }
         const res = await fetch('/api/claim', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+            'Authorization': 'Bearer ' + token
           },
           body: JSON.stringify({ code })
         });
         if (res.status === 204) {
-          document.getElementById('status').textContent = 'Machine claimed!';
-          document.getElementById('claim-btn').disabled = true;
+          statusEl.textContent = 'Machine claimed!';
+          claimButton.disabled = true;
         } else if (res.status === 401) {
-          const next = encodeURIComponent(location.pathname + location.search);
-          location.href = '/?next=' + next;
+          localStorage.removeItem('token');
+          redirectToLogin();
         } else {
           let msg = 'Claim failed';
           try {
             const err = await res.json();
             if (err.detail) msg = err.detail;
-          } catch {}
-          document.getElementById('status').textContent = msg;
+          } catch (err) {}
+          statusEl.textContent = msg;
         }
+      }
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const token = await ensureLoggedIn();
+        if (!token) return;
+        claimButton.addEventListener('click', finalizeClaim);
       });
     </script>
   </body>

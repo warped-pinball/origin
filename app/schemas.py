@@ -62,6 +62,13 @@ class Machine(MachineBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OwnedMachine(BaseModel):
+    id: str
+    name: str
+    game_title: str
+    location_id: Optional[int] = None
+
+
 class MachineResponse(BaseModel):
     signature: str
 

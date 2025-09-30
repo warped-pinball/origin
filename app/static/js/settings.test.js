@@ -82,3 +82,11 @@ test('openLocation rejects javascript protocol in website', () => {
   assert.strictEqual(el('view-website').href, '');
   assert.strictEqual(el('view-website').textContent, '');
 });
+
+test('loadMachines falls back to game title when name missing', async () => {
+  OriginApi.getMachines = async () => ({ ok: true, json: async () => [{ id: 2, game_title: 'Pinball', location_id: null }] });
+  const list = el('machines-list');
+  await loadMachines();
+  assert.ok(list.children.length > 0);
+  assert.ok(list.children[0].textContent.startsWith('Pinball'));
+});
