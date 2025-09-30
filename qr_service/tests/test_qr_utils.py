@@ -271,6 +271,33 @@ def test_apply_template_with_svg_background(monkeypatch, tmp_path):
     assert view[3] == pytest.approx(250.0)
 
 
+def test_svg_template_uses_viewbox_units(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    svg_path = tmp_path / "physical.svg"
+    svg_path.write_text(
+        """
+        <svg width="6in" height="4in" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="600" height="400" fill="#ffffff" />
+        </svg>
+        """.strip()
+    )
+
+    tpl = qr_module.prepare_template(svg_path.name)
+    assert tpl["width"] == pytest.approx(600.0)
+    assert tpl["height"] == pytest.approx(400.0)
+
+    inner = generate_svg("data")
+    svg = apply_template(inner, svg_path.name)
+    root = ET.fromstring(svg)
+    view = [float(v) for v in root.get("viewBox").split()]
+    assert view[2] == pytest.approx(600.0)
+    assert view[3] == pytest.approx(400.0)
+
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    assert float(inner_svg.get("x")) == pytest.approx((600.0 - float(inner_svg.get("width"))) / 2)
+    assert float(inner_svg.get("y")) == pytest.approx((400.0 - float(inner_svg.get("height"))) / 2)
+
 def test_add_frame_sets_print_dimensions(monkeypatch):
     monkeypatch.setenv("QR_PRINT_WIDTH_IN", "3.5")
     svg = add_frame(generate_svg("data"))
