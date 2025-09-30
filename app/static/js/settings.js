@@ -2,6 +2,7 @@
   let cachedLocations = [];
   let currentLocationId = null;
   let currentLocation = null;
+  let claimedMachineId = null;
 
   function getMachineLabel(machine) {
     return machine.name || machine.game_title || machine.id || 'Machine';
@@ -42,7 +43,7 @@
         const opt = document.createElement('option');
         opt.value = loc.id;
         opt.textContent = loc.name;
-        if (Number(sel.dataset.selected) === loc.id) opt.selected = true;
+        if (String(sel.dataset.selected) === String(loc.id)) opt.selected = true;
         sel.appendChild(opt);
       });
       sel.onchange = () => {
@@ -57,31 +58,80 @@
       if (!res.ok) return;
       const machines = await res.json();
       const list = document.getElementById('machines-list');
+      const help = document.getElementById('machine-setup-message');
+      let highlighted = false;
       if (list) {
         list.innerHTML = '';
         machines.forEach(m => {
           const li = document.createElement('li');
-          const label = getMachineLabel(m);
-          li.textContent = label + ' ';
+          li.className = 'machine-item';
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'machine-label';
+          nameSpan.textContent = getMachineLabel(m);
+          li.appendChild(nameSpan);
+
+          const controls = document.createElement('div');
+          controls.className = 'machine-controls';
+
           const sel = document.createElement('select');
           sel.className = 'machine-location';
           sel.dataset.machine = m.id;
           sel.dataset.selected = m.location_id || '';
-          li.appendChild(sel);
+          controls.appendChild(sel);
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'secondary outline machine-remove';
+          removeBtn.textContent = 'Unregister';
+          removeBtn.onclick = () => unregisterMachine(m.id);
+          controls.appendChild(removeBtn);
+
+          li.appendChild(controls);
           list.appendChild(li);
+
+          if (claimedMachineId && claimedMachineId === m.id) {
+            li.classList.add('machine-highlight');
+            if (typeof li.scrollIntoView === 'function') {
+              setTimeout(() => li.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            }
+            highlighted = true;
+          }
         });
       }
       renderMachineOptions();
+      if (highlighted) {
+        if (help) help.style.display = 'block';
+        claimedMachineId = null;
+      } else if (help) {
+        help.style.display = 'none';
+      }
     } catch {}
   }
 
   async function assignMachine(machineId, locationId) {
     const res = await OriginApi.assignMachine(machineId, locationId);
     if (res.ok) {
+      showToast('Machine location updated', 'success');
       if (document.getElementById('machines-list')) loadMachines();
       if (currentLocationId === Number(locationId)) loadLocationMachines();
+      const help = document.getElementById('machine-setup-message');
+      if (help) help.style.display = 'none';
     } else {
       showToast('Failed to assign machine', 'error');
+    }
+  }
+
+  async function unregisterMachine(machineId) {
+    const res = await OriginApi.removeMachine(machineId);
+    if (res.ok) {
+      showToast('Machine unregistered', 'success');
+      loadMachines();
+      loadLocations();
+      const help = document.getElementById('machine-setup-message');
+      if (help) help.style.display = 'none';
+    } else {
+      showToast('Failed to unregister machine', 'error');
     }
   }
 
@@ -219,6 +269,24 @@
   }
 
   function initSettings() {
+    if (typeof location !== 'undefined') {
+      try {
+        const params = new URLSearchParams(location.search || '');
+        const claimed = params.get('claimed_machine');
+        if (claimed) {
+          claimedMachineId = claimed;
+          showToast('Machine claimed! Choose a location below to finish setup.', 'success');
+          const help = document.getElementById('machine-setup-message');
+          if (help) help.style.display = 'block';
+          params.delete('claimed_machine');
+          if (typeof history !== 'undefined' && history.replaceState) {
+            const newQuery = params.toString();
+            const newUrl = location.pathname + (newQuery ? `?${newQuery}` : '') + location.hash;
+            history.replaceState(null, '', newUrl);
+          }
+        }
+      } catch {}
+    }
     const addBtn = document.getElementById('add-location-btn');
     if (addBtn) addBtn.addEventListener('click', () => openLocation());
     const form = document.getElementById('location-detail-form');
@@ -234,6 +302,7 @@
   global.loadLocations = loadLocations;
   global.loadMachines = loadMachines;
   global.__setCachedLocations = locs => { cachedLocations = locs; };
+  global.__setClaimedMachine = id => { claimedMachineId = id; };
 
   document.addEventListener('DOMContentLoaded', initSettings);
 })(typeof window !== 'undefined' ? window : this);

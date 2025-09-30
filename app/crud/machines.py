@@ -1,6 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from .. import models, schemas
+from ..utils.machines import generate_claim_code
 
 
 def create_machine(
@@ -28,3 +29,13 @@ def get_machine_by_name(db: Session, name: str) -> Optional[models.Machine]:
 
 def get_machines_for_user(db: Session, user_id: int) -> List[models.Machine]:
     return db.query(models.Machine).filter(models.Machine.user_id == user_id).all()
+
+
+def release_machine(db: Session, machine: models.Machine) -> models.Machine:
+    machine.user_id = None
+    machine.location_id = None
+    machine.claim_code = generate_claim_code()
+    db.add(machine)
+    db.commit()
+    db.refresh(machine)
+    return machine

@@ -1,7 +1,5 @@
 import base64
 import os
-import secrets
-import string
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -12,6 +10,7 @@ from cryptography.hazmat.primitives import serialization
 from .. import crud, schemas
 from ..database import get_db
 from ..utils.signing import sign_json_response
+from ..utils.machines import generate_claim_code
 import hmac
 import hashlib
 from typing import NamedTuple
@@ -20,11 +19,6 @@ router = APIRouter(prefix="/machines", tags=["machines"])
 
 logger = logging.getLogger(__name__)
 
-
-def generate_claim_code(length: int = 8) -> str:
-    """Generate a random claim code using upper/lower letters and digits."""
-    alphabet = string.ascii_letters + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
     """Look up the per-machine shared secret using the X-Machine-ID header."""
