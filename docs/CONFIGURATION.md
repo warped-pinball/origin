@@ -77,8 +77,10 @@ environment variables:
   centre of the code.
 - `QR_LOGO_SCALE` – size of the logo as a fraction of the QR code width (e.g.
   `0.2` for 20%).
-- `QR_TEMPLATE_SCALE` – multiplier applied to template artwork dimensions
-  before positioning the QR code (default `1.0`).
+- `QR_TEMPLATE_SCALE` – ratio of the QR code width relative to the template
+  width. A value of `0.7`, for example, makes the QR code occupy 70% of the
+  template's width while also scaling the template artwork by the same
+  multiplier (default `1.0`).
 - `QR_TEMPLATE_OFFSET` – vertical centre offset for the QR code when used with
   templates, expressed as a fraction of the template height (default `0.5`).
 - `QR_MODULE_DRAWER` – style used for the QR modules. Valid values are
