@@ -1,4 +1,10 @@
+from urllib.parse import quote
+
 from .. import models
+
+
+def auth_headers(token: str):
+    return {"Authorization": f"Bearer {token}"}
 
 
 def create_user(client, email, password="pass", screen_name=None):
@@ -77,3 +83,56 @@ def test_list_owned_machines_returns_empty_list_when_none(client):
     )
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_unregister_machine_clears_owner_and_location(client, db_session):
+    owner = create_user(client, "machine-release@example.com")
+    location = models.Location(user_id=owner["id"], name="Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="release-machine-id",
+        game_title="Release Me",
+        shared_secret="release-secret-1",
+        user_id=owner["id"],
+        location_id=location.id,
+        claim_code=None,
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    token = login(client, "machine-release@example.com")
+    response = client.delete(
+        f"/api/v1/machines/{quote(machine.id, safe='')}",
+        headers=auth_headers(token),
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(machine)
+    assert machine.user_id is None
+    assert machine.location_id is None
+    assert machine.claim_code is not None
+
+
+def test_unregister_machine_requires_ownership(client, db_session):
+    owner = create_user(client, "machine-owner2@example.com")
+    other = create_user(client, "machine-other2@example.com")
+
+    machine = models.Machine(
+        id="another-machine-id-unique",
+        game_title="Shared",
+        shared_secret="shared-secret-other",
+        user_id=owner["id"],
+        claim_code=None,
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    token = login(client, "machine-other2@example.com")
+    response = client.delete(
+        f"/api/v1/machines/{quote(machine.id, safe='')}",
+        headers=auth_headers(token),
+    )
+
+    assert response.status_code == 404

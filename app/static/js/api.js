@@ -92,6 +92,13 @@
       });
     }
 
+    async function removeMachine(machineId) {
+      const encodedId = encodeURIComponent(machineId);
+      return apiFetch(`/api/v1/machines/${encodedId}`, {
+        method: 'DELETE'
+      });
+    }
+
     return {
       signup,
       login,
@@ -105,7 +112,8 @@
       getLocations,
       createLocation,
       updateLocation,
-      assignMachine
+      assignMachine,
+      removeMachine
     };
   }
 

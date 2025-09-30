@@ -15,11 +15,14 @@
       <h1>Claim {{ game_title }}</h1>
       <p>Machine ID: {{ machine_id }}</p>
       <p>Code: {{ code }}</p>
+      <p>Once claimed, we'll take you to your settings so you can choose where this machine lives.</p>
       <p id="status"></p>
       <button id="claim-btn" disabled>Claim</button>
     </main>
     <script>
       const code = {{ code | tojson }};
+      const machineId = {{ machine_id | tojson }};
+      const settingsUrl = '/?claimed_machine=' + encodeURIComponent(machineId) + '#settings';
       const claimMain = document.getElementById('claim-main');
       const authStatus = document.getElementById('auth-status');
       const authMessage = document.getElementById('auth-message');
@@ -85,8 +88,9 @@
           body: JSON.stringify({ code })
         });
         if (res.status === 204) {
-          statusEl.textContent = 'Machine claimed!';
+          statusEl.innerHTML = `Machine claimed! Redirecting to <a href="${settingsUrl}">your settings</a> to finish setup.`;
           claimButton.disabled = true;
+          setTimeout(() => { location.href = settingsUrl; }, 1500);
         } else if (res.status === 401) {
           localStorage.removeItem('token');
           redirectToLogin();
