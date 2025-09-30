@@ -1,12 +1,15 @@
 import os
 import logging
 import html
+import csv
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 import uuid
 import zipfile
-from io import BytesIO
+from io import BytesIO, StringIO
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 
@@ -63,7 +66,14 @@ class GenerateRequest(BaseModel):
     saturation_boost: float = 0.0
 
 
-ZIPS: dict[str, bytes] = {}
+
+@dataclass
+class GeneratedBundle:
+    zip_bytes: bytes
+    csv_bytes: bytes
+
+
+BUNDLES: dict[str, GeneratedBundle] = {}
 
 
 def _generate_single(base_url: str, tpl, saturation_boost: float, suffix: str):
@@ -115,8 +125,16 @@ def generate(req: GenerateRequest):
     with zipfile.ZipFile(zip_buffer, "w") as zf:
         for item in items:
             zf.writestr(f"{item['suffix']}.svg", item["svg"])
+    csv_buffer = StringIO()
+    writer = csv.writer(csv_buffer)
+    writer.writerow(["QR code"])
+    for item in items:
+        writer.writerow([item["url"]])
+
     zip_id = uuid.uuid1().hex
-    ZIPS[zip_id] = zip_buffer.getvalue()
+    BUNDLES[zip_id] = GeneratedBundle(
+        zip_bytes=zip_buffer.getvalue(), csv_bytes=csv_buffer.getvalue().encode("utf-8")
+    )
 
     preview = items[0]
     preview_payload = {
@@ -128,15 +146,30 @@ def generate(req: GenerateRequest):
     return {"preview": preview_payload, "download_id": zip_id}
 
 
-@app.get("/download/{zip_id}")
-def download(zip_id: str):
-    data = ZIPS.pop(zip_id, None)
-    if data is None:
+@app.get("/download/{bundle_id}")
+def download(bundle_id: str):
+    bundle = BUNDLES.get(bundle_id)
+    if bundle is None:
         raise HTTPException(status_code=404, detail="Not found")
     return Response(
-        data,
+        bundle.zip_bytes,
         media_type="application/zip",
         headers={"Content-Disposition": "attachment; filename=qrs.zip"},
+    )
+
+
+@app.get("/download/{bundle_id}/csv")
+def download_csv(bundle_id: str):
+    bundle = BUNDLES.get(bundle_id)
+    if bundle is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    filename = f"qr-codes-{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"
+    return Response(
+        bundle.csv_bytes,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{filename}\"",
+        },
     )
 
 
@@ -164,6 +197,7 @@ body{{font-family:sans-serif;margin:2rem}}
   <label>Saturation boost<input id='saturation' type='number' step='0.1' value='0'/></label>
   <button id='generate'>Generate</button>
   <button id='download' disabled>Download</button>
+  <button id='download-csv' disabled>Download CSV</button>
 </div>
 <div id='preview-meta'></div>
 <div id='previews'>
@@ -185,6 +219,7 @@ async function generate(){{
  meta.textContent='';
  downloadId='';
  document.getElementById('download').disabled=true;
+ document.getElementById('download-csv').disabled=true;
  const payload={{count,template,saturation_boost:saturation}};
  const r=await fetch('/generate',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});
  if(!r.ok){{
@@ -199,11 +234,17 @@ async function generate(){{
  before.innerHTML=preview.before_svg||'';
  after.innerHTML=preview.after_svg||'';
  downloadId=d.download_id||'';
- document.getElementById('download').disabled=!downloadId;
+ const disabled=!downloadId;
+ document.getElementById('download').disabled=disabled;
+ document.getElementById('download-csv').disabled=disabled;
 }}
 document.getElementById('generate').addEventListener('click',()=>{{generate().catch(console.error);}});
 document.getElementById('download').addEventListener('click',()=>{{
  if(!downloadId)return;
  window.location='/download/'+downloadId;
+}});
+document.getElementById('download-csv').addEventListener('click',()=>{{
+ if(!downloadId)return;
+ window.location='/download/'+downloadId+'/csv';
 }});
 </script></body></html>"""
