@@ -316,14 +316,16 @@ def _prepare_svg_template(path: Path, scale: float) -> tuple[float, float, str]:
 
     data = path.read_bytes()
     root = ET.fromstring(data)
-    width, _ = _parse_dimension(root.attrib.get("width"))
-    height, _ = _parse_dimension(root.attrib.get("height"))
-    if width <= 0 or height <= 0:
-        view_w, view_h = _viewbox_size(root)
-        if view_w is None or view_h is None:
-            raise ValueError("SVG template must define dimensions or a viewBox")
+
+    view_w, view_h = _viewbox_size(root)
+    if view_w is not None and view_h is not None and view_w > 0 and view_h > 0:
         width = view_w
         height = view_h
+    else:
+        width, _ = _parse_dimension(root.attrib.get("width"))
+        height, _ = _parse_dimension(root.attrib.get("height"))
+        if width <= 0 or height <= 0:
+            raise ValueError("SVG template must define dimensions or a viewBox")
     width *= scale
     height *= scale
     data_uri = "data:image/svg+xml;base64," + base64.b64encode(data).decode()
