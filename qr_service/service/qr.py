@@ -384,12 +384,17 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
     except (TypeError, ValueError):
         template_scale = 1.0
 
-    scaled_size = size * template_scale
-    max_size = min(width, height) if width > 0 and height > 0 else scaled_size
-    if max_size > 0:
-        scaled_size = min(scaled_size, max_size)
+    template_scale = max(0.0, template_scale)
+
+    base_dimension = width if width > 0 else size
+    scaled_size = base_dimension * template_scale
+    if width > 0:
+        scaled_size = min(scaled_size, width)
+    if height > 0:
+        scaled_size = min(scaled_size, height)
     if scaled_size <= 0:
-        scaled_size = size
+        candidates = [value for value in (width, height, size) if value and value > 0]
+        scaled_size = min(candidates) if candidates else size
 
     inner.set("width", _format_float(scaled_size))
     inner.set("height", _format_float(scaled_size))
@@ -413,8 +418,10 @@ def apply_template_prepared(svg: str, tpl: dict) -> str:
             "{http://www.w3.org/1999/xlink}href": data_uri,
         },
     )
-    inner.set("x", str((width - size) / 2))
-    inner.set("y", str(height * offset_pct - size / 2))
+    x_pos = (width - size) / 2 if width else 0.0
+    y_center = height * offset_pct if height else size / 2
+    inner.set("x", _format_float(x_pos))
+    inner.set("y", _format_float(y_center - size / 2))
     outer.append(inner)
     _apply_print_dimensions(outer, float(width), float(height))
     return ET.tostring(outer, encoding="unicode")

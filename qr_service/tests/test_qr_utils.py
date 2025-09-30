@@ -199,13 +199,18 @@ def test_apply_template_vertical_offset(monkeypatch, tmp_path):
     monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
     path = tmp_path / "test.png"
     Image.new("RGB", (500, 500), color="white").save(path)
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.6")
     monkeypatch.setenv("QR_TEMPLATE_OFFSET", "0.4")
     inner = generate_svg("data")
     svg = apply_template(inner, path.name)
     root = ET.fromstring(svg)
     inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
     assert inner_svg is not None
-    assert float(inner_svg.get("y")) == pytest.approx(50.0)
+    width = float(root.get("viewBox").split()[2])
+    height = float(root.get("viewBox").split()[3])
+    expected_size = width * 0.6
+    expected_y = height * 0.4 - expected_size / 2
+    assert float(inner_svg.get("y")) == pytest.approx(expected_y)
 
 
 def test_apply_template_respects_scale(monkeypatch):
@@ -227,7 +232,7 @@ def test_apply_template_respects_scale(monkeypatch):
     assert float(root.get("height")[:-2]) == pytest.approx(expected_height_in)
     inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
     assert inner_svg is not None
-    expected_size = SVG_SIZE * 0.5
+    expected_size = width * 0.5
     assert float(inner_svg.get("width")) == pytest.approx(expected_size)
     assert float(inner_svg.get("height")) == pytest.approx(expected_size)
     assert float(inner_svg.get("x")) == pytest.approx((width - expected_size) / 2)
@@ -310,13 +315,33 @@ def test_apply_template_scales_qr_with_svg_background(monkeypatch, tmp_path):
     view = [float(v) for v in root.get("viewBox").split()]
     width = view[2]
     height = view[3]
-    expected_size = min(SVG_SIZE * 0.25, width, height)
+    expected_size = min(width * 0.25, height)
     assert width == pytest.approx(50.0)
     assert height == pytest.approx(50.0)
     assert float(inner_svg.get("width")) == pytest.approx(expected_size)
     assert float(inner_svg.get("height")) == pytest.approx(expected_size)
     assert float(inner_svg.get("x")) == pytest.approx((width - expected_size) / 2)
     assert float(inner_svg.get("y")) == pytest.approx((height - expected_size) / 2)
+
+
+def test_apply_template_scale_respects_height_limit(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    template_path = tmp_path / "wide.png"
+    Image.new("RGB", (400, 100), color="white").save(template_path)
+    monkeypatch.setenv("QR_TEMPLATE_SCALE", "0.75")
+    inner = generate_svg("data")
+    svg = apply_template(inner, template_path.name)
+    root = ET.fromstring(svg)
+    view = [float(v) for v in root.get("viewBox").split()]
+    width, height = view[2], view[3]
+    assert width == pytest.approx(400 * 0.75)
+    assert height == pytest.approx(100 * 0.75)
+    inner_svg = root.find("{http://www.w3.org/2000/svg}svg")
+    assert inner_svg is not None
+    assert float(inner_svg.get("width")) == pytest.approx(height)
+    assert float(inner_svg.get("height")) == pytest.approx(height)
+    assert float(inner_svg.get("x")) == pytest.approx((width - height) / 2)
+    assert float(inner_svg.get("y")) == pytest.approx(0.0)
 
 
 def test_svg_template_uses_viewbox_units(monkeypatch, tmp_path):
