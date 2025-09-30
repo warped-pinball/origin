@@ -61,7 +61,3 @@ def finalize_claim(
     return Response(status_code=204)
 
 
-# @router.get("/api/machines/{machine_id}/status")
-# def machine_status(machine_id: str, db: Session = Depends(get_db)):
-#     machine = db.query(models.Machine).filter_by(id=machine_id).first()
-#     return {"linked": bool(machine and machine.user_id)}

@@ -26,27 +26,6 @@ def generate_claim_code(length: int = 8) -> str:
     alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for _ in range(length))
 
-
-# @router.post("/", response_model=schemas.Machine)
-# def register_machine(
-#     machine: schemas.MachineCreate,
-#     db: Session = Depends(get_db),
-#     current_user: crud.models.User = Depends(get_current_user),
-# ):
-#     existing = crud.get_machine_by_name(db, machine.name)
-#     if existing:
-#         raise HTTPException(status_code=400, detail="Machine already registered")
-#     return crud.create_machine(db, machine, current_user.id)
-
-
-# @router.get("/me", response_model=list[schemas.Machine])
-# def list_my_machines(
-#     db: Session = Depends(get_db),
-#     current_user: crud.models.User = Depends(get_current_user),
-# ):
-#     return crud.get_machines_for_user(db, current_user.id)
-
-
 def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
     """Look up the per-machine shared secret using the X-Machine-ID header."""
     mid_b64 = request.headers.get("X-Machine-ID")
