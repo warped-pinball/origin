@@ -46,7 +46,7 @@ class PasswordReset(BaseModel):
 
 
 class MachineBase(BaseModel):
-    name: str
+    name: Optional[str] = None
 
 
 class MachineCreate(MachineBase):
@@ -55,11 +55,18 @@ class MachineCreate(MachineBase):
 
 
 class Machine(MachineBase):
-    id: int
+    id: str
     user_id: Optional[int] = None
     location_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OwnedMachine(BaseModel):
+    id: str
+    name: str
+    game_title: str
+    location_id: Optional[int] = None
 
 
 class MachineResponse(BaseModel):
@@ -113,7 +120,7 @@ class Location(LocationBase):
 
 
 class LocationMachineLink(BaseModel):
-    machine_id: int
+    machine_id: str
 
 
 class ScoreBase(BaseModel):
@@ -123,7 +130,7 @@ class ScoreBase(BaseModel):
 
 class ScoreCreate(ScoreBase):
     user_id: int
-    machine_id: int
+    machine_id: str
 
 
 class Score(ScoreBase):
