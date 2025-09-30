@@ -235,6 +235,42 @@ def test_apply_template_has_no_cut_line_border():
     assert not border
 
 
+def test_prepare_template_handles_svg(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    svg_path = tmp_path / "template.svg"
+    svg_path.write_text(
+        """
+        <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"></svg>
+        """.strip()
+    )
+    tpl = qr_module.prepare_template("template.svg")
+    assert tpl["data_uri"].startswith("data:image/svg+xml;base64,")
+    assert tpl["width"] == pytest.approx(200.0)
+    assert tpl["height"] == pytest.approx(100.0)
+
+
+def test_apply_template_with_svg_background(monkeypatch, tmp_path):
+    monkeypatch.setattr(qr_module, "TEMPLATES_DIR", tmp_path)
+    svg_path = tmp_path / "background.svg"
+    svg_path.write_text(
+        """
+        <svg width="150" height="250" viewBox="0 0 150 250" xmlns="http://www.w3.org/2000/svg">
+            <rect width="150" height="250" fill="#ffffff" />
+        </svg>
+        """.strip()
+    )
+    inner = generate_svg("data")
+    svg = apply_template(inner, svg_path.name)
+    root = ET.fromstring(svg)
+    images = root.findall("{http://www.w3.org/2000/svg}image")
+    assert images, "Expected background image element"
+    href = images[0].get("{http://www.w3.org/1999/xlink}href")
+    assert href.startswith("data:image/svg+xml;base64,")
+    view = [float(v) for v in root.get("viewBox").split()]
+    assert view[2] == pytest.approx(150.0)
+    assert view[3] == pytest.approx(250.0)
+
+
 def test_add_frame_sets_print_dimensions(monkeypatch):
     monkeypatch.setenv("QR_PRINT_WIDTH_IN", "3.5")
     svg = add_frame(generate_svg("data"))

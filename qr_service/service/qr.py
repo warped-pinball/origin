@@ -296,19 +296,50 @@ def generate_svg(data: str, background_color: str | None = None) -> str:
     return ET.tostring(root, encoding="unicode")
 
 
-def prepare_template(template: str) -> dict:
-    """Load template image once for repeated use."""
-    path = TEMPLATES_DIR / template
-    scale = float(_env("QR_TEMPLATE_SCALE", "1.0"))
+def _prepare_raster_template(path: Path, scale: float) -> tuple[float, float, str]:
+    """Prepare a raster template for embedding as a data URI."""
+
     with Image.open(path) as img:
         width, height = img.size
         if scale != 1.0:
-            width = int(width * scale)
-            height = int(height * scale)
+            width = max(1, int(width * scale))
+            height = max(1, int(height * scale))
             img = img.resize((width, height), Image.LANCZOS)
         buffer = BytesIO()
         img.save(buffer, format="PNG")
     data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+    return float(width), float(height), data_uri
+
+
+def _prepare_svg_template(path: Path, scale: float) -> tuple[float, float, str]:
+    """Prepare an SVG template for embedding as a data URI."""
+
+    data = path.read_bytes()
+    root = ET.fromstring(data)
+    width, _ = _parse_dimension(root.attrib.get("width"))
+    height, _ = _parse_dimension(root.attrib.get("height"))
+    if width <= 0 or height <= 0:
+        view_w, view_h = _viewbox_size(root)
+        if view_w is None or view_h is None:
+            raise ValueError("SVG template must define dimensions or a viewBox")
+        width = view_w
+        height = view_h
+    width *= scale
+    height *= scale
+    data_uri = "data:image/svg+xml;base64," + base64.b64encode(data).decode()
+    return width, height, data_uri
+
+
+def prepare_template(template: str) -> dict:
+    """Load template image once for repeated use."""
+
+    path = TEMPLATES_DIR / template
+    scale = float(_env("QR_TEMPLATE_SCALE", "1.0"))
+
+    if path.suffix.lower() == ".svg":
+        width, height, data_uri = _prepare_svg_template(path, scale)
+    else:
+        width, height, data_uri = _prepare_raster_template(path, scale)
 
     try:
         offset_pct = float(_env("QR_TEMPLATE_OFFSET", "0.5"))
