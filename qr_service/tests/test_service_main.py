@@ -61,6 +61,16 @@ def test_generate_endpoint(monkeypatch):
         assert final_root.get("height").endswith("in")
         assert not any(elem.attrib.get("stroke") == "#ff0000" for elem in final_root.iter())
 
+        resp_csv = client.get(f"/download/{data['download_id']}/csv")
+        assert resp_csv.status_code == 200
+        assert resp_csv.headers["content-type"].startswith("text/csv")
+        disposition = resp_csv.headers["content-disposition"]
+        assert disposition.startswith("attachment; filename=\"qr-codes-")
+        csv_lines = resp_csv.content.decode().strip().splitlines()
+        assert csv_lines[0] == "QR code"
+        assert len(csv_lines) == 3
+        assert all(line.startswith("https://example.com/") for line in csv_lines[1:])
+
 
 def test_generate_applies_post_processing(monkeypatch):
     monkeypatch.setenv("QR_BASE_URL", "https://example.com")
