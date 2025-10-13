@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -99,6 +99,23 @@ class MachineClaimStatus(BaseModel):
     is_claimed: bool = True
     claim_url: Optional[str] = None
     username: Optional[str] = None
+
+
+class MachineGameStateCreate(BaseModel):
+    game_time_ms: int = Field(..., alias="gameTimeMs", ge=0)
+    ball_in_play: int = Field(..., alias="ballInPlay", ge=0)
+    scores: list[int]
+    player_up: Optional[int] = Field(default=None, alias="playerUp", ge=0)
+    players_total: Optional[int] = Field(default=None, alias="playerCount", ge=0)
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @field_validator("scores")
+    @classmethod
+    def validate_scores(cls, value: list[int]) -> list[int]:
+        if not value:
+            raise ValueError("scores must contain at least one entry")
+        return value
 
 
 class LocationBase(BaseModel):

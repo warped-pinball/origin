@@ -2,7 +2,7 @@ import base64
 import os
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives import serialization
@@ -38,6 +38,18 @@ def get_shared_secret_from_request(request: Request, db: Session) -> bytes:
         return base64.b64decode(rec.shared_secret, validate=True)
     except Exception:
         raise HTTPException(status_code=500, detail="Server stored secret decode error")
+
+
+def get_machine_from_request(request: Request, db: Session) -> crud.models.Machine:
+    machine_id = request.headers.get("X-Machine-ID")
+    if not machine_id:
+        raise HTTPException(status_code=400, detail="Missing X-Machine-ID header")
+
+    machine = crud.get_machine(db, machine_id)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    return machine
 
 
 # @router.post("/checkin")
@@ -148,6 +160,17 @@ async def authenticate_machine(
         raise HTTPException(status_code=401, detail="Bad signature")
 
     return MachineAuth(id_b64=mid_b64, shared_secret=shared_secret)
+
+
+@router.post("/game_state", status_code=204)
+def record_game_state(
+    state: schemas.MachineGameStateCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    machine = get_machine_from_request(request, db)
+    crud.record_machine_game_state(db, machine.id, state)
+    return Response(status_code=204)
 
 
 @router.post("/claim_status", response_model=schemas.MachineClaimStatus)
