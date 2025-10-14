@@ -1,5 +1,7 @@
 let deferredPrompt;
 const banner = document.getElementById('install-banner');
+const installButton = document.getElementById('install-button');
+const closeButton = document.getElementById('install-close-button');
 
 function showInstall() {
   if (banner) {
@@ -30,6 +32,14 @@ async function installApp() {
   await deferredPrompt.userChoice;
   deferredPrompt = null;
   hideInstall();
+}
+
+if (installButton) {
+  installButton.addEventListener('click', installApp);
+}
+
+if (closeButton) {
+  closeButton.addEventListener('click', hideInstall);
 }
 
 window.installApp = installApp;
