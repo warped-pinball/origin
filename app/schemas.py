@@ -195,6 +195,7 @@ class MachineScoreboard(BaseModel):
     player_up: Optional[int] = None
     players_total: Optional[int] = None
     high_scores: dict[str, list[ScoreboardScore]] = Field(default_factory=dict)
+    game_time_seconds: list[int] = Field(default_factory=list)
 
 
 class LocationScoreboard(BaseModel):

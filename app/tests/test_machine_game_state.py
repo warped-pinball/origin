@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 
 import pytest
 
@@ -229,6 +230,57 @@ def test_claim_machine_scores_records_entries(client, db_session, machine):
         .all()
     )
     assert [score.value for score in scores] == [10_000, 20_000]
+
+    duplicate_response = client.post(
+        f"/api/v1/machines/{machine.id}/claim_scores",
+        headers=auth_headers(token),
+        json={"slots": [0]},
+    )
+    assert duplicate_response.status_code == 400
+    assert duplicate_response.json()["detail"] == "No new scores recorded"
+
+
+def test_claim_machine_scores_handles_subsecond_created_at(client, db_session, machine):
+    state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=6000,
+        ball_in_play=1,
+        scores=[42_000, 84_000],
+    )
+    db_session.add(state)
+    db_session.commit()
+
+    user = create_user(client, "machine-subsecond@example.com")
+    token = login(client, "machine-subsecond@example.com")
+
+    initial_response = client.post(
+        f"/api/v1/machines/{machine.id}/claim_scores",
+        headers=auth_headers(token),
+        json={"slots": [0, 1]},
+    )
+    assert initial_response.status_code == 200
+    assert initial_response.json()["recorded"] == 2
+
+    latest_state = (
+        db_session.query(models.MachineGameState)
+        .filter(models.MachineGameState.machine_id == machine.id)
+        .order_by(models.MachineGameState.id.desc())
+        .first()
+    )
+    assert latest_state is not None
+
+    scores = (
+        db_session.query(models.Score)
+        .filter(models.Score.machine_id == machine.id)
+        .filter(models.Score.user_id == user["id"])
+        .all()
+    )
+    assert len(scores) == 2
+
+    offset = latest_state.created_at - timedelta(milliseconds=500)
+    for score in scores:
+        score.created_at = offset
+    db_session.commit()
 
     duplicate_response = client.post(
         f"/api/v1/machines/{machine.id}/claim_scores",

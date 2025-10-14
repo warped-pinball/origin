@@ -1,6 +1,7 @@
 import base64
 import os
 import logging
+from datetime import timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
@@ -212,20 +213,42 @@ def claim_machine_scores(
         if slot < 0 or slot > max_index:
             raise HTTPException(status_code=400, detail="Invalid player slot")
 
+    def _normalize(dt):
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            return dt
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
     recorded = 0
     for slot in slots:
         value = state.scores[slot]
         if value is None or not isinstance(value, int) or value < 0:
             continue
 
-        existing = (
+        query = (
             db.query(models.Score)
             .filter(models.Score.machine_id == machine.id)
             .filter(models.Score.user_id == current_user.id)
             .filter(models.Score.value == value)
-            .filter(models.Score.created_at >= state.created_at)
-            .first()
         )
+
+        existing_query = query
+        if state.created_at is not None:
+            existing_query = existing_query.filter(
+                models.Score.created_at >= state.created_at
+            )
+        existing = existing_query.first()
+        if not existing and state.created_at is not None:
+            tolerance = timedelta(seconds=1)
+            lower_bound = _normalize(state.created_at) - tolerance
+            candidate = query.order_by(models.Score.created_at.desc()).first()
+            if candidate and candidate.created_at is not None:
+                candidate_time = _normalize(candidate.created_at)
+                if candidate_time is not None and lower_bound is not None:
+                    if candidate_time >= lower_bound:
+                        existing = candidate
+
         if existing:
             continue
 

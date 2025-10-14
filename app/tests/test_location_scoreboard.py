@@ -104,6 +104,62 @@ def test_scoreboard_returns_recent_state_and_high_scores(client, db_session):
     assert all(entry["player_name"] == "ScoreMaster" for entry in all_time)
 
 
+def test_scoreboard_uses_last_active_scores_and_game_time(client, db_session):
+    user = create_user(db_session)
+    location = models.Location(user_id=user.id, name="Arcade Finale")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-finale",
+        shared_secret="secret-finale",
+        user_id=user.id,
+        location_id=location.id,
+        game_title="Final Countdown",
+    )
+    db_session.add(machine)
+
+    base_time = datetime.utcnow()
+
+    def add_state(offset_seconds, *, scores, ball, player_up, game_active=True):
+        db_session.add(
+            models.MachineGameState(
+                machine_id=machine.id,
+                time_ms=offset_seconds * 1000,
+                ball_in_play=ball,
+                scores=scores,
+                player_up=player_up,
+                players_total=2,
+                created_at=base_time + timedelta(seconds=offset_seconds),
+                game_active=game_active,
+            )
+        )
+
+    add_state(0, scores=[0, 0], ball=1, player_up=0)
+    add_state(5, scores=[1000, 0], ball=1, player_up=0)
+    add_state(9, scores=[3000, 0], ball=1, player_up=0)
+    add_state(14, scores=[3000, 500], ball=1, player_up=1)
+    add_state(20, scores=[3000, 2500], ball=1, player_up=1)
+    add_state(32, scores=[8000, 2500], ball=1, player_up=0)
+    add_state(37, scores=[12000, 2500], ball=2, player_up=0)
+    add_state(42, scores=[15000, 2500], ball=2, player_up=0)
+    add_state(45, scores=[0, 0], ball=0, player_up=None, game_active=False)
+
+    db_session.commit()
+
+    response = client.get(f"/api/v1/public/locations/{location.id}/scoreboard")
+    assert response.status_code == 200
+
+    payload = response.json()
+    machine_payload = payload["machines"][0]
+
+    assert machine_payload["is_active"] is False
+    assert machine_payload["scores"] == [15000, 2500]
+    assert machine_payload["ball_in_play"] == 2
+    assert machine_payload["player_up"] is None
+    assert machine_payload["game_time_seconds"] == [9, 6]
+
+
 def test_scoreboard_includes_scores_without_user(client, db_session):
     owner = create_user(db_session)
     location = models.Location(user_id=owner.id, name="Nameless High Scores")
