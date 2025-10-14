@@ -215,3 +215,57 @@ def test_owned_machines_include_qr_codes(client, db_session):
     assert owned_machine["qr_codes"]
     urls = [entry["url"] for entry in owned_machine["qr_codes"]]
     assert any(url.endswith(f"r={code}") for url in urls)
+    assert all(entry["machine_id"] == machine.id for entry in owned_machine["qr_codes"])
+
+
+def test_qr_api_lists_and_assigns_codes(client, db_session):
+    owner = create_user(client, "qr-api-owner@example.com")
+    token = login(client, "qr-api-owner@example.com")
+    machine_one = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-api-1")
+    machine_two = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-api-2")
+    qr, code = _create_qr(db_session)
+
+    scan_response = client.get(f"/q?r={code}", headers=auth_headers(token))
+    assert scan_response.status_code == 200
+
+    list_response = client.get("/api/v1/qr-codes/", headers=auth_headers(token))
+    assert list_response.status_code == 200
+    codes = list_response.json()
+    assert len(codes) == 1
+    entry = codes[0]
+    assert entry["id"] == qr.id
+    assert entry["machine_id"] is None
+
+    update_response = client.patch(
+        f"/api/v1/qr-codes/{qr.id}",
+        headers=auth_headers(token),
+        json={"machine_id": machine_one.id},
+    )
+    assert update_response.status_code == 200
+    updated = update_response.json()
+    assert updated["machine_id"] == machine_one.id
+    assert updated["machine_label"] == machine_one.game_title
+
+    db_session.refresh(qr)
+    assert qr.machine_id == machine_one.id
+
+    reassign_response = client.patch(
+        f"/api/v1/qr-codes/{qr.id}",
+        headers=auth_headers(token),
+        json={"machine_id": machine_two.id},
+    )
+    assert reassign_response.status_code == 200
+    reassigned = reassign_response.json()
+    assert reassigned["machine_id"] == machine_two.id
+
+    clear_response = client.patch(
+        f"/api/v1/qr-codes/{qr.id}",
+        headers=auth_headers(token),
+        json={"machine_id": None},
+    )
+    assert clear_response.status_code == 200
+    cleared = clear_response.json()
+    assert cleared["machine_id"] is None
+
+    db_session.refresh(qr)
+    assert qr.machine_id is None

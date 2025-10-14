@@ -95,9 +95,11 @@ def test_scoreboard_returns_recent_state_and_high_scores(client, db_session):
 
     all_time = machine_payload["high_scores"]["all_time"]
     daily = machine_payload["high_scores"]["daily"]
+    weekly = machine_payload["high_scores"]["weekly"]
     monthly = machine_payload["high_scores"]["monthly"]
 
     assert [entry["value"] for entry in all_time] == [120000, 90000, 45000]
+    assert [entry["value"] for entry in weekly] == [120000, 90000]
     assert [entry["value"] for entry in monthly] == [120000, 90000]
     assert [entry["value"] for entry in daily] == [120000]
 
@@ -158,6 +160,56 @@ def test_scoreboard_uses_last_active_scores_and_game_time(client, db_session):
     assert machine_payload["ball_in_play"] == 2
     assert machine_payload["player_up"] is None
     assert machine_payload["game_time_seconds"] == [9, 6]
+
+
+def test_scoreboard_game_time_accumulates_across_balls(client, db_session):
+    owner = create_user(db_session)
+    location = models.Location(user_id=owner.id, name="Timekeepers")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-time",
+        shared_secret="secret-time",
+        user_id=owner.id,
+        location_id=location.id,
+        game_title="Time Traveler",
+    )
+    db_session.add(machine)
+
+    base_time = datetime.utcnow()
+
+    def add_state(offset, *, score, ball, active=True):
+        db_session.add(
+            models.MachineGameState(
+                machine_id=machine.id,
+                time_ms=offset * 1000,
+                ball_in_play=ball,
+                scores=[score],
+                player_up=0,
+                players_total=1,
+                created_at=base_time + timedelta(seconds=offset),
+                game_active=active,
+            )
+        )
+
+    add_state(0, score=0, ball=1)
+    add_state(5, score=100, ball=1)
+    add_state(8, score=200, ball=1)
+    add_state(10, score=200, ball=2)
+    add_state(15, score=300, ball=2)
+    add_state(19, score=500, ball=2)
+    add_state(25, score=500, ball=0, active=False)
+
+    db_session.commit()
+
+    response = client.get(f"/api/v1/public/locations/{location.id}/scoreboard")
+    assert response.status_code == 200
+
+    payload = response.json()
+    machine_payload = payload["machines"][0]
+
+    assert machine_payload["game_time_seconds"] == [7]
 
 
 def test_scoreboard_includes_scores_without_user(client, db_session):

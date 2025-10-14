@@ -1,5 +1,7 @@
 (function (global) {
   let cachedLocations = [];
+  let cachedMachines = [];
+  let cachedQrCodes = [];
   let currentLocationId = null;
   let currentLocation = null;
   let claimedMachineId = null;
@@ -11,6 +13,74 @@
     const trimmed = base ? base.replace(/\/$/, '') : '';
     const prefix = trimmed || '';
     return (prefix ? prefix : '') + '/locations/' + loc.id + '/display';
+  }
+
+  function createQrInfo(qr) {
+    const info = document.createElement('div');
+    info.className = 'machine-qr-info';
+
+    const link = document.createElement('a');
+    link.href = qr.url;
+    link.textContent = qr.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    info.appendChild(link);
+
+    if (qr.code) {
+      const codeLabel = document.createElement('span');
+      codeLabel.className = 'machine-qr-code';
+      codeLabel.textContent = `Code: ${qr.code}`;
+      info.appendChild(codeLabel);
+    }
+
+    return info;
+  }
+
+  function createQrActions(qr) {
+    const actions = document.createElement('div');
+    actions.className = 'machine-qr-actions';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'secondary outline';
+    copyBtn.textContent = 'Copy link';
+    copyBtn.onclick = async e => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      try {
+        if (
+          global.navigator &&
+          global.navigator.clipboard &&
+          typeof global.navigator.clipboard.writeText === 'function'
+        ) {
+          await global.navigator.clipboard.writeText(qr.url);
+          showToast('QR link copied', 'success');
+        } else {
+          throw new Error('Clipboard unavailable');
+        }
+      } catch (err) {
+        showToast('Unable to copy QR link', 'error');
+      }
+    };
+
+    const openLink = document.createElement('a');
+    openLink.href = qr.url;
+    openLink.target = '_blank';
+    openLink.rel = 'noopener noreferrer';
+    openLink.className = 'secondary outline';
+    openLink.textContent = 'Open';
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(openLink);
+
+    return actions;
+  }
+
+  function createMachineQrEntry(qr) {
+    const item = document.createElement('li');
+    item.className = 'machine-qr-entry';
+    item.appendChild(createQrInfo(qr));
+    item.appendChild(createQrActions(qr));
+    return item;
   }
 
   function updateLocationDashboard(loc) {
@@ -144,6 +214,7 @@
       const res = await OriginApi.getMachines();
       if (!res.ok) return;
       const machines = await res.json();
+      cachedMachines = machines;
       const list = document.getElementById('machines-list');
       const help = document.getElementById('machine-setup-message');
       let highlighted = false;
@@ -189,64 +260,7 @@
             qrList.className = 'machine-qr-list';
 
             codes.forEach(qr => {
-              const item = document.createElement('li');
-              item.className = 'machine-qr-entry';
-
-              const info = document.createElement('div');
-              info.className = 'machine-qr-info';
-
-              const link = document.createElement('a');
-              link.href = qr.url;
-              link.textContent = qr.url;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              info.appendChild(link);
-
-              if (qr.code) {
-                const codeLabel = document.createElement('span');
-                codeLabel.className = 'machine-qr-code';
-                codeLabel.textContent = `Code: ${qr.code}`;
-                info.appendChild(codeLabel);
-              }
-
-              const actions = document.createElement('div');
-              actions.className = 'machine-qr-actions';
-
-              const copyBtn = document.createElement('button');
-              copyBtn.type = 'button';
-              copyBtn.className = 'secondary outline';
-              copyBtn.textContent = 'Copy link';
-              copyBtn.onclick = async e => {
-                if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                try {
-                  if (
-                    global.navigator &&
-                    global.navigator.clipboard &&
-                    typeof global.navigator.clipboard.writeText === 'function'
-                  ) {
-                    await global.navigator.clipboard.writeText(qr.url);
-                    showToast('QR link copied', 'success');
-                  } else {
-                    throw new Error('Clipboard unavailable');
-                  }
-                } catch (err) {
-                  showToast('Unable to copy QR link', 'error');
-                }
-              };
-
-              const openLink = document.createElement('a');
-              openLink.href = qr.url;
-              openLink.target = '_blank';
-              openLink.rel = 'noopener noreferrer';
-              openLink.className = 'secondary outline';
-              openLink.textContent = 'Open';
-
-              actions.appendChild(copyBtn);
-              actions.appendChild(openLink);
-
-              item.appendChild(info);
-              item.appendChild(actions);
-              qrList.appendChild(item);
+              qrList.appendChild(createMachineQrEntry(qr));
             });
 
             qrSection.appendChild(qrList);
@@ -270,6 +284,7 @@
         });
       }
       renderMachineOptions();
+      renderQrCodes();
       if (highlighted) {
         if (help) help.style.display = 'block';
         claimedMachineId = null;
@@ -303,6 +318,130 @@
     } else {
       showToast('Failed to unregister machine', 'error');
     }
+  }
+
+  async function loadQrCodes() {
+    try {
+      const res = await OriginApi.getQrCodes();
+      if (!res.ok) return;
+      cachedQrCodes = await res.json();
+      renderQrCodes();
+    } catch (error) {}
+  }
+
+  async function updateQrAssignment(qrId, machineId) {
+    try {
+      const res = await OriginApi.assignQrCode(qrId, machineId);
+      if (!res.ok) {
+        showToast('Failed to update QR code', 'error');
+        return false;
+      }
+      const updated = await res.json();
+      const index = cachedQrCodes.findIndex(qr => qr.id === updated.id);
+      if (index >= 0) {
+        cachedQrCodes[index] = updated;
+      } else {
+        cachedQrCodes.push(updated);
+      }
+      renderQrCodes();
+      showToast('QR code updated', 'success');
+      if (document.getElementById('machines-list')) loadMachines();
+      return true;
+    } catch (error) {
+      showToast('Failed to update QR code', 'error');
+      return false;
+    }
+  }
+
+  function renderQrCodes() {
+    const list = document.getElementById('qr-codes-list');
+    const empty = document.getElementById('qr-codes-empty');
+    if (!list || !empty) return;
+
+    if (typeof list.replaceChildren === 'function') {
+      list.replaceChildren();
+    } else {
+      list.innerHTML = '';
+      if (Array.isArray(list.children)) list.children.length = 0;
+    }
+
+    if (!cachedQrCodes.length) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    cachedQrCodes.forEach(qr => {
+      const item = document.createElement('li');
+      item.className = 'qr-code-item';
+
+      const header = document.createElement('div');
+      header.className = 'qr-code-header';
+
+      const info = createQrInfo(qr);
+      info.classList.add('qr-code-info');
+      header.appendChild(info);
+
+      const actions = createQrActions(qr);
+      actions.classList.add('qr-code-actions');
+      header.appendChild(actions);
+
+      item.appendChild(header);
+
+      const assignment = document.createElement('div');
+      assignment.className = 'qr-code-assignment';
+
+      const select = document.createElement('select');
+      select.className = 'qr-code-select';
+      select.dataset.qr = qr.id;
+
+      const hasMachines = Array.isArray(cachedMachines) && cachedMachines.length > 0;
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = hasMachines ? 'Unassigned' : 'No machines available';
+      select.appendChild(defaultOpt);
+
+      if (!hasMachines) {
+        select.disabled = true;
+      } else {
+        const sortedMachines = [...cachedMachines].sort((a, b) => {
+          return getMachineLabel(a).localeCompare(getMachineLabel(b));
+        });
+        sortedMachines.forEach(machine => {
+          const option = document.createElement('option');
+          option.value = machine.id;
+          option.textContent = getMachineLabel(machine);
+          if (String(qr.machine_id || '') === String(machine.id)) option.selected = true;
+          select.appendChild(option);
+        });
+      }
+
+      const status = document.createElement('span');
+      status.className = 'qr-code-status';
+      if (qr.machine_label) {
+        status.textContent = `Assigned to ${qr.machine_label}`;
+      } else if (hasMachines) {
+        status.textContent = 'Not assigned';
+      } else {
+        status.textContent = 'Claim a machine to assign this code';
+      }
+
+      select.onchange = async () => {
+        select.disabled = true;
+        const success = await updateQrAssignment(qr.id, select.value || null);
+        if (!success) {
+          select.disabled = false;
+          renderQrCodes();
+        }
+      };
+
+      assignment.appendChild(select);
+      assignment.appendChild(status);
+      item.appendChild(assignment);
+
+      list.appendChild(item);
+    });
   }
 
   function openLocation(loc = null) {
@@ -515,12 +654,14 @@
     if (deleteBtn) deleteBtn.onclick = handleLocationDelete;
     loadLocations();
     loadMachines();
+    loadQrCodes();
   }
 
   global.openLocation = openLocation;
   global.enableLocationEdit = enableLocationEdit;
   global.loadLocations = loadLocations;
   global.loadMachines = loadMachines;
+  global.loadQrCodes = loadQrCodes;
   global.handleLocationDelete = handleLocationDelete;
   global.__setCachedLocations = locs => { cachedLocations = locs; };
   global.__setClaimedMachine = id => { claimedMachineId = id; };
