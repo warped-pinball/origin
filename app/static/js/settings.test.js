@@ -67,6 +67,7 @@ global.navigator = {
   share: async data => { global.__sharedData = data; }
 };
 global.open = (url, target) => { global.__openedWindow = { url, target }; };
+global.confirm = () => true;
 
 global.OriginApi = {
   getLocations: async () => ({ ok: true, json: async () => [] }),
@@ -74,7 +75,8 @@ global.OriginApi = {
   assignMachine: async () => ({ ok: true }),
   removeMachine: async () => ({ ok: true }),
   createLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) }),
-  updateLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) })
+  updateLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) }),
+  deleteLocation: async () => ({ ok: true })
 };
 
 const code = fs.readFileSync(path.join(__dirname, 'settings.js'), 'utf8');
@@ -102,6 +104,7 @@ test('enableLocationEdit toggles to form', () => {
   assert.strictEqual(el('location-detail-form').style.display, 'block');
   assert.strictEqual(el('location-view').style.display, 'none');
   assert.strictEqual(el('detail-name').value, 'Arcade');
+  assert.strictEqual(el('delete-location-btn').style.display, 'inline-flex');
 });
 
 test('openLocation hides edit for non-owner', () => {
@@ -196,4 +199,35 @@ test('loadMachines renders QR code details and allows copying', async () => {
   const actions = entry.children[1];
   await actions.children[0].onclick({ preventDefault() {} });
   assert.strictEqual(global.__copiedText, 'https://origin.example/q?r=abc123');
+});
+
+test('handleLocationDelete removes location after confirmation', async () => {
+  __setCachedLocations([{ id: 9, name: 'Delete Me' }]);
+  OriginApi.getLocations = async () => ({ ok: true, json: async () => [] });
+  OriginApi.getMachines = async () => ({ ok: true, json: async () => [] });
+  openLocation({ id: 9, name: 'Delete Me' });
+  enableLocationEdit();
+  let confirmationMessage = '';
+  global.confirm = message => { confirmationMessage = message; return true; };
+  let deletedId = null;
+  OriginApi.deleteLocation = async id => { deletedId = id; return { ok: true }; };
+  await handleLocationDelete();
+  assert.strictEqual(deletedId, 9);
+  assert.ok(confirmationMessage.includes('Delete Me'));
+  assert.strictEqual(el('location-detail-form').style.display, 'none');
+  assert.strictEqual(el('location-view').style.display, 'none');
+  assert.strictEqual(el('delete-location-btn').style.display, 'none');
+  global.confirm = () => true;
+});
+
+test('handleLocationDelete aborts when user cancels', async () => {
+  __setCachedLocations([{ id: 11, name: 'Keep Me' }]);
+  openLocation({ id: 11, name: 'Keep Me' });
+  enableLocationEdit();
+  let called = false;
+  OriginApi.deleteLocation = async () => { called = true; return { ok: true }; };
+  global.confirm = () => false;
+  await handleLocationDelete();
+  assert.strictEqual(called, false);
+  global.confirm = () => true;
 });

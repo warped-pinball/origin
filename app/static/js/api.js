@@ -84,6 +84,12 @@
       });
     }
 
+    async function deleteLocation(id) {
+      return apiFetch(`/api/v1/locations/${id}`, {
+        method: 'DELETE'
+      });
+    }
+
     async function assignMachine(machineId, locationId) {
       return apiFetch(`/api/v1/locations/${locationId}/machines`, {
         method: 'POST',
@@ -126,6 +132,7 @@
       getLocations,
       createLocation,
       updateLocation,
+      deleteLocation,
       assignMachine,
       removeMachine,
       getMachineState,

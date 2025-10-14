@@ -40,3 +40,11 @@ def update_location(
     db.commit()
     db.refresh(db_location)
     return db_location
+
+
+def delete_location(db: Session, db_location: models.Location) -> None:
+    db.query(models.Machine).filter(
+        models.Machine.location_id == db_location.id
+    ).update({models.Machine.location_id: None}, synchronize_session=False)
+    db.delete(db_location)
+    db.commit()

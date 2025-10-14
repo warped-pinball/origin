@@ -30,8 +30,6 @@ def minify_js(path: pathlib.Path) -> pathlib.Path:
     dest = path if path.name == "service-worker.js" else path.with_suffix(".min.js")
     content = rjsmin.jsmin(path.read_text())
     dest.write_text(content)
-    if dest != path:
-        path.unlink()
     return dest
 
 

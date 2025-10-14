@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 from .. import crud, schemas
 from ..utils.urls import build_location_display_url
@@ -62,3 +62,16 @@ def add_machine(
     db.refresh(location)
     location.display_url = build_location_display_url(location.id)
     return location
+
+
+@router.delete("/{location_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_location(
+    location_id: int,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
+    db_location = crud.get_location(db, location_id)
+    if not db_location or db_location.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Location not found")
+    crud.delete_location(db, db_location)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

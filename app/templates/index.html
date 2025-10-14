@@ -239,7 +239,10 @@
                             <input id='detail-address' placeholder='Address' />
                             <input id='detail-website' type='url' placeholder='Website' />
                             <input id='detail-hours' placeholder='Hours' />
-                            <button type='submit'>Save</button>
+                            <div class='grid' style='grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:0.5rem;'>
+                                <button type='submit'>Save</button>
+                                <button type='button' id='delete-location-btn' class='secondary outline' style='display:none;'>Delete location</button>
+                            </div>
                         </form>
                         <h3>Machines</h3>
                         <ul id='location-machines-list'></ul>
@@ -261,6 +264,5 @@
                     </label>
                 </div>
             </main>
-            <img src='/static/img/logo.png' alt='Origin logo' class='app-logo'>
         </body>
     </html>
