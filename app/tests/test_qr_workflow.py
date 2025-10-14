@@ -1,4 +1,5 @@
 from base64 import urlsafe_b64encode
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from .test_user_machines import auth_headers, create_user, login
@@ -174,3 +175,24 @@ def test_other_user_scanning_assigned_qr_gets_redirect(client, db_session):
 
     assert response.status_code == 302
     assert response.headers["location"].endswith(f"/machines/{machine.id}")
+
+
+def test_machine_page_redirects_to_settings(client, db_session):
+    owner = create_user(client, "qr-machine-page@example.com")
+    machine = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-page")
+
+    response = client.get(f"/machines/{machine.id}", follow_redirects=False)
+
+    assert response.status_code == 302
+    location = response.headers["location"]
+    assert location.startswith("/?claimed_machine=")
+    assert location.endswith("#settings")
+
+    parts = urlsplit(location)
+    follow_path = parts.path
+    if parts.query:
+        follow_path += f"?{parts.query}"
+
+    follow_response = client.get(follow_path)
+    assert follow_response.status_code == 200
+    assert "Log In" in follow_response.text
