@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Iterable, List, Optional
+from numbers import Number
+from typing import Dict, Iterable, List, Optional, Sequence
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session, aliased, selectinload
@@ -28,11 +29,144 @@ def _state_is_active(
     return state.game_active
 
 
+def _session_states_for_machine(
+    db: Session,
+    machine_id: str,
+    *,
+    limit: int = 200,
+) -> List[models.MachineGameState]:
+    """Return recent states that belong to the latest completed or active game."""
+
+    states_desc: Sequence[models.MachineGameState] = (
+        db.query(models.MachineGameState)
+        .filter(models.MachineGameState.machine_id == machine_id)
+        .order_by(
+            models.MachineGameState.created_at.desc(),
+            models.MachineGameState.id.desc(),
+        )
+        .limit(limit)
+        .all()
+    )
+
+    if not states_desc:
+        return []
+
+    session_desc: List[models.MachineGameState] = []
+    seen_active = False
+
+    for state in states_desc:
+        is_active = _state_is_active(state)
+
+        if session_desc and seen_active and not is_active:
+            break
+
+        session_desc.append(state)
+
+        if is_active:
+            seen_active = True
+
+    session_states = list(reversed(session_desc))
+
+    if session_states:
+        for index, state in enumerate(session_states):
+            if _state_is_active(state):
+                if index > 0:
+                    session_states = session_states[index:]
+                break
+
+    return session_states
+
+
+def _select_display_state(
+    states: Sequence[models.MachineGameState],
+) -> Optional[models.MachineGameState]:
+    if not states:
+        return None
+
+    for state in reversed(states):
+        if _state_is_active(state):
+            return state
+        if any(
+            isinstance(score, Number) and score > 0
+            for score in (state.scores or [])
+        ):
+            return state
+
+    return states[-1]
+
+
+def _compute_player_game_times(
+    states: Sequence[models.MachineGameState],
+    *,
+    pause_threshold_seconds: float = 10.0,
+) -> List[int]:
+    if not states:
+        return []
+
+    max_players = max(len(state.scores or []) for state in states)
+    if max_players == 0:
+        return []
+
+    timers: List[Dict[int, Dict[str, object]]] = [
+        {}
+        for _ in range(max_players)
+    ]
+    previous_scores: List[Optional[int]] = [None] * max_players
+
+    for state in states:
+        timestamp = _to_utc_naive(state.created_at)
+        if timestamp is None:
+            continue
+
+        ball = state.ball_in_play
+        scores = state.scores or []
+
+        for index in range(max_players):
+            raw_score = scores[index] if index < len(scores) else None
+            if raw_score is None or not isinstance(raw_score, Number):
+                continue
+
+            score = int(raw_score)
+
+            previous = previous_scores[index]
+            if previous is None:
+                previous_scores[index] = score
+                continue
+
+            delta = score - previous
+            if delta > 0 and ball is not None and ball > 0:
+                timer = timers[index].setdefault(
+                    ball,
+                    {"total": 0.0, "last": None},
+                )
+                last = timer["last"]
+                if last is None:
+                    timer["last"] = timestamp
+                else:
+                    elapsed = (timestamp - last).total_seconds()
+                    if elapsed < pause_threshold_seconds:
+                        timer["total"] += elapsed
+                    timer["last"] = timestamp
+
+            previous_scores[index] = score
+
+    totals: List[int] = []
+    for timer in timers:
+        total_seconds = sum(
+            value["total"]
+            for value in timer.values()
+            if isinstance(value.get("total"), (int, float))
+        )
+        totals.append(int(round(total_seconds)))
+
+    return totals
+
+
 def _latest_states_for_location(db: Session, location_id: int) -> Iterable[models.MachineGameState]:
     subquery = (
         db.query(
             models.MachineGameState.machine_id.label("machine_id"),
-            func.max(models.MachineGameState.created_at).label("latest_created_at"),
+            func.max(models.MachineGameState.id).label("latest_id"),
         )
         .join(models.Machine, models.Machine.id == models.MachineGameState.machine_id)
         .filter(models.Machine.location_id == location_id)
@@ -47,7 +181,7 @@ def _latest_states_for_location(db: Session, location_id: int) -> Iterable[model
         .join(
             subquery,
             (state_alias.machine_id == subquery.c.machine_id)
-            & (state_alias.created_at == subquery.c.latest_created_at),
+            & (state_alias.id == subquery.c.latest_id),
         )
         .all()
     )
@@ -110,8 +244,37 @@ def build_location_scoreboard(
 
     machine_payloads: List[Dict[str, object]] = []
     for machine in machines:
-        state = states_by_machine.get(machine.id)
-        is_active = _state_is_active(state)
+        latest_state = states_by_machine.get(machine.id)
+        is_active = _state_is_active(latest_state)
+
+        session_states: List[models.MachineGameState] = []
+        display_state: Optional[models.MachineGameState] = None
+        game_time_seconds: List[int] = []
+
+        if latest_state is not None:
+            session_states = _session_states_for_machine(db, machine.id)
+            if session_states:
+                display_state = _select_display_state(session_states)
+                game_time_seconds = _compute_player_game_times(session_states)
+
+        scores_for_display: List[int] = []
+        if display_state and display_state.scores:
+            scores_for_display = [
+                int(score) if isinstance(score, Number) and score >= 0 else 0
+                for score in display_state.scores
+            ]
+
+        ball_in_play = display_state.ball_in_play if display_state else None
+
+        players_total: Optional[int] = None
+        if display_state and display_state.players_total is not None:
+            players_total = display_state.players_total
+        elif latest_state and latest_state.players_total is not None:
+            players_total = latest_state.players_total
+
+        player_up: Optional[int] = None
+        if is_active and latest_state is not None:
+            player_up = latest_state.player_up
 
         high_scores: Dict[str, List[Dict[str, object]]] = {}
         for label, since in windows.items():
@@ -141,11 +304,12 @@ def build_location_scoreboard(
                 "machine_id": machine.id,
                 "game_title": machine.game_title,
                 "is_active": is_active,
-                "updated_at": state.created_at if state else None,
-                "scores": state.scores if state else [],
-                "ball_in_play": state.ball_in_play if state else None,
-                "player_up": state.player_up if state else None,
-                "players_total": state.players_total if state else None,
+                "updated_at": latest_state.created_at if latest_state else None,
+                "scores": scores_for_display,
+                "ball_in_play": ball_in_play,
+                "player_up": player_up,
+                "players_total": players_total,
+                "game_time_seconds": game_time_seconds,
                 "high_scores": high_scores,
             }
         )
