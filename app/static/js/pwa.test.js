@@ -8,7 +8,19 @@ const code = fs.readFileSync(path.join(__dirname, 'pwa.js'), 'utf8');
 
 let beforeHandler;
 let installHandler;
+let installClick;
+let closeClick;
 const banner = { hidden: true };
+const installBtn = {
+  addEventListener: (event, handler) => {
+    if (event === 'click') installClick = handler;
+  }
+};
+const closeBtn = {
+  addEventListener: (event, handler) => {
+    if (event === 'click') closeClick = handler;
+  }
+};
 
 global.window = {
   addEventListener: (event, handler) => {
@@ -18,7 +30,12 @@ global.window = {
 };
 
 global.document = {
-  getElementById: () => banner
+  getElementById: (id) => {
+    if (id === 'install-banner') return banner;
+    if (id === 'install-button') return installBtn;
+    if (id === 'install-close-button') return closeBtn;
+    return null;
+  }
 };
 
 vm.runInThisContext(code);
@@ -31,6 +48,7 @@ test('shows banner and installs app', async () => {
   };
   beforeHandler(ev);
   assert.strictEqual(banner.hidden, false);
+  assert.strictEqual(typeof installClick, 'function');
   await window.installApp();
   assert.ok(ev.promptCalled);
   assert.strictEqual(banner.hidden, true);
@@ -53,5 +71,22 @@ test('assigns functions to window', () => {
 test('closeInstall hides banner', () => {
   banner.hidden = false;
   window.closeInstall();
+  assert.strictEqual(banner.hidden, true);
+  assert.strictEqual(typeof closeClick, 'function');
+});
+
+test('click handlers invoke install and close logic', async () => {
+  banner.hidden = false;
+  const ev = {
+    preventDefault() {},
+    prompt: () => { ev.promptCalled = true; return Promise.resolve(); },
+    userChoice: Promise.resolve({ outcome: 'dismissed' })
+  };
+  beforeHandler(ev);
+  await installClick();
+  assert.ok(ev.promptCalled);
+  assert.strictEqual(banner.hidden, true);
+  banner.hidden = false;
+  closeClick();
   assert.strictEqual(banner.hidden, true);
 });

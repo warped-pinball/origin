@@ -18,12 +18,12 @@
       <h2>Create Account</h2>
       <form id='signup-form'>
         <label for='signup-email'>Email address</label>
-        <input id='signup-email' name='email' type='email' placeholder='Email address' required />
+        <input id='signup-email' name='email' type='email' placeholder='Email address' autocomplete='email' required />
         <span id='signup-email-error' class='error'></span>
         <label for='signup-screen'>Screen name</label>
         <input id='signup-screen' name='screen' type='text' placeholder='Screen name' required />
         <label for='signup-password'>Password</label>
-        <input id='signup-password' name='password' type='password' placeholder='Password' required />
+        <input id='signup-password' name='password' type='password' placeholder='Password' autocomplete='new-password' required />
         <label>
           <input id='signup-accept' type='checkbox' required />
           I agree to the <a href='/terms' target='_blank'>Terms of Service</a> and <a href='/privacy' target='_blank'>Privacy Policy</a>
