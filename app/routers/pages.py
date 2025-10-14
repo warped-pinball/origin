@@ -1,6 +1,8 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from urllib.parse import quote
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from .. import crud
@@ -34,6 +36,18 @@ PAGE_TEMPLATES = {
 
 for path, template in PAGE_TEMPLATES.items():
     router.get(path, response_class=HTMLResponse)(_render(template))
+
+
+@router.get("/machines/{machine_id}", include_in_schema=False)
+async def machine_settings_redirect(
+    machine_id: str, db: Session = Depends(get_db)
+):
+    machine = crud.get_machine(db, machine_id)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    target = f"/?claimed_machine={quote(machine_id, safe='')}#settings"
+    return RedirectResponse(target, status_code=status.HTTP_302_FOUND)
 
 
 @router.get("/locations/{location_id}/display", response_class=HTMLResponse)
