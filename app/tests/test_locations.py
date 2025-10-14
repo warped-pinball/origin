@@ -65,3 +65,56 @@ def test_location_display_url_in_responses(client):
     assert list_response.status_code == 200
     listed = list_response.json()
     assert listed[0]["display_url"].endswith(f"/locations/{listed[0]['id']}/display")
+
+
+def test_delete_location_moves_machines_to_unassigned(client, db_session):
+    token = create_user_and_login(client)
+
+    user = db_session.query(models.User).filter_by(email="loc@example.com").first()
+    location = models.Location(user_id=user.id, name="Delete Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="delete-machine",
+        shared_secret="delete-secret",
+        user_id=user.id,
+        game_title="Delete Test",
+        location_id=location.id,
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    location_id = location.id
+    machine_id = machine.id
+    db_session.expunge_all()
+
+    response = client.delete(
+        f"/api/v1/locations/{location_id}", headers=auth_headers(token)
+    )
+
+    assert response.status_code == 204
+    db_session.expire_all()
+    assert db_session.get(models.Location, location_id) is None
+    assert db_session.get(models.Machine, machine_id).location_id is None
+
+
+def test_delete_location_requires_owner(client, db_session):
+    token = create_user_and_login(client)
+    other_user = models.User(
+        email="other@example.com",
+        hashed_password="x",
+        screen_name="other",
+    )
+    db_session.add(other_user)
+    db_session.flush()
+
+    location = models.Location(user_id=other_user.id, name="Other Arcade")
+    db_session.add(location)
+    db_session.commit()
+
+    response = client.delete(
+        f"/api/v1/locations/{location.id}", headers=auth_headers(token)
+    )
+
+    assert response.status_code == 404

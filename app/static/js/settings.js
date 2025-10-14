@@ -312,6 +312,7 @@
     const form = document.getElementById('location-detail-form');
     const view = document.getElementById('location-view');
     const editBtn = document.getElementById('edit-location-btn');
+    const deleteBtn = document.getElementById('delete-location-btn');
     if (title) title.textContent = loc ? loc.name : 'Add Location';
     if (loc) {
       if (view) {
@@ -348,6 +349,7 @@
       if (form) form.style.display = 'none';
       const isOwner = cachedLocations.some(l => l.id === loc.id);
       if (editBtn) editBtn.style.display = isOwner ? 'block' : 'none';
+      if (deleteBtn) deleteBtn.style.display = 'none';
       if (currentLocationId) loadLocationMachines(false);
     } else {
       if (view) view.style.display = 'none';
@@ -361,6 +363,7 @@
         document.getElementById('detail-hours').value = '';
       }
       if (editBtn) editBtn.style.display = 'none';
+      if (deleteBtn) deleteBtn.style.display = 'none';
       const ml = document.getElementById('location-machines-list');
       if (ml) ml.innerHTML = '';
     }
@@ -371,6 +374,7 @@
     const form = document.getElementById('location-detail-form');
     const view = document.getElementById('location-view');
     const editBtn = document.getElementById('edit-location-btn');
+    const deleteBtn = document.getElementById('delete-location-btn');
     if (editBtn) editBtn.style.display = 'none';
     if (view) view.style.display = 'none';
     if (form) {
@@ -381,6 +385,7 @@
       document.getElementById('detail-hours').value = currentLocation ? currentLocation.hours || '' : '';
       form.style.display = 'block';
     }
+    if (deleteBtn) deleteBtn.style.display = currentLocationId ? 'inline-flex' : 'none';
     if (currentLocationId) loadLocationMachines(true);
   }
 
@@ -406,6 +411,47 @@
     } else {
       showToast('Failed to save location', 'error');
     }
+  }
+
+  async function handleLocationDelete() {
+    if (!currentLocationId) return;
+    const deleteTarget =
+      currentLocation || cachedLocations.find(loc => loc.id === currentLocationId) || null;
+    const name = deleteTarget && deleteTarget.name ? deleteTarget.name : 'this location';
+    const message =
+      `Delete ${name}? Machines assigned here will move to Unassigned and their scores will be kept.`;
+    const confirmed = typeof global.confirm === 'function' ? global.confirm(message) : true;
+    if (!confirmed) return;
+
+    const res = await OriginApi.deleteLocation(currentLocationId);
+    if (!res.ok) {
+      showToast('Failed to delete location', 'error');
+      return;
+    }
+
+    showToast('Location deleted', 'success');
+    cachedLocations = cachedLocations.filter(loc => loc.id !== currentLocationId);
+    currentLocationId = null;
+    currentLocation = null;
+
+    const form = document.getElementById('location-detail-form');
+    if (form) {
+      form.reset();
+      form.style.display = 'none';
+    }
+    const view = document.getElementById('location-view');
+    if (view) view.style.display = 'none';
+    const editBtn = document.getElementById('edit-location-btn');
+    if (editBtn) editBtn.style.display = 'none';
+    const deleteBtn = document.getElementById('delete-location-btn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    const machinesList = document.getElementById('location-machines-list');
+    if (machinesList) machinesList.innerHTML = '';
+    updateLocationDashboard(null);
+
+    showPage('settings');
+    loadLocations();
+    loadMachines();
   }
 
   async function loadLocationMachines(editable = false) {
@@ -465,6 +511,8 @@
     if (form) form.addEventListener('submit', saveLocation);
     const editBtn = document.getElementById('edit-location-btn');
     if (editBtn) editBtn.addEventListener('click', enableLocationEdit);
+    const deleteBtn = document.getElementById('delete-location-btn');
+    if (deleteBtn) deleteBtn.onclick = handleLocationDelete;
     loadLocations();
     loadMachines();
   }
@@ -473,6 +521,7 @@
   global.enableLocationEdit = enableLocationEdit;
   global.loadLocations = loadLocations;
   global.loadMachines = loadMachines;
+  global.handleLocationDelete = handleLocationDelete;
   global.__setCachedLocations = locs => { cachedLocations = locs; };
   global.__setClaimedMachine = id => { claimedMachineId = id; };
 

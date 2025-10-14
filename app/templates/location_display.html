@@ -692,9 +692,9 @@
             console.error(error);
             statusElement.innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
             liveSubheadingElement.textContent = 'Connection issue';
-            liveGamesElement.innerHTML = '<p class="empty-state">We're trying to reconnect. Check the network if this continues.</p>';
+            liveGamesElement.innerHTML = `<p class="empty-state">We're trying to reconnect. Check the network if this continues.</p>`;
             scoresSubheadingElement.textContent = 'Connection issue';
-            highScoresElement.innerHTML = '<div class="score-card"><p class="empty-state">We'll keep retrying automatically. Scores will reappear once we reconnect.</p></div>';
+            highScoresElement.innerHTML = `<div class="score-card"><p class="empty-state">We'll keep retrying automatically. Scores will reappear once we reconnect.</p></div>`;
         } finally {
             isFetching = false;
         }

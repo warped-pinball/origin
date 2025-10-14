@@ -28,6 +28,7 @@ from .locations import (
     get_location,
     set_machine_location,
     update_location,
+    delete_location,
 )
 from .scores import (
     create_score,
@@ -62,6 +63,7 @@ __all__ = [
     "get_location",
     "set_machine_location",
     "update_location",
+    "delete_location",
     "create_score",
     "get_top_scores",
     "get_user_scores",
