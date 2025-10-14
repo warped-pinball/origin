@@ -97,6 +97,37 @@ def test_login_trailing_space(client):
     assert response.status_code == 200
 
 
+def test_login_cookie_not_secure_on_http(client):
+    client.post(
+        "/api/v1/users/",
+        json={"email": "cookie-http@example.com", "password": "pass", "screen_name": "cookie-http"},
+    )
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "cookie-http@example.com", "password": "pass"},
+    )
+    assert response.status_code == 200
+    cookie = response.headers.get("set-cookie", "")
+    assert "token=" in cookie
+    assert "Secure" not in cookie
+
+
+def test_login_cookie_secure_when_forwarded_proto_is_https(client):
+    client.post(
+        "/api/v1/users/",
+        json={"email": "cookie-https@example.com", "password": "pass", "screen_name": "cookie-https"},
+    )
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "cookie-https@example.com", "password": "pass"},
+        headers={"x-forwarded-proto": "https"},
+    )
+    assert response.status_code == 200
+    cookie = response.headers.get("set-cookie", "")
+    assert "token=" in cookie
+    assert "Secure" in cookie
+
+
 def test_login_unverified_user(client, db_session):
     from .. import crud, schemas
 
@@ -126,6 +157,7 @@ def test_verify_email_redirects(client, db_session):
     assert "token" not in response.headers["location"]
     cookie = response.headers.get("set-cookie", "")
     assert "token=" in cookie
+    assert "Secure" not in cookie
     db_session.expire_all()
     db_user = (
         db_session.query(models.User).filter_by(email="verify@example.com").first()
@@ -137,6 +169,25 @@ def test_verify_email_bad_token(client):
     response = client.get("/api/v1/auth/verify?token=bad", follow_redirects=False)
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid token"
+
+
+def test_verify_email_cookie_secure_with_forwarded_proto(client, db_session):
+    from .. import crud, schemas
+
+    user = schemas.UserCreate(
+        email="verify-forward@example.com", password="pass", screen_name="vf"
+    )
+    created = crud.create_user(db_session, user)
+    token = created.verification_token
+    response = client.get(
+        f"/api/v1/auth/verify?token={token}",
+        follow_redirects=False,
+        headers={"x-forwarded-proto": "https"},
+    )
+    assert response.status_code == 302
+    cookie = response.headers.get("set-cookie", "")
+    assert "token=" in cookie
+    assert "Secure" in cookie
 
 
 def test_password_reset_flow(client, db_session):
