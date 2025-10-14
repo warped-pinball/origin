@@ -40,10 +40,19 @@ def handle_qr(
     qr = db.query(models.QRCode).filter(models.QRCode.id == qr_id).first()
     if not qr:
         raise HTTPException(status_code=404, detail="QR code not found")
+
     host = os.environ.get("PUBLIC_HOST_URL", "")
     if qr.machine_id:
         location = f"{host}/machines/{qr.machine_id}"
         return RedirectResponse(location, status_code=status.HTTP_302_FOUND)
+
+    if qr.user_id is None:
+        qr.user_id = current_user.id
+        db.add(qr)
+        db.commit()
+        db.refresh(qr)
+    elif qr.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="QR code not found")
 
     machines = crud.get_machines_for_user(db, current_user.id)
     return templates.TemplateResponse(
@@ -55,17 +64,21 @@ def handle_qr(
 @router.post("/q/assign")
 def assign_qr(
     code: str = Form(...),
-    machine_id: int = Form(...),
+    machine_id: str = Form(...),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
     qr_id = _decode_id(code)
     qr = (
         db.query(models.QRCode)
-        .filter(models.QRCode.id == qr_id, models.QRCode.user_id == current_user.id)
+        .filter(models.QRCode.id == qr_id)
         .first()
     )
     if not qr:
+        raise HTTPException(status_code=404, detail="QR code not found")
+    if qr.user_id is None:
+        qr.user_id = current_user.id
+    elif qr.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="QR code not found")
     machine = (
         db.query(models.Machine)
