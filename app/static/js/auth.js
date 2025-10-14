@@ -171,14 +171,30 @@
     return null;
   }
 
+  function setAuthCookie(token) {
+    if (!token) return;
+    let cookie = `token=${encodeURIComponent(token)}; path=/; SameSite=Lax`;
+    if (typeof location !== 'undefined' && location.protocol === 'https:') {
+      cookie += '; Secure';
+    }
+    document.cookie = cookie;
+  }
+
   function checkAuth() {
     const params = new URLSearchParams(location.search);
     const cookieToken = getCookie('token');
+    let localToken = null;
+    try {
+      localToken = localStorage.getItem('token');
+    } catch {}
     if (cookieToken) {
       try { localStorage.setItem('token', cookieToken); } catch {}
-      document.cookie = 'token=; Max-Age=0; path=/';
+      localToken = cookieToken;
+      setAuthCookie(cookieToken);
+    } else if (localToken) {
+      setAuthCookie(localToken);
     }
-    const hasToken = !!localStorage.getItem('token');
+    const hasToken = !!localToken;
     const next = params.get('next');
     if (hasToken) {
       if (next) {
