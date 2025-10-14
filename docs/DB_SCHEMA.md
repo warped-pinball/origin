@@ -66,6 +66,7 @@
 | game | VARCHAR | False | True |  | False |
 | value | INTEGER | False | True |  | False |
 | created_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
+| duration_ms | INTEGER | False | True |  | False |
 
 ## users
 

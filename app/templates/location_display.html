@@ -80,6 +80,31 @@
             z-index: 1;
         }
 
+        .slide-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .live-section,
+        .high-scores-section {
+            background: rgba(15, 23, 42, 0.65);
+            border-radius: 22px;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .live-section.inactive {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
         .tag {
             display: inline-flex;
             align-items: center;
@@ -153,6 +178,48 @@
             margin-top: 1rem;
         }
 
+        .high-scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+            gap: 1rem;
+        }
+
+        .high-score-card {
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 18px;
+            padding: 1rem 1.2rem;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .section-heading {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .high-score-card h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .high-score-card ol {
+            padding-left: 1rem;
+        }
+
+        .high-score-card li {
+            margin-bottom: 0.6rem;
+        }
+
         .player-card {
             background: rgba(15, 23, 42, 0.65);
             border-radius: 20px;
@@ -176,6 +243,21 @@
 
         .score-count {
             position: relative;
+        }
+
+        .score-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .score-meta {
+            display: block;
+            margin-top: 0.3rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.03em;
         }
 
         .empty-state {
@@ -205,6 +287,9 @@
             }
             .slide {
                 min-height: 20rem;
+            }
+            .slide-grid {
+                grid-template-columns: 1fr;
             }
             footer {
                 position: static;
@@ -271,53 +356,74 @@
             return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         }
 
-        function renderHighScores(scores, machineId, timeframe) {
-            if (!scores || scores.length === 0) {
-                return '<p class="empty-state">No scores recorded yet. Be the first!</p>';
+        function formatDuration(ms) {
+            if (!Number.isFinite(ms) || ms <= 0) {
+                return null;
             }
-            return `<ol>${scores
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            return `${minutes}:${seconds}`;
+        }
+
+        function renderHighScoreCard(scores, machineId, timeframe) {
+            const label = titleCase(timeframe);
+            if (!scores || scores.length === 0) {
+                return `<div class="high-score-card"><h4>${label}</h4><p class="empty-state">No scores recorded yet. Be the first!</p></div>`;
+            }
+            const items = scores
                 .map((entry, index) => {
                     const player = entry.player_name || 'Anonymous';
                     const achieved = new Date(entry.achieved_at);
-                    const meta = achieved.toLocaleDateString();
+                    const dateLabel = achieved.toLocaleDateString();
+                    const duration = formatDuration(entry.duration_ms);
                     const key = `${machineId}-${timeframe}-high-${index}`;
-                    return `<li><span>${player}</span><span class="score-value score-count" data-count-up="${entry.value}" data-count-up-key="${key}">${entry.value.toLocaleString()}</span><br><small>${meta}</small></li>`;
+                    const metaParts = [dateLabel];
+                    if (duration) {
+                        metaParts.push(duration);
+                    }
+                    return `<li><div class="score-line"><span>${player}</span><span class="score-value score-count" data-count-up="${entry.value}" data-count-up-key="${key}">${entry.value.toLocaleString()}</span></div><span class="score-meta">${metaParts.join(' · ')}</span></li>`;
                 })
-                .join('')}</ol>`;
+                .join('');
+            return `<div class="high-score-card"><h4>${label}</h4><ol>${items}</ol></div>`;
         }
 
         function buildSlides(data) {
             const newSlides = [];
             data.machines.forEach((machine) => {
                 const title = machine.game_title || 'Machine ' + machine.machine_id;
-                if (machine.is_active) {
-                    const players = machine.scores.map((score, index) => {
-                        const key = `${machine.machine_id}-live-${index}`;
-                        return `<div class="player-card"><h4>Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}</h4><p class="score-count" data-count-up="${score}" data-count-up-key="${key}">${score.toLocaleString()}</p></div>`;
-                    }).join('');
-                    const parts = [];
-                    if (machine.players_total) {
-                        parts.push(`${machine.players_total} player${machine.players_total === 1 ? '' : 's'}`);
-                    }
-                    if (machine.ball_in_play !== null && machine.ball_in_play !== undefined) {
-                        parts.push(`Ball ${machine.ball_in_play}`);
-                    }
-                    const subheading = parts.join(' · ') || 'Game in progress';
-                    newSlides.push({
-                        tag: 'Now Playing',
-                        heading: title,
-                        subheading,
-                        body: players ? `<div class="scores-grid">${players}</div>` : '<p class="empty-state">Scores will appear once the game reports them.</p>'
-                    });
-                }
+                const players = (machine.scores || []).map((score, index) => {
+                    const key = `${machine.machine_id}-live-${index}`;
+                    const isActivePlayer = machine.player_up === index;
+                    return `<div class="player-card"><h4>Player ${index + 1}${isActivePlayer ? ' • Up' : ''}</h4><p class="score-count" data-count-up="${score}" data-count-up-key="${key}">${score.toLocaleString()}</p></div>`;
+                }).join('');
 
-                Object.entries(machine.high_scores).forEach(([timeframe, scores]) => {
-                    newSlides.push({
-                        tag: `${titleCase(timeframe)} High Scores`,
-                        heading: title,
-                        subheading: `${scores.length || 'No'} record${scores.length === 1 ? '' : 's'}`,
-                        body: renderHighScores(scores, machine.machine_id, timeframe)
-                    });
+                const parts = [];
+                if (machine.players_total) {
+                    parts.push(`${machine.players_total} player${machine.players_total === 1 ? '' : 's'}`);
+                }
+                if (machine.ball_in_play !== null && machine.ball_in_play !== undefined && machine.ball_in_play > 0) {
+                    parts.push(`Ball ${machine.ball_in_play}`);
+                }
+                const subheading = machine.is_active
+                    ? parts.join(' · ') || 'Game in progress'
+                    : 'No active game';
+
+                const liveSection = machine.is_active
+                    ? `<section class="live-section"><h4 class="section-heading">Live Game</h4>${players ? `<div class="scores-grid">${players}</div>` : '<p class="empty-state">Scores will appear once the game reports them.</p>'}</section>`
+                    : `<section class="live-section inactive"><h4 class="section-heading">Live Game</h4><p class="empty-state">Waiting for the next game to start.</p></section>`;
+
+                const highScoreCards = Object.entries(machine.high_scores || {})
+                    .map(([timeframe, scores]) => renderHighScoreCard(scores, machine.machine_id, timeframe))
+                    .join('');
+
+                const highScoresSection = `<section class="high-scores-section"><h4 class="section-heading">High Scores</h4>${highScoreCards || '<p class="empty-state">No scores recorded yet. Be the first!</p>'}</section>`;
+
+                newSlides.push({
+                    tag: machine.is_active ? 'Live & Records' : 'Records',
+                    heading: title,
+                    subheading,
+                    body: `<div class="slide-grid">${liveSection}${highScoresSection}</div>`
                 });
             });
 

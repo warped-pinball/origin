@@ -125,6 +125,7 @@ def build_location_scoreboard(
                 {
                     "value": score.value,
                     "achieved_at": score.created_at,
+                    "duration_ms": score.duration_ms,
                     "player_name": (
                         score.user.screen_name
                         if score.user and score.user.screen_name

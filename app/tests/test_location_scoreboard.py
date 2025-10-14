@@ -102,6 +102,7 @@ def test_scoreboard_returns_recent_state_and_high_scores(client, db_session):
     assert [entry["value"] for entry in daily] == [120000]
 
     assert all(entry["player_name"] == "ScoreMaster" for entry in all_time)
+    assert all(entry["duration_ms"] is None for entry in all_time)
 
 
 def test_scoreboard_returns_404_for_unknown_location(client):

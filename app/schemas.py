@@ -146,6 +146,7 @@ class ScoreboardScore(BaseModel):
     value: int
     achieved_at: datetime
     player_name: Optional[str] = None
+    duration_ms: Optional[int] = None
 
 
 class MachineScoreboard(BaseModel):

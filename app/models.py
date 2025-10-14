@@ -79,6 +79,7 @@ class Score(Base):
     game = Column(String, index=True)
     value = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    duration_ms = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="scores")
     machine = relationship("Machine", back_populates="scores")

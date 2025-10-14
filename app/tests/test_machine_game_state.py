@@ -170,3 +170,120 @@ def test_record_game_state_records_scores_when_game_ends(client, db_session):
     assert [
         entry["value"] for entry in machine_payload["high_scores"]["all_time"]
     ] == [30_000, 12_500]
+
+
+def test_record_game_state_uses_last_active_scores_when_inactive_resets(
+    client, db_session, machine
+):
+    active_payloads = [
+        {
+            "gameTimeMs": 1000,
+            "ballInPlay": 1,
+            "scores": [1_000, 2_000],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 2000,
+            "ballInPlay": 1,
+            "scores": [5_000, 8_000],
+            "playerUp": 1,
+            "gameActive": True,
+        },
+    ]
+
+    for payload in active_payloads:
+        response = client.post(
+            "/api/v1/machines/game_state",
+            json=payload,
+            headers={"X-Machine-ID": machine.id},
+        )
+        assert response.status_code == 204
+
+    ending_payload = {
+        "gameTimeMs": 2100,
+        "ballInPlay": 0,
+        "scores": [0, 0],
+        "gameActive": False,
+    }
+
+    response = client.post(
+        "/api/v1/machines/game_state",
+        json=ending_payload,
+        headers={"X-Machine-ID": machine.id},
+    )
+    assert response.status_code == 204
+
+    scores = (
+        db_session.query(models.Score)
+        .filter(models.Score.machine_id == machine.id)
+        .order_by(models.Score.value.desc())
+        .all()
+    )
+    assert [score.value for score in scores] == [8_000, 5_000]
+    assert all(score.duration_ms is None for score in scores)
+
+
+def test_record_game_state_calculates_game_durations(client, db_session, machine):
+    sequence = [
+        {"gameTimeMs": 1000, "ballInPlay": 1, "scores": [0], "playerUp": 0, "gameActive": True},
+        {
+            "gameTimeMs": 2000,
+            "ballInPlay": 1,
+            "scores": [100],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 7000,
+            "ballInPlay": 1,
+            "scores": [500],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 22_000,
+            "ballInPlay": 1,
+            "scores": [1_000],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 25_000,
+            "ballInPlay": 2,
+            "scores": [1_000],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 26_000,
+            "ballInPlay": 2,
+            "scores": [1_500],
+            "playerUp": 0,
+            "gameActive": True,
+        },
+        {
+            "gameTimeMs": 30_000,
+            "ballInPlay": 0,
+            "scores": [0],
+            "gameActive": False,
+        },
+    ]
+
+    for payload in sequence:
+        response = client.post(
+            "/api/v1/machines/game_state",
+            json=payload,
+            headers={"X-Machine-ID": machine.id},
+        )
+        assert response.status_code == 204
+
+    score_record = (
+        db_session.query(models.Score)
+        .filter(models.Score.machine_id == machine.id)
+        .order_by(models.Score.value.desc())
+        .first()
+    )
+    assert score_record is not None
+    assert score_record.value == 1_500
+    assert score_record.duration_ms == 15_000
