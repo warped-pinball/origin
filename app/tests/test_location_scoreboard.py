@@ -104,6 +104,42 @@ def test_scoreboard_returns_recent_state_and_high_scores(client, db_session):
     assert all(entry["player_name"] == "ScoreMaster" for entry in all_time)
 
 
+def test_scoreboard_includes_scores_without_user(client, db_session):
+    owner = create_user(db_session)
+    location = models.Location(user_id=owner.id, name="Nameless High Scores")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-no-user",
+        shared_secret="secret-no-user",
+        user_id=owner.id,
+        location_id=location.id,
+        game_title="Mystery Machine",
+    )
+    db_session.add(machine)
+
+    score = models.Score(
+        user_id=None,
+        machine_id=machine.id,
+        game="Mystery Machine",
+        value=77777,
+        created_at=datetime.utcnow(),
+    )
+    db_session.add(score)
+    db_session.commit()
+
+    response = client.get(f"/api/v1/public/locations/{location.id}/scoreboard")
+    assert response.status_code == 200
+    payload = response.json()
+
+    machine_payload = next(m for m in payload["machines"] if m["machine_id"] == machine.id)
+    all_time_scores = machine_payload["high_scores"]["all_time"]
+    assert all_time_scores, "Expected at least one high score entry"
+    assert all_time_scores[0]["value"] == 77777
+    assert all_time_scores[0]["player_name"] is None
+
+
 def test_scoreboard_returns_404_for_unknown_location(client):
     response = client.get("/api/v1/public/locations/999/scoreboard")
     assert response.status_code == 404
