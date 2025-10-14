@@ -9,7 +9,8 @@
     const { origin, protocol, host } = global.location || {};
     const base = origin || (protocol && host ? `${protocol}//${host}` : '');
     const trimmed = base ? base.replace(/\/$/, '') : '';
-    return `${trimmed ? `${trimmed}` : ''}/locations/${loc.id}/display`;
+    const prefix = trimmed || '';
+    return (prefix ? prefix : '') + '/locations/' + loc.id + '/display';
   }
 
   function updateLocationDashboard(loc) {
@@ -60,7 +61,7 @@
           } else {
             throw new Error('Clipboard unavailable');
           }
-        } catch {
+        } catch (error) {
           showToast('Unable to copy link', 'error');
         }
       };
@@ -118,7 +119,7 @@
         });
       }
       renderMachineOptions();
-    } catch {}
+    } catch (error) {}
   }
 
   function renderMachineOptions() {
@@ -192,7 +193,7 @@
       } else if (help) {
         help.style.display = 'none';
       }
-    } catch {}
+    } catch (error) {}
   }
 
   async function assignMachine(machineId, locationId) {
@@ -246,7 +247,7 @@
                 website.removeAttribute('href');
                 website.removeAttribute('target');
               }
-            } catch {
+            } catch (error) {
               website.textContent = '';
               website.removeAttribute('href');
               website.removeAttribute('target');
@@ -353,7 +354,7 @@
           }
         });
       }
-    } catch {}
+    } catch (error) {}
   }
 
   function initSettings() {
@@ -373,7 +374,7 @@
             history.replaceState(null, '', newUrl);
           }
         }
-      } catch {}
+      } catch (error) {}
     }
     const addBtn = document.getElementById('add-location-btn');
     if (addBtn) addBtn.addEventListener('click', () => openLocation());
