@@ -75,6 +75,7 @@ def test_scoreboard_returns_recent_state_and_high_scores(client, db_session):
         player_up=1,
         players_total=2,
         created_at=now,
+        game_active=True,
     )
     db_session.add(state)
     db_session.commit()
@@ -147,6 +148,7 @@ def test_get_location_scoreboard_version_tracks_latest_activity(db_session):
         player_up=0,
         players_total=1,
         created_at=earlier,
+        game_active=True,
     )
     db_session.add(state)
     db_session.commit()
@@ -196,6 +198,7 @@ async def test_scoreboard_stream_emits_events_for_updates(db_session, anyio_back
         player_up=0,
         players_total=1,
         created_at=first_timestamp,
+        game_active=True,
     )
     db_session.add(initial_state)
     db_session.commit()
@@ -225,6 +228,7 @@ async def test_scoreboard_stream_emits_events_for_updates(db_session, anyio_back
         player_up=0,
         players_total=1,
         created_at=second_timestamp,
+        game_active=True,
     )
     db_session.add(next_state)
     db_session.commit()

@@ -73,5 +73,6 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
         "scores",
         "player_up",
         "players_total",
+        "game_active",
     ]:
         assert col in state_cols

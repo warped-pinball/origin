@@ -107,6 +107,7 @@ class MachineGameStateCreate(BaseModel):
     scores: list[int]
     player_up: Optional[int] = Field(default=None, alias="playerUp", ge=0)
     players_total: Optional[int] = Field(default=None, alias="playerCount", ge=0)
+    game_active: Optional[bool] = Field(default=None, alias="gameActive")
 
     model_config = ConfigDict(populate_by_name=True)
 
