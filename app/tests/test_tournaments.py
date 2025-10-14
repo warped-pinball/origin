@@ -200,5 +200,6 @@ def test_tournaments_require_authentication(client):
         headers=headers,
     )
     t = create_resp.json()
+    client.cookies.clear()
     reg_resp = client.post(f"/api/v1/tournaments/{t['id']}/register")
     assert reg_resp.status_code == 401
