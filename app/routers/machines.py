@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives import serialization
 
-from .. import crud, schemas
+from .. import crud, models, schemas
 from ..database import get_db
 from ..utils.signing import sign_json_response
 from ..utils.machines import generate_claim_code
+from ..auth import get_current_user
 import hmac
 import hashlib
 from typing import NamedTuple
@@ -171,6 +172,78 @@ def record_game_state(
     machine = get_machine_from_request(request, db)
     crud.record_machine_game_state(db, machine, state)
     return Response(status_code=204)
+
+
+@router.get("/{machine_id}/latest_state", response_model=schemas.MachineGameStateView)
+def get_latest_machine_state(
+    machine_id: str,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
+    machine = crud.get_machine(db, machine_id)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    state = crud.get_latest_machine_state(db, machine_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="No scores available")
+
+    return schemas.MachineGameStateView.model_validate(state)
+
+
+@router.post("/{machine_id}/claim_scores", response_model=schemas.ClaimScoresResponse)
+def claim_machine_scores(
+    machine_id: str,
+    payload: schemas.ClaimMachineScoresRequest,
+    db: Session = Depends(get_db),
+    current_user: crud.models.User = Depends(get_current_user),
+):
+    machine = crud.get_machine(db, machine_id)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+
+    state = crud.get_latest_machine_state(db, machine_id)
+    if state is None or not isinstance(state.scores, list) or not state.scores:
+        raise HTTPException(status_code=400, detail="No scores available")
+
+    slots = sorted(set(payload.slots))
+    max_index = len(state.scores) - 1
+    for slot in slots:
+        if slot < 0 or slot > max_index:
+            raise HTTPException(status_code=400, detail="Invalid player slot")
+
+    recorded = 0
+    for slot in slots:
+        value = state.scores[slot]
+        if value is None or not isinstance(value, int) or value < 0:
+            continue
+
+        existing = (
+            db.query(models.Score)
+            .filter(models.Score.machine_id == machine.id)
+            .filter(models.Score.user_id == current_user.id)
+            .filter(models.Score.value == value)
+            .filter(models.Score.created_at >= state.created_at)
+            .first()
+        )
+        if existing:
+            continue
+
+        crud.create_score(
+            db,
+            schemas.ScoreCreate(
+                user_id=current_user.id,
+                machine_id=machine.id,
+                game=machine.game_title or machine.id,
+                value=value,
+            ),
+        )
+        recorded += 1
+
+    if recorded == 0:
+        raise HTTPException(status_code=400, detail="No new scores recorded")
+
+    return schemas.ClaimScoresResponse(recorded=recorded)
 
 
 @router.post("/claim_status", response_model=schemas.MachineClaimStatus)

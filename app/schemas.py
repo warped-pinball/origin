@@ -62,11 +62,21 @@ class Machine(MachineBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OwnedQRCode(BaseModel):
+    id: int
+    url: str
+    code: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OwnedMachine(BaseModel):
     id: str
     name: str
     game_title: str
     location_id: Optional[int] = None
+    qr_codes: list[OwnedQRCode] = []
 
 
 class MachineResponse(BaseModel):
@@ -117,6 +127,33 @@ class MachineGameStateCreate(BaseModel):
         if not value:
             raise ValueError("scores must contain at least one entry")
         return value
+
+
+class MachineGameStateView(BaseModel):
+    time_ms: int
+    ball_in_play: int
+    scores: list[Optional[int]]
+    player_up: Optional[int] = None
+    players_total: Optional[int] = None
+    game_active: Optional[bool] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ClaimMachineScoresRequest(BaseModel):
+    slots: list[int]
+
+    @field_validator("slots")
+    @classmethod
+    def validate_slots(cls, value: list[int]) -> list[int]:
+        if not value:
+            raise ValueError("slots must contain at least one entry")
+        return value
+
+
+class ClaimScoresResponse(BaseModel):
+    recorded: int
 
 
 class LocationBase(BaseModel):

@@ -1,5 +1,4 @@
 from base64 import urlsafe_b64encode
-from urllib.parse import urlsplit
 from uuid import uuid4
 
 from .test_user_machines import auth_headers, create_user, login
@@ -181,18 +180,38 @@ def test_machine_page_redirects_to_settings(client, db_session):
     owner = create_user(client, "qr-machine-page@example.com")
     machine = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-page")
 
-    response = client.get(f"/machines/{machine.id}", follow_redirects=False)
+    response = client.get(f"/machines/{machine.id}")
 
-    assert response.status_code == 302
-    location = response.headers["location"]
-    assert location.startswith("/?claimed_machine=")
-    assert location.endswith("#settings")
+    assert response.status_code == 200
+    assert "Latest scores" in response.text
+    assert "Machine QR code" in response.text
+    assert "Owned Machine" in response.text
 
-    parts = urlsplit(location)
-    follow_path = parts.path
-    if parts.query:
-        follow_path += f"?{parts.query}"
 
-    follow_response = client.get(follow_path)
-    assert follow_response.status_code == 200
-    assert "Log In" in follow_response.text
+def test_owned_machines_include_qr_codes(client, db_session):
+    owner = create_user(client, "qr-owned-list@example.com")
+    token = login(client, "qr-owned-list@example.com")
+    machine = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-list")
+    qr, code = _create_qr(db_session)
+
+    response = client.get(f"/q?r={code}", headers=auth_headers(token))
+    assert response.status_code == 200
+
+    assign_response = client.post(
+        "/q/assign",
+        headers=auth_headers(token),
+        data={"code": code, "machine_id": machine.id},
+        follow_redirects=False,
+    )
+    assert assign_response.status_code == 302
+
+    machines_response = client.get(
+        "/api/v1/machines/me", headers=auth_headers(token)
+    )
+    assert machines_response.status_code == 200
+    machines = machines_response.json()
+    assert machines
+    owned_machine = next(m for m in machines if m["id"] == machine.id)
+    assert owned_machine["qr_codes"]
+    urls = [entry["url"] for entry in owned_machine["qr_codes"]]
+    assert any(url.endswith(f"r={code}") for url in urls)

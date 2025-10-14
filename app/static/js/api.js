@@ -99,6 +99,20 @@
       });
     }
 
+    async function getMachineState(machineId) {
+      const encodedId = encodeURIComponent(machineId);
+      return apiFetch(`/api/v1/machines/${encodedId}/latest_state`);
+    }
+
+    async function claimMachineScores(machineId, slots) {
+      const encodedId = encodeURIComponent(machineId);
+      return apiFetch(`/api/v1/machines/${encodedId}/claim_scores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slots })
+      });
+    }
+
     return {
       signup,
       login,
@@ -113,7 +127,9 @@
       createLocation,
       updateLocation,
       assignMachine,
-      removeMachine
+      removeMachine,
+      getMachineState,
+      claimMachineScores
     };
   }
 

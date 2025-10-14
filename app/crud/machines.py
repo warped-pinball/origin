@@ -41,6 +41,17 @@ def get_machines_for_user(db: Session, user_id: int) -> List[models.Machine]:
     return db.query(models.Machine).filter(models.Machine.user_id == user_id).all()
 
 
+def get_latest_machine_state(
+    db: Session, machine_id: str
+) -> Optional[models.MachineGameState]:
+    return (
+        db.query(models.MachineGameState)
+        .filter(models.MachineGameState.machine_id == machine_id)
+        .order_by(models.MachineGameState.id.desc())
+        .first()
+    )
+
+
 def release_machine(db: Session, machine: models.Machine) -> models.Machine:
     machine.user_id = None
     machine.location_id = None
