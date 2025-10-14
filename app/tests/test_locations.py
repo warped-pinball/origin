@@ -44,3 +44,24 @@ def test_add_machine_accepts_string_identifier(client, db_session):
     assert res.status_code == 200
     db_session.refresh(machine)
     assert machine.location_id == location.id
+
+
+def test_location_display_url_in_responses(client):
+    token = create_user_and_login(client)
+
+    response = client.post(
+        "/api/v1/locations/",
+        json={"name": "Display Arcade"},
+        headers=auth_headers(token),
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["display_url"].endswith(f"/locations/{data['id']}/display")
+
+    list_response = client.get(
+        "/api/v1/locations/",
+        headers=auth_headers(token),
+    )
+    assert list_response.status_code == 200
+    listed = list_response.json()
+    assert listed[0]["display_url"].endswith(f"/locations/{listed[0]['id']}/display")
