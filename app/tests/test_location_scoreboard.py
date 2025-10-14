@@ -118,6 +118,7 @@ def test_location_display_page_renders_for_existing_location(client, db_session)
     response = client.get(f"/locations/{location.id}/display")
     assert response.status_code == 200
     assert "Uptown Arcade" in response.text
+    assert "data-count-up" in response.text
 
 
 def test_get_location_scoreboard_version_tracks_latest_activity(db_session):

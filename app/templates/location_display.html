@@ -174,6 +174,10 @@
             color: var(--accent);
         }
 
+        .score-count {
+            position: relative;
+        }
+
         .empty-state {
             font-size: 1.15rem;
             color: var(--text-secondary);
@@ -242,6 +246,8 @@
         const statusElement = document.getElementById('status');
         const updatedAtElement = document.getElementById('updated-at');
         const slideContainer = document.getElementById('slide-content');
+        const numberFormatter = new Intl.NumberFormat();
+        const previousScoreValues = new Map();
 
         let slides = [];
         let currentSlide = 0;
@@ -265,7 +271,7 @@
             return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         }
 
-        function renderHighScores(scores) {
+        function renderHighScores(scores, machineId, timeframe) {
             if (!scores || scores.length === 0) {
                 return '<p class="empty-state">No scores recorded yet. Be the first!</p>';
             }
@@ -274,7 +280,8 @@
                     const player = entry.player_name || 'Anonymous';
                     const achieved = new Date(entry.achieved_at);
                     const meta = achieved.toLocaleDateString();
-                    return `<li><span>${player}</span><span class="score-value">${entry.value.toLocaleString()}</span><br><small>${meta}</small></li>`;
+                    const key = `${machineId}-${timeframe}-high-${index}`;
+                    return `<li><span>${player}</span><span class="score-value score-count" data-count-up="${entry.value}" data-count-up-key="${key}">${entry.value.toLocaleString()}</span><br><small>${meta}</small></li>`;
                 })
                 .join('')}</ol>`;
         }
@@ -285,7 +292,8 @@
                 const title = machine.game_title || 'Machine ' + machine.machine_id;
                 if (machine.is_active) {
                     const players = machine.scores.map((score, index) => {
-                        return `<div class="player-card"><h4>Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}</h4><p>${score.toLocaleString()}</p></div>`;
+                        const key = `${machine.machine_id}-live-${index}`;
+                        return `<div class="player-card"><h4>Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}</h4><p class="score-count" data-count-up="${score}" data-count-up-key="${key}">${score.toLocaleString()}</p></div>`;
                     }).join('');
                     const parts = [];
                     if (machine.players_total) {
@@ -308,7 +316,7 @@
                         tag: `${titleCase(timeframe)} High Scores`,
                         heading: title,
                         subheading: `${scores.length || 'No'} record${scores.length === 1 ? '' : 's'}`,
-                        body: renderHighScores(scores)
+                        body: renderHighScores(scores, machine.machine_id, timeframe)
                     });
                 });
             });
@@ -325,6 +333,46 @@
             return newSlides;
         }
 
+        function animateScores(container) {
+            if (!container) return;
+            const elements = container.querySelectorAll('[data-count-up]');
+            elements.forEach((element) => {
+                const target = Number(element.getAttribute('data-count-up'));
+                if (!Number.isFinite(target)) {
+                    return;
+                }
+                const key = element.getAttribute('data-count-up-key');
+                const hasKey = Boolean(key);
+                const start = hasKey && previousScoreValues.has(key)
+                    ? previousScoreValues.get(key)
+                    : 0;
+                if (start === target) {
+                    element.textContent = numberFormatter.format(target);
+                    if (hasKey) {
+                        previousScoreValues.set(key, target);
+                    }
+                    return;
+                }
+                const duration = 900;
+                const startTime = performance.now();
+                const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+                const update = (now) => {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const eased = easeOutCubic(progress);
+                    const value = Math.round(start + (target - start) * eased);
+                    element.textContent = numberFormatter.format(value);
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else if (hasKey) {
+                        previousScoreValues.set(key, target);
+                    }
+                };
+
+                requestAnimationFrame(update);
+            });
+        }
+
         function displaySlide(index) {
             if (slides.length === 0) return;
             const slide = slides[index % slides.length];
@@ -334,6 +382,7 @@
                 ${slide.subheading ? `<h3>${slide.subheading}</h3>` : ''}
                 ${slide.body}
             `;
+            animateScores(slideContainer);
         }
 
         function scheduleRotation() {
