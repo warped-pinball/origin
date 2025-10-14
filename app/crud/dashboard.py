@@ -146,3 +146,32 @@ def build_location_scoreboard(
         "machines": machine_payloads,
         "generated_at": now,
     }
+
+
+def get_location_scoreboard_version(
+    db: Session, location_id: int
+) -> Optional[datetime]:
+    """Return the most recent timestamp that should refresh the scoreboard."""
+
+    latest_state: Optional[datetime] = (
+        db.query(func.max(models.MachineGameState.created_at))
+        .join(
+            models.Machine,
+            models.MachineGameState.machine_id == models.Machine.id,
+        )
+        .filter(models.Machine.location_id == location_id)
+        .scalar()
+    )
+
+    latest_score: Optional[datetime] = (
+        db.query(func.max(models.Score.created_at))
+        .join(models.Machine, models.Score.machine_id == models.Machine.id)
+        .filter(models.Machine.location_id == location_id)
+        .scalar()
+    )
+
+    candidates = [value for value in (latest_state, latest_score) if value is not None]
+    if not candidates:
+        return None
+
+    return _to_utc_naive(max(candidates))

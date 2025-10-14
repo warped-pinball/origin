@@ -1,7 +1,12 @@
+import asyncio
 from datetime import datetime, timedelta
 from uuid import uuid4
 
+import pytest
+
 from .. import models
+from ..crud.dashboard import get_location_scoreboard_version
+from ..routers.scoreboard import _location_scoreboard_stream
 
 
 def create_user(db_session, *, email: str | None = None, screen_name: str | None = None):
@@ -113,3 +118,120 @@ def test_location_display_page_renders_for_existing_location(client, db_session)
     response = client.get(f"/locations/{location.id}/display")
     assert response.status_code == 200
     assert "Uptown Arcade" in response.text
+
+
+def test_get_location_scoreboard_version_tracks_latest_activity(db_session):
+    user = create_user(db_session)
+    location = models.Location(user_id=user.id, name="Westside Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-track",
+        user_id=user.id,
+        shared_secret=f"secret-{uuid4().hex}",
+        location_id=location.id,
+        game_title="Tracker",
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    assert get_location_scoreboard_version(db_session, location.id) is None
+
+    earlier = datetime.utcnow().replace(microsecond=0) - timedelta(minutes=5)
+    state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=1000,
+        scores=[1000],
+        ball_in_play=1,
+        player_up=0,
+        players_total=1,
+        created_at=earlier,
+    )
+    db_session.add(state)
+    db_session.commit()
+
+    version_after_state = get_location_scoreboard_version(db_session, location.id)
+    assert version_after_state == earlier
+
+    later = datetime.utcnow().replace(microsecond=0)
+    score = models.Score(
+        user_id=user.id,
+        machine_id=machine.id,
+        game="Tracker",
+        value=12345,
+        created_at=later,
+    )
+    db_session.add(score)
+    db_session.commit()
+
+    version_after_score = get_location_scoreboard_version(db_session, location.id)
+    assert version_after_score == later
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
+async def test_scoreboard_stream_emits_events_for_updates(db_session, anyio_backend):
+    user = create_user(db_session)
+    location = models.Location(user_id=user.id, name="Stream Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-stream",
+        shared_secret=f"secret-{uuid4().hex}",
+        user_id=user.id,
+        location_id=location.id,
+        game_title="Streamer",
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    first_timestamp = datetime.utcnow().replace(microsecond=0)
+    initial_state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=500,
+        scores=[1000],
+        ball_in_play=1,
+        player_up=0,
+        players_total=1,
+        created_at=first_timestamp,
+    )
+    db_session.add(initial_state)
+    db_session.commit()
+
+    class StubRequest:
+        def __init__(self) -> None:
+            self._disconnected = False
+
+        async def is_disconnected(self) -> bool:
+            return self._disconnected
+
+        def disconnect(self) -> None:
+            self._disconnected = True
+
+    request = StubRequest()
+    generator = _location_scoreboard_stream(location.id, request, 0.05)
+
+    first_event = await asyncio.wait_for(generator.__anext__(), timeout=2.0)
+    assert first_timestamp.isoformat() in first_event
+
+    second_timestamp = first_timestamp + timedelta(minutes=1)
+    next_state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=750,
+        scores=[2000],
+        ball_in_play=1,
+        player_up=0,
+        players_total=1,
+        created_at=second_timestamp,
+    )
+    db_session.add(next_state)
+    db_session.commit()
+
+    second_event = await asyncio.wait_for(generator.__anext__(), timeout=2.0)
+    assert second_timestamp.isoformat() in second_event
+
+    request.disconnect()
+    with pytest.raises(StopAsyncIteration):
+        await asyncio.wait_for(generator.__anext__(), timeout=1.0)

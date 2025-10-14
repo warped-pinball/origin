@@ -235,12 +235,22 @@
         const apiBase = {{ api_base|tojson }};
         const normalizedBase = apiBase ? apiBase.replace(/\/$/, '') : '';
         const scoreboardUrl = `${normalizedBase}/api/v1/public/locations/${locationId}/scoreboard`;
+        const scoreboardStreamUrl = `${scoreboardUrl}/stream`;
+        const fallbackRefreshIntervalMs = 5000;
+        const realtimeRetryDelayMs = 15000;
+
+        const statusElement = document.getElementById('status');
+        const updatedAtElement = document.getElementById('updated-at');
+        const slideContainer = document.getElementById('slide-content');
 
         let slides = [];
         let currentSlide = 0;
         let rotationTimer = null;
+        let refreshTimer = null;
+        let eventSource = null;
+        let realtimeRetryTimer = null;
+        let isFetching = false;
         const rotationIntervalMs = 8000;
-        const refreshIntervalMs = 10000;
 
         function formatDateTime(value) {
             if (!value) return 'never';
@@ -318,8 +328,7 @@
         function displaySlide(index) {
             if (slides.length === 0) return;
             const slide = slides[index % slides.length];
-            const container = document.getElementById('slide-content');
-            container.innerHTML = `
+            slideContainer.innerHTML = `
                 <span class="tag">${slide.tag}</span>
                 <h2>${slide.heading}</h2>
                 ${slide.subheading ? `<h3>${slide.subheading}</h3>` : ''}
@@ -337,9 +346,51 @@
             }, rotationIntervalMs);
         }
 
+        function stopPolling() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        function startPolling(interval) {
+            stopPolling();
+            refreshTimer = setInterval(() => {
+                fetchScoreboard();
+            }, interval);
+        }
+
+        function teardownEventSource() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        function clearRealtimeRetry() {
+            if (realtimeRetryTimer) {
+                clearTimeout(realtimeRetryTimer);
+                realtimeRetryTimer = null;
+            }
+        }
+
+        function scheduleRealtimeRetry() {
+            if (realtimeRetryTimer) {
+                return;
+            }
+            realtimeRetryTimer = setTimeout(() => {
+                realtimeRetryTimer = null;
+                initializeRealtimeUpdates(true);
+            }, realtimeRetryDelayMs);
+        }
+
         async function fetchScoreboard() {
+            if (isFetching) {
+                return;
+            }
+            isFetching = true;
             try {
-                document.getElementById('status').innerHTML = '<span class="status-dot"></span> Updating';
+                statusElement.innerHTML = '<span class="status-dot"></span> Updating';
                 const response = await fetch(scoreboardUrl, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error('Unable to load scoreboard');
@@ -349,22 +400,58 @@
                 currentSlide = 0;
                 displaySlide(currentSlide);
                 scheduleRotation();
-                document.getElementById('updated-at').textContent = `Last updated: ${formatDateTime(data.generated_at)}`;
-                document.getElementById('status').innerHTML = '<span class="status-dot"></span> Live';
+                updatedAtElement.textContent = `Last updated: ${formatDateTime(data.generated_at)}`;
+                statusElement.innerHTML = '<span class="status-dot"></span> Live';
             } catch (error) {
                 console.error(error);
-                document.getElementById('status').innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
-                const container = document.getElementById('slide-content');
-                container.innerHTML = `
+                statusElement.innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
+                slideContainer.innerHTML = `
                     <span class="tag">Connection issue</span>
                     <h2>Trying to reconnect…</h2>
                     <p class="empty-state">We\'ll keep retrying automatically. Check your network if this continues.</p>
                 `;
+            } finally {
+                isFetching = false;
             }
         }
 
+        function initializeRealtimeUpdates(isRetry = false) {
+            if (!('EventSource' in window)) {
+                startPolling(fallbackRefreshIntervalMs);
+                return;
+            }
+
+            if (eventSource) {
+                return;
+            }
+
+            if (!isRetry) {
+                startPolling(fallbackRefreshIntervalMs);
+            }
+
+            eventSource = new EventSource(`${scoreboardStreamUrl}?poll_interval=2`);
+            eventSource.onopen = () => {
+                clearRealtimeRetry();
+                stopPolling();
+            };
+            eventSource.onmessage = () => {
+                fetchScoreboard();
+            };
+            eventSource.onerror = () => {
+                teardownEventSource();
+                startPolling(fallbackRefreshIntervalMs);
+                scheduleRealtimeRetry();
+            };
+        }
+
+        window.addEventListener('beforeunload', () => {
+            teardownEventSource();
+            stopPolling();
+            clearRealtimeRetry();
+        });
+
         fetchScoreboard();
-        setInterval(fetchScoreboard, refreshIntervalMs);
+        initializeRealtimeUpdates();
     </script>
 </body>
 </html>
