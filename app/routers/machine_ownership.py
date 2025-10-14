@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
@@ -26,13 +28,14 @@ def list_owned_machines(
     ]
 
 
-@router.delete("/{machine_id}", status_code=204)
+@router.delete("/{machine_id:path}", status_code=204)
 def unregister_machine(
     machine_id: str,
     db: Session = Depends(get_db),
     current_user: crud.models.User = Depends(get_current_user),
 ):
-    machine = crud.get_machine(db, machine_id)
+    decoded_machine_id = unquote(machine_id)
+    machine = crud.get_machine(db, decoded_machine_id)
     if not machine or machine.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Machine not found")
     crud.release_machine(db, machine)

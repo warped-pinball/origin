@@ -115,6 +115,36 @@ def test_unregister_machine_clears_owner_and_location(client, db_session):
     assert machine.claim_code is not None
 
 
+def test_unregister_machine_handles_encoded_identifier(client, db_session):
+    owner = create_user(client, "machine-release-encoded@example.com")
+    location = models.Location(user_id=owner["id"], name="Encoded Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="ZaxBDE/TVtYhAoH/xhAIeg==",
+        game_title="Encoded Machine",
+        shared_secret="encoded-secret-1",
+        user_id=owner["id"],
+        location_id=location.id,
+        claim_code=None,
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    token = login(client, "machine-release-encoded@example.com")
+    response = client.delete(
+        f"/api/v1/machines/{quote(machine.id, safe='')}",
+        headers=auth_headers(token),
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(machine)
+    assert machine.user_id is None
+    assert machine.location_id is None
+    assert machine.claim_code is not None
+
+
 def test_unregister_machine_requires_ownership(client, db_session):
     owner = create_user(client, "machine-owner2@example.com")
     other = create_user(client, "machine-other2@example.com")
