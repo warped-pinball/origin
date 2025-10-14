@@ -29,13 +29,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 3rem 2rem;
+            justify-content: flex-start;
+            padding: 3rem 2rem 5rem;
+            gap: 2rem;
         }
 
         header {
             text-align: center;
-            margin-bottom: 2rem;
+            width: min(60rem, 92vw);
         }
 
         header h1 {
@@ -51,23 +52,30 @@
             color: var(--text-secondary);
         }
 
-        .slide {
-            width: min(72rem, 90vw);
-            min-height: 24rem;
+        main {
+            width: min(78rem, 95vw);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            position: relative;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 28px;
             padding: clamp(1.5rem, 3vw, 2.5rem);
             box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             gap: 1.25rem;
-            position: relative;
-            overflow: hidden;
+            flex: 1 1 0;
+            min-height: clamp(18rem, 35vh, 26rem);
         }
 
-        .slide::before {
+        .panel::before {
             content: "";
             position: absolute;
             inset: -30%;
@@ -75,9 +83,16 @@
             z-index: 0;
         }
 
-        .slide-content {
+        .panel-header,
+        .panel-content {
             position: relative;
             z-index: 1;
+        }
+
+        .panel-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
         .tag {
@@ -92,96 +107,164 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             font-size: 0.85rem;
+            align-self: flex-start;
         }
 
-        .slide h2 {
+        .panel h2 {
             font-size: clamp(2rem, 4vw, 3rem);
             margin: 0;
         }
 
-        .slide h3 {
+        .panel h3 {
             margin: 0;
             font-size: clamp(1.3rem, 2.5vw, 2rem);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .live-games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+            gap: 1rem;
+        }
+
+        .live-card {
+            background: rgba(15, 23, 42, 0.65);
+            border-radius: 22px;
+            padding: 1.1rem 1.35rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .live-card h4 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .live-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .live-scores {
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .live-score {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .player-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .player-label.player-active {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .scores-grid {
+            display: grid;
+            gap: 1.25rem;
+        }
+
+        .score-card {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 22px;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .score-card h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .timeframes {
+            display: grid;
+            gap: 0.85rem;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        }
+
+        .timeframe h5 {
+            margin: 0 0 0.45rem;
+            font-size: 0.95rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
             color: var(--text-secondary);
         }
 
         ol, ul {
             margin: 0;
-            padding-left: 1.5rem;
+            padding: 0;
+            list-style: none;
         }
 
-        ol li {
-            font-size: clamp(1.2rem, 2.2vw, 1.8rem);
-            margin-bottom: 0.6rem;
+        .high-score-list li {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.75rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            align-items: baseline;
+        }
+
+        .player-name {
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 1.1rem;
         }
 
         .score-value {
             color: var(--accent);
             font-weight: 700;
-            margin-left: 0.75rem;
+            font-size: 1.25rem;
         }
 
-        .meta {
-            font-size: 0.95rem;
+        .achieved-at {
+            display: block;
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-            letter-spacing: 0.04em;
-        }
-
-        .status-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.05rem;
-        }
-
-        .status-dot {
-            width: 0.85rem;
-            height: 0.85rem;
-            border-radius: 50%;
-            background: #16a34a;
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
-        }
-
-        .scores-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .player-card {
-            background: rgba(15, 23, 42, 0.65);
-            border-radius: 20px;
-            padding: 1rem 1.25rem;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-        }
-
-        .player-card h4 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .player-card p {
-            margin: 0.35rem 0 0;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--accent);
+            opacity: 0.8;
+            margin-top: 0.15rem;
         }
 
         .score-count {
             position: relative;
         }
 
+        .live-games-grid .empty-state,
+        .scores-grid .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
         .empty-state {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: var(--text-secondary);
-            margin: 1rem 0 0;
+            margin: 0.75rem 0 0;
         }
 
         footer {
@@ -199,16 +282,49 @@
             border: 1px solid rgba(148, 163, 184, 0.2);
         }
 
-        @media (max-width: 720px) {
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        .status-dot {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 50%;
+            background: #16a34a;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+        }
+
+        @media (max-width: 960px) {
             body {
-                padding: 2rem 1.25rem;
+                padding: 2.5rem 1.5rem 4rem;
             }
-            .slide {
-                min-height: 20rem;
+
+            .panel {
+                min-height: auto;
             }
+
             footer {
                 position: static;
-                margin-top: 2rem;
+                margin-top: 1rem;
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 2rem 1.1rem 3rem;
+                gap: 1.5rem;
+            }
+
+            header h1 {
+                font-size: clamp(2.2rem, 8vw, 3.2rem);
+            }
+
+            .live-score .score-value {
+                font-size: 1.6rem;
             }
         }
     </style>
@@ -219,13 +335,35 @@
         <p>Live games · High scores · Updated in real time</p>
     </header>
 
-    <section id="slide" class="slide">
-        <div class="slide-content" id="slide-content">
-            <span class="tag">Preparing display</span>
-            <h2>Please wait…</h2>
-            <p class="empty-state">Fetching the latest action for this location.</p>
-        </div>
-    </section>
+    <main>
+        <section class="panel live-panel">
+            <div class="panel-header">
+                <span class="tag">Live Games</span>
+                <h2>Now Playing</h2>
+                <h3 id="live-subheading">Waiting for machines to report in…</h3>
+            </div>
+            <div class="panel-content">
+                <div id="live-games" class="live-games-grid">
+                    <p class="empty-state">Preparing live game feed…</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel scores-panel">
+            <div class="panel-header">
+                <span class="tag">High Scores</span>
+                <h2>Leaderboards</h2>
+                <h3 id="scores-subheading">Tracking the best scores for every era</h3>
+            </div>
+            <div class="panel-content">
+                <div id="high-scores" class="scores-grid">
+                    <div>
+                        <p class="empty-state">Fetching high scores…</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <footer>
         <span id="status" class="status-indicator"><span class="status-dot"></span> Updating</span>
@@ -233,274 +371,323 @@
         <span>v{{ version }}</span>
     </footer>
 
-    <script>
-        const locationId = {{ location_id }};
-        const locationName = {{ location_name|tojson }};
-        const apiBase = {{ api_base|tojson }};
-        const normalizedBase = apiBase ? apiBase.replace(/\/$/, '') : '';
-        const scoreboardUrl = `${normalizedBase}/api/v1/public/locations/${locationId}/scoreboard`;
-        const scoreboardStreamUrl = `${scoreboardUrl}/stream`;
-        const fallbackRefreshIntervalMs = 5000;
-        const realtimeRetryDelayMs = 15000;
 
-        const statusElement = document.getElementById('status');
-        const updatedAtElement = document.getElementById('updated-at');
-        const slideContainer = document.getElementById('slide-content');
-        const numberFormatter = new Intl.NumberFormat();
-        const previousScoreValues = new Map();
+<script>
+    const locationId = {{ location_id }};
+    const locationName = {{ location_name|tojson }};
+    const apiBase = {{ api_base|tojson }};
+    const normalizedBase = apiBase ? apiBase.replace(/\/$/, '') : '';
+    const scoreboardUrl = `${normalizedBase}/api/v1/public/locations/${locationId}/scoreboard`;
+    const scoreboardStreamUrl = `${scoreboardUrl}/stream`;
+    const fallbackRefreshIntervalMs = 5000;
+    const realtimeRetryDelayMs = 15000;
 
-        let slides = [];
-        let currentSlide = 0;
-        let rotationTimer = null;
-        let refreshTimer = null;
-        let eventSource = null;
-        let realtimeRetryTimer = null;
-        let isFetching = false;
-        const rotationIntervalMs = 8000;
+    const statusElement = document.getElementById('status');
+    const updatedAtElement = document.getElementById('updated-at');
+    const liveGamesElement = document.getElementById('live-games');
+    const highScoresElement = document.getElementById('high-scores');
+    const liveSubheadingElement = document.getElementById('live-subheading');
+    const scoresSubheadingElement = document.getElementById('scores-subheading');
+    const numberFormatter = new Intl.NumberFormat();
+    const previousScoreValues = new Map();
+    const timeframeOrder = [
+        { key: 'daily', label: 'Daily' },
+        { key: 'monthly', label: 'Monthly' },
+        { key: 'all_time', label: 'All-Time' },
+    ];
+    const locationLabel = locationName || 'this location';
 
-        function formatDateTime(value) {
-            if (!value) return 'never';
-            const date = new Date(value);
-            return date.toLocaleString(undefined, {
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-        }
+    let refreshTimer = null;
+    let eventSource = null;
+    let realtimeRetryTimer = null;
+    let isFetching = false;
 
-        function titleCase(value) {
-            return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        }
-
-        function renderHighScores(scores, machineId, timeframe) {
-            if (!scores || scores.length === 0) {
-                return '<p class="empty-state">No scores recorded yet. Be the first!</p>';
-            }
-            return `<ol>${scores
-                .map((entry, index) => {
-                    const player = entry.player_name || 'Anonymous';
-                    const achieved = new Date(entry.achieved_at);
-                    const meta = achieved.toLocaleDateString();
-                    const key = `${machineId}-${timeframe}-high-${index}`;
-                    return `<li><span>${player}</span><span class="score-value score-count" data-count-up="${entry.value}" data-count-up-key="${key}">${entry.value.toLocaleString()}</span><br><small>${meta}</small></li>`;
-                })
-                .join('')}</ol>`;
-        }
-
-        function buildSlides(data) {
-            const newSlides = [];
-            data.machines.forEach((machine) => {
-                const title = machine.game_title || 'Machine ' + machine.machine_id;
-                if (machine.is_active) {
-                    const players = machine.scores.map((score, index) => {
-                        const key = `${machine.machine_id}-live-${index}`;
-                        return `<div class="player-card"><h4>Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}</h4><p class="score-count" data-count-up="${score}" data-count-up-key="${key}">${score.toLocaleString()}</p></div>`;
-                    }).join('');
-                    const parts = [];
-                    if (machine.players_total) {
-                        parts.push(`${machine.players_total} player${machine.players_total === 1 ? '' : 's'}`);
-                    }
-                    if (machine.ball_in_play !== null && machine.ball_in_play !== undefined) {
-                        parts.push(`Ball ${machine.ball_in_play}`);
-                    }
-                    const subheading = parts.join(' · ') || 'Game in progress';
-                    newSlides.push({
-                        tag: 'Now Playing',
-                        heading: title,
-                        subheading,
-                        body: players ? `<div class="scores-grid">${players}</div>` : '<p class="empty-state">Scores will appear once the game reports them.</p>'
-                    });
-                }
-
-                Object.entries(machine.high_scores).forEach(([timeframe, scores]) => {
-                    newSlides.push({
-                        tag: `${titleCase(timeframe)} High Scores`,
-                        heading: title,
-                        subheading: `${scores.length || 'No'} record${scores.length === 1 ? '' : 's'}`,
-                        body: renderHighScores(scores, machine.machine_id, timeframe)
-                    });
-                });
-            });
-
-            if (newSlides.length === 0) {
-                newSlides.push({
-                    tag: 'No Data',
-                    heading: locationName,
-                    subheading: 'Waiting for scores to arrive',
-                    body: '<p class="empty-state">Once games start reporting, live stats will appear here automatically.</p>'
-                });
-            }
-
-            return newSlides;
-        }
-
-        function animateScores(container) {
-            if (!container) return;
-            const elements = container.querySelectorAll('[data-count-up]');
-            elements.forEach((element) => {
-                const target = Number(element.getAttribute('data-count-up'));
-                if (!Number.isFinite(target)) {
-                    return;
-                }
-                const key = element.getAttribute('data-count-up-key');
-                const hasKey = Boolean(key);
-                const start = hasKey && previousScoreValues.has(key)
-                    ? previousScoreValues.get(key)
-                    : 0;
-                if (start === target) {
-                    element.textContent = numberFormatter.format(target);
-                    if (hasKey) {
-                        previousScoreValues.set(key, target);
-                    }
-                    return;
-                }
-                const duration = 900;
-                const startTime = performance.now();
-                const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-
-                const update = (now) => {
-                    const progress = Math.min((now - startTime) / duration, 1);
-                    const eased = easeOutCubic(progress);
-                    const value = Math.round(start + (target - start) * eased);
-                    element.textContent = numberFormatter.format(value);
-                    if (progress < 1) {
-                        requestAnimationFrame(update);
-                    } else if (hasKey) {
-                        previousScoreValues.set(key, target);
-                    }
-                };
-
-                requestAnimationFrame(update);
-            });
-        }
-
-        function displaySlide(index) {
-            if (slides.length === 0) return;
-            const slide = slides[index % slides.length];
-            slideContainer.innerHTML = `
-                <span class="tag">${slide.tag}</span>
-                <h2>${slide.heading}</h2>
-                ${slide.subheading ? `<h3>${slide.subheading}</h3>` : ''}
-                ${slide.body}
-            `;
-            animateScores(slideContainer);
-        }
-
-        function scheduleRotation() {
-            if (rotationTimer) {
-                clearInterval(rotationTimer);
-            }
-            rotationTimer = setInterval(() => {
-                currentSlide = (currentSlide + 1) % slides.length;
-                displaySlide(currentSlide);
-            }, rotationIntervalMs);
-        }
-
-        function stopPolling() {
-            if (refreshTimer) {
-                clearInterval(refreshTimer);
-                refreshTimer = null;
-            }
-        }
-
-        function startPolling(interval) {
-            stopPolling();
-            refreshTimer = setInterval(() => {
-                fetchScoreboard();
-            }, interval);
-        }
-
-        function teardownEventSource() {
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-            }
-        }
-
-        function clearRealtimeRetry() {
-            if (realtimeRetryTimer) {
-                clearTimeout(realtimeRetryTimer);
-                realtimeRetryTimer = null;
-            }
-        }
-
-        function scheduleRealtimeRetry() {
-            if (realtimeRetryTimer) {
-                return;
-            }
-            realtimeRetryTimer = setTimeout(() => {
-                realtimeRetryTimer = null;
-                initializeRealtimeUpdates(true);
-            }, realtimeRetryDelayMs);
-        }
-
-        async function fetchScoreboard() {
-            if (isFetching) {
-                return;
-            }
-            isFetching = true;
-            try {
-                statusElement.innerHTML = '<span class="status-dot"></span> Updating';
-                const response = await fetch(scoreboardUrl, { cache: 'no-store' });
-                if (!response.ok) {
-                    throw new Error('Unable to load scoreboard');
-                }
-                const data = await response.json();
-                slides = buildSlides(data);
-                currentSlide = 0;
-                displaySlide(currentSlide);
-                scheduleRotation();
-                updatedAtElement.textContent = `Last updated: ${formatDateTime(data.generated_at)}`;
-                statusElement.innerHTML = '<span class="status-dot"></span> Live';
-            } catch (error) {
-                console.error(error);
-                statusElement.innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
-                slideContainer.innerHTML = `
-                    <span class="tag">Connection issue</span>
-                    <h2>Trying to reconnect…</h2>
-                    <p class="empty-state">We\'ll keep retrying automatically. Check your network if this continues.</p>
-                `;
-            } finally {
-                isFetching = false;
-            }
-        }
-
-        function initializeRealtimeUpdates(isRetry = false) {
-            if (!('EventSource' in window)) {
-                startPolling(fallbackRefreshIntervalMs);
-                return;
-            }
-
-            if (eventSource) {
-                return;
-            }
-
-            if (!isRetry) {
-                startPolling(fallbackRefreshIntervalMs);
-            }
-
-            eventSource = new EventSource(`${scoreboardStreamUrl}?poll_interval=2`);
-            eventSource.onopen = () => {
-                clearRealtimeRetry();
-                stopPolling();
-            };
-            eventSource.onmessage = () => {
-                fetchScoreboard();
-            };
-            eventSource.onerror = () => {
-                teardownEventSource();
-                startPolling(fallbackRefreshIntervalMs);
-                scheduleRealtimeRetry();
-            };
-        }
-
-        window.addEventListener('beforeunload', () => {
-            teardownEventSource();
-            stopPolling();
-            clearRealtimeRetry();
+    function formatDateTime(value) {
+        if (!value) return 'never';
+        const date = new Date(value);
+        return date.toLocaleString(undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
         });
+    }
 
-        fetchScoreboard();
-        initializeRealtimeUpdates();
-    </script>
+    function animateScores(container) {
+        if (!container) return;
+        const elements = container.querySelectorAll('[data-count-up]');
+        elements.forEach((element) => {
+            const target = Number(element.getAttribute('data-count-up'));
+            if (!Number.isFinite(target)) {
+                return;
+            }
+            const key = element.getAttribute('data-count-up-key');
+            const hasKey = Boolean(key);
+            const start = hasKey && previousScoreValues.has(key)
+                ? previousScoreValues.get(key)
+                : 0;
+            if (start === target) {
+                element.textContent = numberFormatter.format(target);
+                if (hasKey) {
+                    previousScoreValues.set(key, target);
+                }
+                return;
+            }
+            const duration = 900;
+            const startTime = performance.now();
+            const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+            const update = (now) => {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const eased = easeOutCubic(progress);
+                const value = Math.round(start + (target - start) * eased);
+                element.textContent = numberFormatter.format(value);
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else if (hasKey) {
+                    previousScoreValues.set(key, target);
+                }
+            };
+
+            requestAnimationFrame(update);
+        });
+    }
+
+    function renderLiveGameCard(machine) {
+        const title = machine.game_title || `Machine ${machine.machine_id}`;
+        const metaParts = [];
+        if (machine.players_total) {
+            metaParts.push(`${machine.players_total} player${machine.players_total === 1 ? '' : 's'}`);
+        }
+        if (machine.ball_in_play !== null && machine.ball_in_play !== undefined) {
+            metaParts.push(`Ball ${machine.ball_in_play}`);
+        }
+        if (!metaParts.length) {
+            metaParts.push('Game in progress');
+        }
+
+        const playerRows = (machine.scores || []).map((score, index) => {
+            const key = `${machine.machine_id}-live-${index}`;
+            const labelClass = machine.player_up === index ? 'player-label player-active' : 'player-label';
+            const labelText = `Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}`;
+            return `
+                <div class="live-score">
+                    <span class="${labelClass}">${labelText}</span>
+                    <span class="score-value score-count" data-count-up="${score}" data-count-up-key="${key}">${numberFormatter.format(score)}</span>
+                </div>
+            `;
+        }).join('');
+
+        const scoresMarkup = playerRows || '<p class="empty-state">Scores will appear once the game reports them.</p>';
+
+        return `
+            <article class="live-card">
+                <h4>${title}</h4>
+                <div class="live-meta">${metaParts.join(' · ')}</div>
+                <div class="live-scores">
+                    ${scoresMarkup}
+                </div>
+            </article>
+        `;
+    }
+
+    function renderLiveGames(machines) {
+        const activeMachines = machines.filter((machine) => machine.is_active);
+        if (activeMachines.length === 0) {
+            liveSubheadingElement.textContent = 'No active games right now';
+            return `<p class="empty-state">No live games at ${locationLabel} right now. Check back soon!</p>`;
+        }
+
+        const heading = activeMachines.length === 1
+            ? '1 active game'
+            : `${activeMachines.length} active games`;
+        liveSubheadingElement.textContent = heading;
+
+        return activeMachines.map((machine) => renderLiveGameCard(machine)).join('');
+    }
+
+    function renderHighScoreEntry(entry, machineId, timeframe, index) {
+        const key = `${machineId}-${timeframe}-high-${index}`;
+        const achieved = entry.achieved_at ? new Date(entry.achieved_at) : null;
+        const achievedMarkup = achieved
+            ? `<span class="achieved-at">${achieved.toLocaleDateString()}</span>`
+            : '';
+        const playerName = entry.player_name ?? '';
+        const safePlayerName = playerName || '&nbsp;';
+
+        return `
+            <li>
+                <div>
+                    <span class="player-name">${safePlayerName}</span>
+                    ${achievedMarkup}
+                </div>
+                <span class="score-value score-count" data-count-up="${entry.value}" data-count-up-key="${key}">${numberFormatter.format(entry.value)}</span>
+            </li>
+        `;
+    }
+
+    function renderHighScoreCard(machine) {
+        const title = machine.game_title || `Machine ${machine.machine_id}`;
+        const sections = timeframeOrder.map(({ key, label }) => {
+            const entries = (machine.high_scores && machine.high_scores[key]) || [];
+            const content = entries.length
+                ? `<ol class="high-score-list">${entries
+                    .map((entry, index) => renderHighScoreEntry(entry, machine.machine_id, key, index))
+                    .join('')}</ol>`
+                : '<p class="empty-state">No scores recorded yet. Be the first!</p>';
+            return `
+                <div class="timeframe">
+                    <h5>${label}</h5>
+                    ${content}
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <article class="score-card">
+                <h4>${title}</h4>
+                <div class="timeframes">
+                    ${sections}
+                </div>
+            </article>
+        `;
+    }
+
+    function renderHighScoresSection(machines) {
+        if (!machines.length) {
+            scoresSubheadingElement.textContent = 'No machines reporting yet';
+            return `<div class="score-card"><p class="empty-state">No machines at ${locationLabel} are reporting scores yet.</p></div>`;
+        }
+
+        const totalEntries = machines.reduce((sum, machine) => {
+            return sum + timeframeOrder.reduce((inner, { key }) => {
+                const list = (machine.high_scores && machine.high_scores[key]) || [];
+                return inner + list.length;
+            }, 0);
+        }, 0);
+
+        if (totalEntries > 0) {
+            scoresSubheadingElement.textContent = `Displaying ${totalEntries} high score${totalEntries === 1 ? '' : 's'} across ${machines.length} machine${machines.length === 1 ? '' : 's'}`;
+        } else {
+            scoresSubheadingElement.textContent = 'No high scores recorded yet';
+        }
+
+        return machines.map((machine) => renderHighScoreCard(machine)).join('');
+    }
+
+    function renderDashboard(data) {
+        const machines = Array.isArray(data.machines) ? data.machines : [];
+        liveGamesElement.innerHTML = renderLiveGames(machines);
+        highScoresElement.innerHTML = renderHighScoresSection(machines);
+        animateScores(liveGamesElement);
+        animateScores(highScoresElement);
+    }
+
+    function stopPolling() {
+        if (refreshTimer) {
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
+    }
+
+    function startPolling(interval) {
+        stopPolling();
+        refreshTimer = setInterval(() => {
+            fetchScoreboard();
+        }, interval);
+    }
+
+    function teardownEventSource() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+    }
+
+    function clearRealtimeRetry() {
+        if (realtimeRetryTimer) {
+            clearTimeout(realtimeRetryTimer);
+            realtimeRetryTimer = null;
+        }
+    }
+
+    function scheduleRealtimeRetry() {
+        if (realtimeRetryTimer) {
+            return;
+        }
+        realtimeRetryTimer = setTimeout(() => {
+            realtimeRetryTimer = null;
+            initializeRealtimeUpdates(true);
+        }, realtimeRetryDelayMs);
+    }
+
+    async function fetchScoreboard() {
+        if (isFetching) {
+            return;
+        }
+        isFetching = true;
+        try {
+            statusElement.innerHTML = '<span class="status-dot"></span> Updating';
+            const response = await fetch(scoreboardUrl, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error('Unable to load scoreboard');
+            }
+            const data = await response.json();
+            renderDashboard(data);
+            updatedAtElement.textContent = `Last updated: ${formatDateTime(data.generated_at)}`;
+            statusElement.innerHTML = '<span class="status-dot"></span> Live';
+        } catch (error) {
+            console.error(error);
+            statusElement.innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
+            liveSubheadingElement.textContent = 'Connection issue';
+            liveGamesElement.innerHTML = '<p class="empty-state">We're trying to reconnect. Check the network if this continues.</p>';
+            scoresSubheadingElement.textContent = 'Connection issue';
+            highScoresElement.innerHTML = '<div class="score-card"><p class="empty-state">We'll keep retrying automatically. Scores will reappear once we reconnect.</p></div>';
+        } finally {
+            isFetching = false;
+        }
+    }
+
+    function initializeRealtimeUpdates(isRetry = false) {
+        if (!('EventSource' in window)) {
+            startPolling(fallbackRefreshIntervalMs);
+            return;
+        }
+
+        if (eventSource) {
+            return;
+        }
+
+        if (!isRetry) {
+            startPolling(fallbackRefreshIntervalMs);
+        }
+
+        eventSource = new EventSource(`${scoreboardStreamUrl}?poll_interval=2`);
+        eventSource.onopen = () => {
+            clearRealtimeRetry();
+            stopPolling();
+        };
+        eventSource.onmessage = () => {
+            fetchScoreboard();
+        };
+        eventSource.onerror = () => {
+            teardownEventSource();
+            startPolling(fallbackRefreshIntervalMs);
+            scheduleRealtimeRetry();
+        };
+    }
+
+    window.addEventListener('beforeunload', () => {
+        teardownEventSource();
+        stopPolling();
+        clearRealtimeRetry();
+    });
+
+    fetchScoreboard();
+    initializeRealtimeUpdates();
+</script>
+
 </body>
 </html>
