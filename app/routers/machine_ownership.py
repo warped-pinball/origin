@@ -29,6 +29,7 @@ def list_owned_machines(
                     url=qr.url,
                     code=qr.nfc_link,
                     created_at=qr.created_at,
+                    machine_id=qr.machine_id,
                 )
                 for qr in db.query(models.QRCode)
                 .filter(models.QRCode.machine_id == machine.id)

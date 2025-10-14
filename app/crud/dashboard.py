@@ -107,8 +107,8 @@ def _compute_player_game_times(
     if max_players == 0:
         return []
 
-    timers: List[Dict[int, Dict[str, object]]] = [
-        {}
+    trackers: List[Dict[str, object]] = [
+        {"total": 0.0, "last": None, "ball": None}
         for _ in range(max_players)
     ]
     previous_scores: List[Optional[int]] = [None] * max_players
@@ -127,36 +127,33 @@ def _compute_player_game_times(
                 continue
 
             score = int(raw_score)
-
             previous = previous_scores[index]
+            tracker = trackers[index]
+
+            if tracker.get("ball") != ball and ball is not None:
+                tracker["ball"] = ball
+                tracker["last"] = None
+
             if previous is None:
                 previous_scores[index] = score
                 continue
 
             delta = score - previous
             if delta > 0 and ball is not None and ball > 0:
-                timer = timers[index].setdefault(
-                    ball,
-                    {"total": 0.0, "last": None},
-                )
-                last = timer["last"]
-                if last is None:
-                    timer["last"] = timestamp
-                else:
+                last = tracker["last"]
+                if last is not None:
                     elapsed = (timestamp - last).total_seconds()
                     if elapsed < pause_threshold_seconds:
-                        timer["total"] += elapsed
-                    timer["last"] = timestamp
+                        tracker["total"] += elapsed
+                tracker["last"] = timestamp
 
             previous_scores[index] = score
 
     totals: List[int] = []
-    for timer in timers:
-        total_seconds = sum(
-            value["total"]
-            for value in timer.values()
-            if isinstance(value.get("total"), (int, float))
-        )
+    for tracker in trackers:
+        total_seconds = tracker.get("total", 0.0)
+        if not isinstance(total_seconds, (int, float)):
+            total_seconds = 0.0
         totals.append(int(round(total_seconds)))
 
     return totals
@@ -239,6 +236,7 @@ def build_location_scoreboard(
     windows = {
         "all_time": None,
         "daily": now - timedelta(days=1),
+        "weekly": now - timedelta(days=7),
         "monthly": now - timedelta(days=30),
     }
 

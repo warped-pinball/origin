@@ -119,6 +119,18 @@
       });
     }
 
+    async function getQrCodes() {
+      return apiFetch('/api/v1/qr-codes/');
+    }
+
+    async function assignQrCode(qrId, machineId) {
+      return apiFetch(`/api/v1/qr-codes/${qrId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ machine_id: machineId || null })
+      });
+    }
+
     return {
       signup,
       login,
@@ -136,7 +148,9 @@
       assignMachine,
       removeMachine,
       getMachineState,
-      claimMachineScores
+      claimMachineScores,
+      getQrCodes,
+      assignQrCode
     };
   }
 

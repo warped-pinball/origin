@@ -76,7 +76,9 @@ global.OriginApi = {
   removeMachine: async () => ({ ok: true }),
   createLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) }),
   updateLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) }),
-  deleteLocation: async () => ({ ok: true })
+  deleteLocation: async () => ({ ok: true }),
+  getQrCodes: async () => ({ ok: true, json: async () => [] }),
+  assignQrCode: async () => ({ ok: true, json: async () => ({}) })
 };
 
 const code = fs.readFileSync(path.join(__dirname, 'settings.js'), 'utf8');
@@ -199,6 +201,69 @@ test('loadMachines renders QR code details and allows copying', async () => {
   const actions = entry.children[1];
   await actions.children[0].onclick({ preventDefault() {} });
   assert.strictEqual(global.__copiedText, 'https://origin.example/q?r=abc123');
+});
+
+test('loadQrCodes renders list and updates assignments', async () => {
+  OriginApi.getMachines = async () => ({
+    ok: true,
+    json: async () => ([
+      { id: 'm1', game_title: 'Machine One', location_id: null, qr_codes: [] },
+      { id: 'm2', game_title: 'Machine Two', location_id: null, qr_codes: [] }
+    ])
+  });
+  OriginApi.getQrCodes = async () => ({
+    ok: true,
+    json: async () => ([{
+      id: 42,
+      url: 'https://origin.example/q?r=xyz',
+      code: 'xyz',
+      machine_id: null,
+      machine_label: null
+    }])
+  });
+  let assignedId = null;
+  let assignedMachine = null;
+  OriginApi.assignQrCode = async (id, machineId) => {
+    assignedId = id;
+    assignedMachine = machineId;
+    return {
+      ok: true,
+      json: async () => ({
+        id,
+        url: 'https://origin.example/q?r=xyz',
+        code: 'xyz',
+        machine_id: machineId,
+        machine_label: machineId ? 'Machine One' : null
+      })
+    };
+  };
+
+  const list = el('qr-codes-list');
+  list.children = [];
+  list.innerHTML = '';
+  el('qr-codes-empty').style.display = 'none';
+
+  await loadMachines();
+  await loadQrCodes();
+
+  assert.strictEqual(list.children.length, 1);
+  const item = list.children[0];
+  const assignment = item.children[item.children.length - 1];
+  const select = assignment.children[0];
+  const status = assignment.children[1];
+  assert.strictEqual(status.textContent, 'Not assigned');
+
+  select.value = 'm1';
+  await select.onchange();
+
+  assert.strictEqual(assignedId, 42);
+  assert.strictEqual(assignedMachine, 'm1');
+  assert.deepStrictEqual(lastToast, { message: 'QR code updated', type: 'success' });
+
+  const updatedItem = el('qr-codes-list').children[0];
+  const updatedAssignment = updatedItem.children[updatedItem.children.length - 1];
+  const updatedStatus = updatedAssignment.children[1];
+  assert.strictEqual(updatedStatus.textContent, 'Assigned to Machine One');
 });
 
 test('handleLocationDelete removes location after confirmation', async () => {

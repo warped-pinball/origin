@@ -307,6 +307,63 @@ main.container { padding-bottom:3.5rem; }
     color:var(--muted-color,#64748b);
 }
 
+.qr-codes-section {
+    display:flex;
+    flex-direction:column;
+    gap:0.75rem;
+    margin-top:0.5rem;
+}
+
+.qr-codes-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:0.75rem;
+}
+
+.qr-code-item {
+    display:flex;
+    flex-direction:column;
+    gap:0.75rem;
+    padding:0.75rem;
+    border-radius:0.5rem;
+    border:1px solid rgba(148,163,184,0.35);
+    background:rgba(15,23,42,0.04);
+}
+
+.qr-code-header {
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+}
+
+.qr-code-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+}
+
+.qr-code-info {
+    flex:1 1 auto;
+}
+
+.qr-code-assignment {
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    align-items:center;
+}
+
+.qr-code-select {
+    min-width:12rem;
+    flex:1 1 12rem;
+}
+
+.qr-code-status {
+    color:var(--muted-color,#64748b);
+}
+
 .scoreboard-updated {
     margin:0 0 0.5rem;
     color:var(--muted-color,#64748b);

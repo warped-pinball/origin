@@ -67,8 +67,24 @@ class OwnedQRCode(BaseModel):
     url: str
     code: Optional[str] = None
     created_at: datetime
+    machine_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class QRCodeDetail(BaseModel):
+    id: int
+    url: str
+    code: Optional[str] = None
+    created_at: datetime
+    machine_id: Optional[str] = None
+    machine_label: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class QRCodeAssignmentUpdate(BaseModel):
+    machine_id: Optional[str] = None
 
 
 class OwnedMachine(BaseModel):
