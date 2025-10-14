@@ -21,20 +21,28 @@ global.document = {
 };
 global.displayPage = () => {};
 global.loadUserInfo = () => {};
-global.location = { search: '', pathname: '/', hash: '' };
+global.location = { search: '', pathname: '/', hash: '', protocol: 'https:' };
 vm.runInThisContext(code);
 let loggedIn = false;
 let loginShown = false;
 global.showLoggedIn = () => { loggedIn = true; };
 global.showLogin = () => { loginShown = true; };
 
-test('checkAuth stores token from cookie', () => {
+test('checkAuth keeps cookie and localStorage in sync', () => {
+  store.token = undefined;
   loggedIn = false;
   loginShown = false;
   replaced = undefined;
   cookieStore = 'token=abc';
   checkAuth();
   assert.strictEqual(store.token, 'abc');
-  assert.strictEqual(cookieStore, 'token=; Max-Age=0; path=/');
-  assert.strictEqual(replaced, undefined);
+  assert.strictEqual(cookieStore, 'token=abc; path=/; SameSite=Lax; Secure');
+
+  store.token = 'persisted';
+  loggedIn = false;
+  loginShown = false;
+  replaced = undefined;
+  cookieStore = '';
+  checkAuth();
+  assert.strictEqual(cookieStore, 'token=persisted; path=/; SameSite=Lax; Secure');
 });

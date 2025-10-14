@@ -15,7 +15,7 @@
         <input type="hidden" name="code" value="{{ code }}" />
         <select name="machine_id">
           {% for m in machines %}
-          <option value="{{ m.id }}">{{ m.name }}</option>
+          <option value="{{ m.id }}">{{ m.game_title or m.name or m.id }}</option>
           {% endfor %}
         </select>
         <button type="submit">Assign</button>

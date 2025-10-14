@@ -48,6 +48,7 @@ def test_first_scan_claims_qr_for_user(client, db_session):
 
     assert response.status_code == 200
     assert "Select Machine" in response.text
+    assert "Owned Machine" in response.text
     db_session.refresh(qr)
     assert qr.user_id == owner["id"]
 
@@ -63,6 +64,7 @@ def test_unknown_code_creates_qr_entry(client, db_session):
 
     assert response.status_code == 200
     assert "Select Machine" in response.text
+    assert "Owned Machine" in response.text
 
     qr = (
         db_session.query(models.QRCode)
