@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
-from jose import jwt, JWTError
-from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from .database import get_db
-from . import crud
 import os
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Request, status
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
+
+from . import crud
+from .database import get_db
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -14,8 +15,23 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
+
+def _get_token_from_request(request: Request, auto_error: bool) -> Optional[str]:
+    authorization = request.headers.get("Authorization")
+    if authorization:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() == "bearer" and token:
+            return token
+    cookie_token = request.cookies.get("token")
+    if cookie_token:
+        return cookie_token
+    if auto_error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return None
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -29,8 +45,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+    request: Request, db: Session = Depends(get_db)
 ) -> crud.models.User:
+    token = _get_token_from_request(request, auto_error=True)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -50,9 +67,9 @@ def get_current_user(
 
 
 def get_current_user_optional(
-    db: Session = Depends(get_db),
-    token: Optional[str] = Depends(oauth2_scheme_optional),
+    request: Request, db: Session = Depends(get_db)
 ) -> Optional[crud.models.User]:
+    token = _get_token_from_request(request, auto_error=False)
     if not token:
         return None
     try:

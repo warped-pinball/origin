@@ -52,6 +52,25 @@ def test_first_scan_claims_qr_for_user(client, db_session):
     assert qr.user_id == owner["id"]
 
 
+def test_qr_scan_uses_cookie_when_no_auth_header(client, db_session):
+    owner = create_user(client, "qr-cookie-owner@example.com")
+    login_response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "qr-cookie-owner@example.com", "password": "pass"},
+    )
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+    assert login_response.cookies.get("token") == token
+
+    _create_machine(db_session, owner_id=owner["id"])
+    qr, code = _create_qr(db_session)
+
+    response = client.get(f"/q?r={code}", cookies={"token": token})
+
+    assert response.status_code == 200
+    assert "Select Machine" in response.text
+
+
 def test_other_user_cannot_claim_claimed_qr(client, db_session):
     owner = create_user(client, "qr-claimed-owner@example.com")
     owner_token = login(client, "qr-claimed-owner@example.com")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
@@ -27,7 +27,17 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    response = JSONResponse({"access_token": access_token, "token_type": "bearer"})
+    response.set_cookie(
+        key="token",
+        value=access_token,
+        max_age=int(access_token_expires.total_seconds()),
+        secure=True,
+        httponly=False,
+        samesite="lax",
+        path="/",
+    )
+    return response
 
 
 @router.get("/verify")
