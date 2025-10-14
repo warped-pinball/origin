@@ -174,6 +174,89 @@
           controls.appendChild(removeBtn);
 
           li.appendChild(controls);
+
+          const qrSection = document.createElement('div');
+          qrSection.className = 'machine-qr-section';
+          const codes = Array.isArray(m.qr_codes) ? m.qr_codes : [];
+          if (codes.length) {
+            const qrTitle = document.createElement('p');
+            qrTitle.className = 'machine-qr-title';
+            qrTitle.textContent = codes.length === 1 ? 'QR code' : 'QR codes';
+            qrSection.appendChild(qrTitle);
+
+            const qrList = document.createElement('ul');
+            qrList.className = 'machine-qr-list';
+
+            codes.forEach(qr => {
+              const item = document.createElement('li');
+              item.className = 'machine-qr-entry';
+
+              const info = document.createElement('div');
+              info.className = 'machine-qr-info';
+
+              const link = document.createElement('a');
+              link.href = qr.url;
+              link.textContent = qr.url;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              info.appendChild(link);
+
+              if (qr.code) {
+                const codeLabel = document.createElement('span');
+                codeLabel.className = 'machine-qr-code';
+                codeLabel.textContent = `Code: ${qr.code}`;
+                info.appendChild(codeLabel);
+              }
+
+              const actions = document.createElement('div');
+              actions.className = 'machine-qr-actions';
+
+              const copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'secondary outline';
+              copyBtn.textContent = 'Copy link';
+              copyBtn.onclick = async e => {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                try {
+                  if (
+                    global.navigator &&
+                    global.navigator.clipboard &&
+                    typeof global.navigator.clipboard.writeText === 'function'
+                  ) {
+                    await global.navigator.clipboard.writeText(qr.url);
+                    showToast('QR link copied', 'success');
+                  } else {
+                    throw new Error('Clipboard unavailable');
+                  }
+                } catch (err) {
+                  showToast('Unable to copy QR link', 'error');
+                }
+              };
+
+              const openLink = document.createElement('a');
+              openLink.href = qr.url;
+              openLink.target = '_blank';
+              openLink.rel = 'noopener noreferrer';
+              openLink.className = 'secondary outline';
+              openLink.textContent = 'Open';
+
+              actions.appendChild(copyBtn);
+              actions.appendChild(openLink);
+
+              item.appendChild(info);
+              item.appendChild(actions);
+              qrList.appendChild(item);
+            });
+
+            qrSection.appendChild(qrList);
+          } else {
+            const empty = document.createElement('p');
+            empty.className = 'machine-qr-empty';
+            empty.textContent = 'No QR codes have been assigned yet.';
+            qrSection.appendChild(empty);
+          }
+
+          li.appendChild(qrSection);
           list.appendChild(li);
 
           if (claimedMachineId && claimedMachineId === m.id) {

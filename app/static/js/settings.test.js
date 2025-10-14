@@ -70,7 +70,7 @@ global.open = (url, target) => { global.__openedWindow = { url, target }; };
 
 global.OriginApi = {
   getLocations: async () => ({ ok: true, json: async () => [] }),
-  getMachines: async () => ({ ok: true, json: async () => [{ id: 1, name: 'M1', location_id: 1 }] }),
+  getMachines: async () => ({ ok: true, json: async () => [{ id: 1, name: 'M1', location_id: 1, qr_codes: [] }] }),
   assignMachine: async () => ({ ok: true }),
   removeMachine: async () => ({ ok: true }),
   createLocation: async () => ({ ok: true, json: async () => ({ id: 1 }) }),
@@ -155,7 +155,7 @@ test('loadMachines falls back to game title when name missing', async () => {
 
 test('loadMachines highlights claimed machine and shows remove button', async () => {
   __setClaimedMachine('abc');
-  OriginApi.getMachines = async () => ({ ok: true, json: async () => [{ id: 'abc', name: 'New Machine', location_id: null }] });
+  OriginApi.getMachines = async () => ({ ok: true, json: async () => [{ id: 'abc', name: 'New Machine', location_id: null, qr_codes: [] }] });
   const list = el('machines-list');
   list.children = [];
   list.innerHTML = '';
@@ -167,4 +167,33 @@ test('loadMachines highlights claimed machine and shows remove button', async ()
   assert.ok(li.classList.contains('machine-highlight'));
   assert.strictEqual(message.style.display, 'block');
   assert.strictEqual(li.children[1].children[1].textContent, 'Unregister');
+});
+
+test('loadMachines renders QR code details and allows copying', async () => {
+  OriginApi.getMachines = async () => ({
+    ok: true,
+    json: async () => ([{
+      id: 'qr-1',
+      name: 'QR Machine',
+      location_id: null,
+      qr_codes: [{ id: 12, url: 'https://origin.example/q?r=abc123', code: 'abc123' }]
+    }])
+  });
+  const list = el('machines-list');
+  list.children = [];
+  list.innerHTML = '';
+  global.__copiedText = '';
+  await loadMachines();
+  assert.strictEqual(list.children.length, 1);
+  const machineItem = list.children[0];
+  const qrSection = machineItem.children.find(child => child.className && child.className.includes('machine-qr-section'));
+  assert.ok(qrSection);
+  const qrList = qrSection.children.find(child => child.className && child.className.includes('machine-qr-list'));
+  assert.ok(qrList);
+  const entry = qrList.children[0];
+  const info = entry.children[0];
+  assert.strictEqual(info.children[0].textContent, 'https://origin.example/q?r=abc123');
+  const actions = entry.children[1];
+  await actions.children[0].onclick({ preventDefault() {} });
+  assert.strictEqual(global.__copiedText, 'https://origin.example/q?r=abc123');
 });

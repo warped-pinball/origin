@@ -3,7 +3,7 @@ from urllib.parse import unquote
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from .. import crud, schemas
+from .. import crud, models, schemas
 from ..auth import get_current_user
 from ..database import get_db
 
@@ -23,6 +23,18 @@ def list_owned_machines(
             name=machine.game_title or machine.id,
             game_title=machine.game_title or machine.id,
             location_id=machine.location_id,
+            qr_codes=[
+                schemas.OwnedQRCode(
+                    id=qr.id,
+                    url=qr.url,
+                    code=qr.nfc_link,
+                    created_at=qr.created_at,
+                )
+                for qr in db.query(models.QRCode)
+                .filter(models.QRCode.machine_id == machine.id)
+                .order_by(models.QRCode.created_at.asc())
+                .all()
+            ],
         )
         for machine in machines
     ]

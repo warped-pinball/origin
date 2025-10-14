@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 
+from .test_user_machines import auth_headers, create_user, login
 from .. import models
 
 
@@ -170,3 +171,69 @@ def test_record_game_state_records_scores_when_game_ends(client, db_session):
     assert [
         entry["value"] for entry in machine_payload["high_scores"]["all_time"]
     ] == [30_000, 12_500]
+
+
+def test_get_latest_machine_state_returns_scores(client, db_session, machine):
+    state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=5000,
+        ball_in_play=1,
+        scores=[1_000, 2_000, 3_000],
+        player_up=1,
+        players_total=3,
+    )
+    db_session.add(state)
+    db_session.commit()
+
+    user = create_user(client, "machine-state@example.com")
+    token = login(client, "machine-state@example.com")
+
+    response = client.get(
+        f"/api/v1/machines/{machine.id}/latest_state",
+        headers=auth_headers(token),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["scores"] == [1000, 2000, 3000]
+    assert payload["player_up"] == 1
+    assert payload["players_total"] == 3
+
+
+def test_claim_machine_scores_records_entries(client, db_session, machine):
+    state = models.MachineGameState(
+        machine_id=machine.id,
+        time_ms=6000,
+        ball_in_play=1,
+        scores=[10_000, 20_000],
+    )
+    db_session.add(state)
+    db_session.commit()
+
+    user = create_user(client, "machine-claim@example.com")
+    token = login(client, "machine-claim@example.com")
+
+    response = client.post(
+        f"/api/v1/machines/{machine.id}/claim_scores",
+        headers=auth_headers(token),
+        json={"slots": [0, 1]},
+    )
+    assert response.status_code == 200
+    assert response.json()["recorded"] == 2
+
+    scores = (
+        db_session.query(models.Score)
+        .filter(models.Score.machine_id == machine.id)
+        .filter(models.Score.user_id == user["id"])
+        .order_by(models.Score.value.asc())
+        .all()
+    )
+    assert [score.value for score in scores] == [10_000, 20_000]
+
+    duplicate_response = client.post(
+        f"/api/v1/machines/{machine.id}/claim_scores",
+        headers=auth_headers(token),
+        json={"slots": [0]},
+    )
+    assert duplicate_response.status_code == 400
+    assert duplicate_response.json()["detail"] == "No new scores recorded"

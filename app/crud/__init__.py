@@ -18,6 +18,7 @@ from .machines import (
     get_machine,
     get_machine_by_name,
     get_machines_for_user,
+    get_latest_machine_state,
     release_machine,
     record_machine_game_state,
 )
@@ -53,6 +54,7 @@ __all__ = [
     "get_machine",
     "get_machine_by_name",
     "get_machines_for_user",
+    "get_latest_machine_state",
     "release_machine",
     "record_machine_game_state",
     "create_location",
