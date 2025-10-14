@@ -52,6 +52,40 @@ def test_first_scan_claims_qr_for_user(client, db_session):
     assert qr.user_id == owner["id"]
 
 
+def test_unknown_code_creates_qr_entry(client, db_session):
+    owner = create_user(client, "qr-unknown-owner@example.com")
+    token = login(client, "qr-unknown-owner@example.com")
+    machine = _create_machine(db_session, owner_id=owner["id"], machine_id="machine-unknown")
+
+    code = "AbCdEf12"
+
+    response = client.get(f"/q?r={code}", headers=auth_headers(token))
+
+    assert response.status_code == 200
+    assert "Select Machine" in response.text
+
+    qr = (
+        db_session.query(models.QRCode)
+        .filter(models.QRCode.nfc_link == code)
+        .one()
+    )
+    assert qr.url.endswith(f"/q?r={code}")
+    assert qr.user_id == owner["id"]
+
+    assign_response = client.post(
+        "/q/assign",
+        headers=auth_headers(token),
+        data={"code": code, "machine_id": machine.id},
+        follow_redirects=False,
+    )
+
+    assert assign_response.status_code == 302
+    assert assign_response.headers["location"].endswith(f"/machines/{machine.id}")
+
+    db_session.refresh(qr)
+    assert qr.machine_id == machine.id
+
+
 def test_qr_scan_uses_cookie_when_no_auth_header(client, db_session):
     owner = create_user(client, "qr-cookie-owner@example.com")
     login_response = client.post(
