@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ location_name }} · Live Scores</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+            --accent: #38bdf8;
+            --accent-muted: rgba(56, 189, 248, 0.15);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5f5;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --card-border: rgba(148, 163, 184, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin: 0;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        header p {
+            margin: 0.75rem 0 0;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .slide {
+            width: min(72rem, 90vw);
+            min-height: 24rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: clamp(1.5rem, 3vw, 2.5rem);
+            box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: "";
+            position: absolute;
+            inset: -30%;
+            background: radial-gradient(circle at top right, var(--accent-muted), transparent 65%);
+            z-index: 0;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .slide h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin: 0;
+        }
+
+        .slide h3 {
+            margin: 0;
+            font-size: clamp(1.3rem, 2.5vw, 2rem);
+            color: var(--text-secondary);
+        }
+
+        ol, ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        ol li {
+            font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+            margin-bottom: 0.6rem;
+        }
+
+        .score-value {
+            color: var(--accent);
+            font-weight: 700;
+            margin-left: 0.75rem;
+        }
+
+        .meta {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            letter-spacing: 0.04em;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        .status-dot {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 50%;
+            background: #16a34a;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .player-card {
+            background: rgba(15, 23, 42, 0.65);
+            border-radius: 20px;
+            padding: 1rem 1.25rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .player-card h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .player-card p {
+            margin: 0.35rem 0 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .empty-state {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin: 1rem 0 0;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 1.75rem;
+            right: 2rem;
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 999px;
+            padding: 0.6rem 1.4rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 2rem 1.25rem;
+            }
+            .slide {
+                min-height: 20rem;
+            }
+            footer {
+                position: static;
+                margin-top: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{ location_name }}</h1>
+        <p>Live games · High scores · Updated in real time</p>
+    </header>
+
+    <section id="slide" class="slide">
+        <div class="slide-content" id="slide-content">
+            <span class="tag">Preparing display</span>
+            <h2>Please wait…</h2>
+            <p class="empty-state">Fetching the latest action for this location.</p>
+        </div>
+    </section>
+
+    <footer>
+        <span id="status" class="status-indicator"><span class="status-dot"></span> Updating</span>
+        <span id="updated-at">Last updated: never</span>
+        <span>v{{ version }}</span>
+    </footer>
+
+    <script>
+        const locationId = {{ location_id }};
+        const locationName = {{ location_name|tojson }};
+        const apiBase = {{ api_base|tojson }};
+        const normalizedBase = apiBase ? apiBase.replace(/\/$/, '') : '';
+        const scoreboardUrl = `${normalizedBase}/api/v1/public/locations/${locationId}/scoreboard`;
+
+        let slides = [];
+        let currentSlide = 0;
+        let rotationTimer = null;
+        const rotationIntervalMs = 8000;
+        const refreshIntervalMs = 10000;
+
+        function formatDateTime(value) {
+            if (!value) return 'never';
+            const date = new Date(value);
+            return date.toLocaleString(undefined, {
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+        }
+
+        function titleCase(value) {
+            return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        }
+
+        function renderHighScores(scores) {
+            if (!scores || scores.length === 0) {
+                return '<p class="empty-state">No scores recorded yet. Be the first!</p>';
+            }
+            return `<ol>${scores
+                .map((entry, index) => {
+                    const player = entry.player_name || 'Anonymous';
+                    const achieved = new Date(entry.achieved_at);
+                    const meta = achieved.toLocaleDateString();
+                    return `<li><span>${player}</span><span class="score-value">${entry.value.toLocaleString()}</span><br><small>${meta}</small></li>`;
+                })
+                .join('')}</ol>`;
+        }
+
+        function buildSlides(data) {
+            const newSlides = [];
+            data.machines.forEach((machine) => {
+                const title = machine.game_title || 'Machine ' + machine.machine_id;
+                if (machine.is_active) {
+                    const players = machine.scores.map((score, index) => {
+                        return `<div class="player-card"><h4>Player ${index + 1}${machine.player_up === index ? ' • Up' : ''}</h4><p>${score.toLocaleString()}</p></div>`;
+                    }).join('');
+                    const parts = [];
+                    if (machine.players_total) {
+                        parts.push(`${machine.players_total} player${machine.players_total === 1 ? '' : 's'}`);
+                    }
+                    if (machine.ball_in_play !== null && machine.ball_in_play !== undefined) {
+                        parts.push(`Ball ${machine.ball_in_play}`);
+                    }
+                    const subheading = parts.join(' · ') || 'Game in progress';
+                    newSlides.push({
+                        tag: 'Now Playing',
+                        heading: title,
+                        subheading,
+                        body: players ? `<div class="scores-grid">${players}</div>` : '<p class="empty-state">Scores will appear once the game reports them.</p>'
+                    });
+                }
+
+                Object.entries(machine.high_scores).forEach(([timeframe, scores]) => {
+                    newSlides.push({
+                        tag: `${titleCase(timeframe)} High Scores`,
+                        heading: title,
+                        subheading: `${scores.length || 'No'} record${scores.length === 1 ? '' : 's'}`,
+                        body: renderHighScores(scores)
+                    });
+                });
+            });
+
+            if (newSlides.length === 0) {
+                newSlides.push({
+                    tag: 'No Data',
+                    heading: locationName,
+                    subheading: 'Waiting for scores to arrive',
+                    body: '<p class="empty-state">Once games start reporting, live stats will appear here automatically.</p>'
+                });
+            }
+
+            return newSlides;
+        }
+
+        function displaySlide(index) {
+            if (slides.length === 0) return;
+            const slide = slides[index % slides.length];
+            const container = document.getElementById('slide-content');
+            container.innerHTML = `
+                <span class="tag">${slide.tag}</span>
+                <h2>${slide.heading}</h2>
+                ${slide.subheading ? `<h3>${slide.subheading}</h3>` : ''}
+                ${slide.body}
+            `;
+        }
+
+        function scheduleRotation() {
+            if (rotationTimer) {
+                clearInterval(rotationTimer);
+            }
+            rotationTimer = setInterval(() => {
+                currentSlide = (currentSlide + 1) % slides.length;
+                displaySlide(currentSlide);
+            }, rotationIntervalMs);
+        }
+
+        async function fetchScoreboard() {
+            try {
+                document.getElementById('status').innerHTML = '<span class="status-dot"></span> Updating';
+                const response = await fetch(scoreboardUrl, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Unable to load scoreboard');
+                }
+                const data = await response.json();
+                slides = buildSlides(data);
+                currentSlide = 0;
+                displaySlide(currentSlide);
+                scheduleRotation();
+                document.getElementById('updated-at').textContent = `Last updated: ${formatDateTime(data.generated_at)}`;
+                document.getElementById('status').innerHTML = '<span class="status-dot"></span> Live';
+            } catch (error) {
+                console.error(error);
+                document.getElementById('status').innerHTML = '<span class="status-dot" style="background:#f97316; box-shadow:0 0 12px rgba(249,115,22,0.6);"></span> Offline';
+                const container = document.getElementById('slide-content');
+                container.innerHTML = `
+                    <span class="tag">Connection issue</span>
+                    <h2>Trying to reconnect…</h2>
+                    <p class="empty-state">We\'ll keep retrying automatically. Check your network if this continues.</p>
+                `;
+            }
+        }
+
+        fetchScoreboard();
+        setInterval(fetchScoreboard, refreshIntervalMs);
+    </script>
+</body>
+</html>

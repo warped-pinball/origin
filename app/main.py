@@ -16,6 +16,7 @@ from .routers import (
     locations,
     meta,
     pages,
+    scoreboard,
 )
 import os
 import logging
@@ -74,3 +75,4 @@ app.include_router(claim.router)
 app.include_router(tournaments.router, prefix="/api/v1")
 app.include_router(qr.router)
 app.include_router(meta.router, prefix="/api/v1")
+app.include_router(scoreboard.router)

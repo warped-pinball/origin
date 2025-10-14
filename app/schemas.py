@@ -132,12 +132,38 @@ class LocationCreate(LocationBase):
 class Location(LocationBase):
     id: int
     machines: list[Machine] = []
+    display_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class LocationMachineLink(BaseModel):
     machine_id: str
+
+
+class ScoreboardScore(BaseModel):
+    value: int
+    achieved_at: datetime
+    player_name: Optional[str] = None
+
+
+class MachineScoreboard(BaseModel):
+    machine_id: str
+    game_title: Optional[str] = None
+    is_active: bool
+    updated_at: Optional[datetime] = None
+    scores: list[int] = Field(default_factory=list)
+    ball_in_play: Optional[int] = None
+    player_up: Optional[int] = None
+    players_total: Optional[int] = None
+    high_scores: dict[str, list[ScoreboardScore]] = Field(default_factory=dict)
+
+
+class LocationScoreboard(BaseModel):
+    location_id: int
+    location_name: str
+    machines: list[MachineScoreboard]
+    generated_at: datetime
 
 
 class ScoreBase(BaseModel):
