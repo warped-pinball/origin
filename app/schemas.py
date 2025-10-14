@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing import Optional
 from datetime import datetime
 
@@ -99,6 +99,50 @@ class MachineClaimStatus(BaseModel):
     is_claimed: bool = True
     claim_url: Optional[str] = None
     username: Optional[str] = None
+
+
+class MachineGameStateCreate(BaseModel):
+    machine_id: Optional[str] = Field(default=None, alias="machineId")
+    game_time_ms: int = Field(..., alias="gameTimeMs", ge=0)
+    ball_in_play: int = Field(..., alias="ballInPlay", ge=0)
+    scores: list[int]
+    player_up: Optional[int] = Field(default=None, alias="playerUp", ge=0)
+    players_total: Optional[int] = Field(default=None, alias="playerCount", ge=0)
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_aliases(cls, value):
+        if not isinstance(value, dict):
+            return value
+
+        data = dict(value)
+
+        alias_pairs = {
+            "machineId": ["machine_id", "machine_id_b64"],
+            "gameTimeMs": ["game_time_ms", "timeMs"],
+            "ballInPlay": ["ball_in_play"],
+            "playerUp": ["player_up"],
+            "playerCount": ["players_total", "players"],
+        }
+
+        for canonical, alternates in alias_pairs.items():
+            if canonical in data and data[canonical] is not None:
+                continue
+            for alt in alternates:
+                if alt in data and data[alt] is not None:
+                    data.setdefault(canonical, data[alt])
+                    break
+
+        return data
+
+    @field_validator("scores")
+    @classmethod
+    def validate_scores(cls, value: list[int]) -> list[int]:
+        if not value:
+            raise ValueError("scores must contain at least one entry")
+        return value
 
 
 class LocationBase(BaseModel):

@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+    func,
+    Boolean,
+    JSON,
+)
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -47,6 +56,11 @@ class Machine(Base):
     user = relationship("User", back_populates="machines", foreign_keys=[user_id])
     location = relationship("Location", back_populates="machines")
     scores = relationship("Score", back_populates="machine")
+    game_states = relationship(
+        "MachineGameState",
+        back_populates="machine",
+        cascade="all, delete-orphan",
+    )
 
 class MachineChallenge(Base):
     __tablename__ = "machine_challenges"
@@ -68,6 +82,20 @@ class Score(Base):
 
     user = relationship("User", back_populates="scores")
     machine = relationship("Machine", back_populates="scores")
+
+
+class MachineGameState(Base):
+    __tablename__ = "machine_game_states"
+    id = Column(Integer, primary_key=True, index=True)
+    machine_id = Column(String, ForeignKey("machines.id"), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    time_ms = Column(Integer, nullable=False)
+    ball_in_play = Column(Integer, nullable=False)
+    scores = Column(JSON, nullable=False)
+    player_up = Column(Integer, nullable=True)
+    players_total = Column(Integer, nullable=True)
+
+    machine = relationship("Machine", back_populates="game_states")
 
 
 class QRCode(Base):

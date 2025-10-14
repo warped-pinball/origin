@@ -17,6 +17,7 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
         "machine_challenges",
         "scores",
         "qr_codes",
+        "machine_game_states",
     ]:
         assert table in tables
 
@@ -61,3 +62,16 @@ def test_apply_migrations_creates_expected_schema(tmp_path):
         "claim_code",
     ]:
         assert col in machine_cols
+
+    state_cols = {c["name"] for c in insp.get_columns("machine_game_states")}
+    for col in [
+        "id",
+        "machine_id",
+        "created_at",
+        "time_ms",
+        "ball_in_play",
+        "scores",
+        "player_up",
+        "players_total",
+    ]:
+        assert col in state_cols

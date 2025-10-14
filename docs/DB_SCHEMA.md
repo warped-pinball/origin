@@ -19,6 +19,19 @@
 | machine_id | VARCHAR | False | False |  | False |
 | issued_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
 
+## machine_game_states
+
+| Column | Type | Primary Key | Nullable | Default | Unique |
+| --- | --- | --- | --- | --- | --- |
+| id | INTEGER | True | False |  | False |
+| machine_id | VARCHAR | False | False |  | False |
+| created_at | TIMESTAMP | False | False | CURRENT_TIMESTAMP | False |
+| time_ms | INTEGER | False | False |  | False |
+| ball_in_play | INTEGER | False | False |  | False |
+| scores | JSON | False | False |  | False |
+| player_up | INTEGER | False | True |  | False |
+| players_total | INTEGER | False | True |  | False |
+
 ## machines
 
 | Column | Type | Primary Key | Nullable | Default | Unique |

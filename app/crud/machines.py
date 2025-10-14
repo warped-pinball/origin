@@ -39,3 +39,20 @@ def release_machine(db: Session, machine: models.Machine) -> models.Machine:
     db.commit()
     db.refresh(machine)
     return machine
+
+
+def record_machine_game_state(
+    db: Session, machine_id: str, state: schemas.MachineGameStateCreate
+) -> models.MachineGameState:
+    record = models.MachineGameState(
+        machine_id=machine_id,
+        time_ms=state.game_time_ms,
+        ball_in_play=state.ball_in_play,
+        scores=state.scores,
+        player_up=state.player_up,
+        players_total=state.players_total,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
