@@ -31,6 +31,7 @@
 | scores | JSON | False | False |  | False |
 | player_up | INTEGER | False | True |  | False |
 | players_total | INTEGER | False | True |  | False |
+| game_active | BOOLEAN | False | True |  | False |
 
 ## machines
 

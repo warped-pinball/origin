@@ -18,6 +18,16 @@ def _to_utc_naive(value: Optional[datetime]) -> Optional[datetime]:
     return value.astimezone(timezone.utc).replace(tzinfo=None)
 
 
+def _state_is_active(
+    state: Optional[models.MachineGameState],
+) -> bool:
+    if state is None:
+        return False
+    if state.game_active is None:
+        return True
+    return state.game_active
+
+
 def _latest_states_for_location(db: Session, location_id: int) -> Iterable[models.MachineGameState]:
     subquery = (
         db.query(
@@ -101,7 +111,7 @@ def build_location_scoreboard(
     machine_payloads: List[Dict[str, object]] = []
     for machine in machines:
         state = states_by_machine.get(machine.id)
-        is_active = state is not None
+        is_active = _state_is_active(state)
 
         high_scores: Dict[str, List[Dict[str, object]]] = {}
         for label, since in windows.items():

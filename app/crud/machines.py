@@ -1,7 +1,17 @@
 from typing import List, Optional
+
 from sqlalchemy.orm import Session
+
 from .. import models, schemas
 from ..utils.machines import generate_claim_code
+
+
+def _is_game_active(active_flag: Optional[bool]) -> bool:
+    """Interpret a stored game_active flag with backwards compatibility."""
+    if active_flag is None:
+        # Older records did not track game_active explicitly; treat them as active
+        return True
+    return active_flag
 
 
 def create_machine(
@@ -42,17 +52,43 @@ def release_machine(db: Session, machine: models.Machine) -> models.Machine:
 
 
 def record_machine_game_state(
-    db: Session, machine_id: str, state: schemas.MachineGameStateCreate
+    db: Session, machine: models.Machine, state: schemas.MachineGameStateCreate
 ) -> models.MachineGameState:
+    previous_state = (
+        db.query(models.MachineGameState)
+        .filter(models.MachineGameState.machine_id == machine.id)
+        .order_by(models.MachineGameState.id.desc())
+        .first()
+    )
+
     record = models.MachineGameState(
-        machine_id=machine_id,
+        machine_id=machine.id,
         time_ms=state.game_time_ms,
         ball_in_play=state.ball_in_play,
         scores=state.scores,
         player_up=state.player_up,
         players_total=state.players_total,
+        game_active=state.game_active,
     )
     db.add(record)
+
+    became_inactive = False
+    if state.game_active is False and previous_state is not None:
+        became_inactive = _is_game_active(previous_state.game_active)
+
+    if became_inactive:
+        for score_value in state.scores:
+            if score_value is None or score_value < 0:
+                continue
+            db.add(
+                models.Score(
+                    user_id=None,
+                    machine_id=machine.id,
+                    game=machine.game_title,
+                    value=score_value,
+                )
+            )
+
     db.commit()
     db.refresh(record)
     return record
