@@ -219,8 +219,19 @@
                         <h2 id='location-detail-title'>Add Location</h2>
                         <div id='location-view'>
                             <p id='view-address'></p>
-                            <p id='view-website'></p>
+                            <a id='view-website'></a>
                             <p id='view-hours'></p>
+                            <div id='location-dashboard' class='location-dashboard' style='display:none;'>
+                                <p style='margin-bottom:0.5rem;'>Location dashboard:</p>
+                                <a id='location-dashboard-link'
+                                   style='display:inline-block;margin-bottom:0.5rem;word-break:break-all;'
+                                   target='_blank' rel='noopener noreferrer'></a>
+                                <div class='grid' style='grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:0.5rem;'>
+                                    <button type='button' id='location-dashboard-copy' class='secondary outline'>Copy link</button>
+                                    <button type='button' id='location-dashboard-open' class='secondary outline'>Open in new tab</button>
+                                    <button type='button' id='location-dashboard-share' class='secondary outline'>Share link</button>
+                                </div>
+                            </div>
                             <button id='edit-location-btn' style='width:fit-content;margin-bottom:0.5rem;display:none;'>Edit</button>
                         </div>
                         <form id='location-detail-form' style='display:none;'>

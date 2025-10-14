@@ -56,9 +56,17 @@ global.document = {
 };
 
 global.showPage = () => {};
-global.showToast = () => {};
+let lastToast = null;
+global.showToast = (message, type) => { lastToast = { message, type }; };
 global.history = { replaceState: () => {} };
-global.location = { search: '', hash: '', pathname: '/' };
+global.location = { search: '', hash: '', pathname: '/', origin: 'https://origin.example', protocol: 'https:', host: 'origin.example' };
+global.navigator = {
+  clipboard: {
+    writeText: async text => { global.__copiedText = text; }
+  },
+  share: async data => { global.__sharedData = data; }
+};
+global.open = (url, target) => { global.__openedWindow = { url, target }; };
 
 global.OriginApi = {
   getLocations: async () => ({ ok: true, json: async () => [] }),
@@ -105,6 +113,34 @@ test('openLocation rejects javascript protocol in website', () => {
   openLocation({ id: 3, name: 'Bad', website: 'javascript:alert(1)' });
   assert.strictEqual(el('view-website').href, '');
   assert.strictEqual(el('view-website').textContent, '');
+});
+
+test('openLocation configures dashboard actions', async () => {
+  __setCachedLocations([{ id: 5 }]);
+  global.__copiedText = '';
+  global.__sharedData = null;
+  global.__openedWindow = null;
+  lastToast = null;
+  openLocation({ id: 5, name: 'Test Place', address: '123 St', website: 'http://example.com' });
+  const container = el('location-dashboard');
+  assert.strictEqual(container.style.display, 'block');
+  const link = el('location-dashboard-link');
+  assert.strictEqual(link.href, 'https://origin.example/locations/5/display');
+  await el('location-dashboard-copy').onclick({ preventDefault() {} });
+  assert.strictEqual(global.__copiedText, 'https://origin.example/locations/5/display');
+  assert.deepStrictEqual(lastToast, { message: 'Location link copied', type: 'success' });
+  await el('location-dashboard-open').onclick({ preventDefault() {} });
+  assert.deepStrictEqual(global.__openedWindow, { url: 'https://origin.example/locations/5/display', target: '_blank' });
+  await el('location-dashboard-share').onclick({ preventDefault() {} });
+  assert.strictEqual(global.__sharedData.url, 'https://origin.example/locations/5/display');
+});
+
+test('share button hidden when Web Share API unavailable', () => {
+  const originalShare = global.navigator.share;
+  delete global.navigator.share;
+  openLocation({ id: 6, name: 'No Share' });
+  assert.strictEqual(el('location-dashboard-share').style.display, 'none');
+  global.navigator.share = originalShare;
 });
 
 test('loadMachines falls back to game title when name missing', async () => {

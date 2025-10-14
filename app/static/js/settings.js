@@ -4,6 +4,92 @@
   let currentLocation = null;
   let claimedMachineId = null;
 
+  function getLocationDashboardUrl(loc) {
+    if (!loc || !loc.id) return '';
+    const { origin, protocol, host } = global.location || {};
+    const base = origin || (protocol && host ? `${protocol}//${host}` : '');
+    const trimmed = base ? base.replace(/\/$/, '') : '';
+    return `${trimmed ? `${trimmed}` : ''}/locations/${loc.id}/display`;
+  }
+
+  function updateLocationDashboard(loc) {
+    const container = document.getElementById('location-dashboard');
+    const linkEl = document.getElementById('location-dashboard-link');
+    const copyBtn = document.getElementById('location-dashboard-copy');
+    const openBtn = document.getElementById('location-dashboard-open');
+    const shareBtn = document.getElementById('location-dashboard-share');
+    if (!container) return;
+    if (!loc || !loc.id) {
+      container.style.display = 'none';
+      if (linkEl) {
+        linkEl.textContent = '';
+        linkEl.removeAttribute('href');
+      }
+      if (copyBtn) copyBtn.onclick = null;
+      if (openBtn) openBtn.onclick = null;
+      if (shareBtn) {
+        shareBtn.style.display = 'none';
+        shareBtn.onclick = null;
+      }
+      return;
+    }
+    const url = getLocationDashboardUrl(loc);
+    if (linkEl) {
+      linkEl.href = url;
+      linkEl.textContent = url;
+      linkEl.target = '_blank';
+      linkEl.rel = 'noopener noreferrer';
+    }
+    if (openBtn) {
+      openBtn.onclick = e => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof global.open === 'function') {
+          global.open(url, '_blank', 'noopener');
+        } else if (global.window && typeof global.window.open === 'function') {
+          global.window.open(url, '_blank', 'noopener');
+        }
+      };
+    }
+    if (copyBtn) {
+      copyBtn.onclick = async e => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        try {
+          if (global.navigator && global.navigator.clipboard && typeof global.navigator.clipboard.writeText === 'function') {
+            await global.navigator.clipboard.writeText(url);
+            showToast('Location link copied', 'success');
+          } else {
+            throw new Error('Clipboard unavailable');
+          }
+        } catch {
+          showToast('Unable to copy link', 'error');
+        }
+      };
+    }
+    if (shareBtn) {
+      if (global.navigator && typeof global.navigator.share === 'function') {
+        shareBtn.style.display = 'inline-flex';
+        shareBtn.onclick = async e => {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          try {
+            await global.navigator.share({
+              title: loc.name ? `${loc.name} on Origin` : 'Location dashboard',
+              text: loc.name ? `Check out ${loc.name} on Origin.` : 'Check out this location on Origin.',
+              url
+            });
+          } catch (err) {
+            if (!err || err.name !== 'AbortError') {
+              showToast('Unable to share link', 'error');
+            }
+          }
+        };
+      } else {
+        shareBtn.style.display = 'none';
+        shareBtn.onclick = null;
+      }
+    }
+    container.style.display = 'block';
+  }
+
   function getMachineLabel(machine) {
     return machine.name || machine.game_title || machine.id || 'Machine';
   }
@@ -174,12 +260,14 @@
         document.getElementById('view-hours').textContent = loc.hours || '';
         view.style.display = 'block';
       }
+      updateLocationDashboard(loc);
       if (form) form.style.display = 'none';
       const isOwner = cachedLocations.some(l => l.id === loc.id);
       if (editBtn) editBtn.style.display = isOwner ? 'block' : 'none';
       if (currentLocationId) loadLocationMachines(false);
     } else {
       if (view) view.style.display = 'none';
+      updateLocationDashboard(null);
       if (form) {
         form.reset();
         form.style.display = 'block';
