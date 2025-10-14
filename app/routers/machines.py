@@ -169,7 +169,7 @@ def record_game_state(
     db: Session = Depends(get_db),
 ):
     machine = get_machine_from_request(request, db)
-    crud.record_machine_game_state(db, machine.id, state)
+    crud.record_machine_game_state(db, machine, state)
     return Response(status_code=204)
 
 

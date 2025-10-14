@@ -113,3 +113,67 @@ def test_location_display_page_renders_for_existing_location(client, db_session)
     response = client.get(f"/locations/{location.id}/display")
     assert response.status_code == 200
     assert "Uptown Arcade" in response.text
+
+
+def test_scoreboard_includes_scores_from_game_end(client, db_session):
+    user = create_user(db_session)
+    location = models.Location(user_id=user.id, name="Midtown Arcade")
+    db_session.add(location)
+    db_session.flush()
+
+    machine = models.Machine(
+        id="machine-end-1",
+        shared_secret=f"secret-{uuid4().hex}",
+        user_id=user.id,
+        location_id=location.id,
+        game_title="Space Battle",
+    )
+    db_session.add(machine)
+    db_session.commit()
+
+    active_payload = {
+        "gameTimeMs": 1000,
+        "ballInPlay": 1,
+        "scores": [1200, 800],
+        "playerUp": 1,
+        "playerCount": 2,
+        "gameActive": True,
+    }
+    finished_payload = {
+        "gameTimeMs": 1100,
+        "ballInPlay": 0,
+        "scores": [2200, 1800],
+        "playerUp": None,
+        "playerCount": 2,
+        "gameActive": False,
+    }
+
+    response = client.post(
+        "/api/v1/machines/game_state",
+        json=active_payload,
+        headers={"X-Machine-ID": machine.id},
+    )
+    assert response.status_code == 204
+
+    response = client.post(
+        "/api/v1/machines/game_state",
+        json=finished_payload,
+        headers={"X-Machine-ID": machine.id},
+    )
+    assert response.status_code == 204
+
+    response = client.get(f"/api/v1/public/locations/{location.id}/scoreboard")
+    assert response.status_code == 200
+    payload = response.json()
+
+    machine_payload = next(
+        item for item in payload["machines"] if item["machine_id"] == machine.id
+    )
+
+    # current scores should match the last reported state
+    assert machine_payload["scores"] == finished_payload["scores"]
+
+    all_time_scores = machine_payload["high_scores"]["all_time"]
+    assert [entry["value"] for entry in all_time_scores] == [2200, 1800]
+    assert machine_payload["high_scores"]["daily"] == all_time_scores
+    assert machine_payload["high_scores"]["monthly"] == all_time_scores

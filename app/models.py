@@ -94,6 +94,7 @@ class MachineGameState(Base):
     scores = Column(JSON, nullable=False)
     player_up = Column(Integer, nullable=True)
     players_total = Column(Integer, nullable=True)
+    game_active = Column(Boolean, nullable=True)
 
     machine = relationship("Machine", back_populates="game_states")
 
