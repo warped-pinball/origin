@@ -59,3 +59,18 @@ Install dependencies and run the backend test suite:
 pip install -r requirements.txt -r requirements-test.txt
 pytest -q
 ```
+
+## Warp Pinball Intro/Outro Generator
+
+The repository ships with a standalone helper that produces Warp Pinball title
+cards with a spiraling background, SVG logo overlay, and customizable text.
+
+```bash
+python scripts/generate_intro_video.py path/to/logo.svg warp_intro.mp4 \
+  --title "Warp Pinball" --subtitle "Experience the warp field" \
+  --resolution 1920x1080 --duration 8 --fps 60
+```
+
+Additional CLI options allow you to tweak the spiral motion, gradient colors,
+layout padding, text width, and custom fonts. Run the script with `--help` to
+see the full list of parameters.

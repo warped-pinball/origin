@@ -15,3 +15,6 @@ rcssmin
 rjsmin
 qrcode
 Pillow
+moviepy
+numpy
+cairosvg
