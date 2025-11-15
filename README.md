@@ -1,61 +1,80 @@
 # Origin
 
+Origin now includes a purpose-built utility for keeping your GitHub Actions artifacts in check. The
+`artifact_auditor` module can audit the artifacts created by the workflows that power the GALP
+repository and optionally delete anything that no longer needs to live in storage.
 
-This repository contains the Origin backend API built with FastAPI and a simple Progressive Web App (PWA). Additional documentation lives in the [docs](docs/) folder. Start with the [Developer Guide](docs/DEVELOPER_GUIDE.md) and the [API specification](docs/API_SPEC.md).
+## Artifact auditor quick start
 
-## Backend
+### Requirements
 
-### Development
+- Python 3.10+
+- A personal access token (classic) or fine-grained token with the `repo` scope so the script can list
+  and delete artifacts
+- `httpx` (installed automatically when you install the project's dependencies)
+
+### Environment setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-test.txt
+```
+
+You can store default values for the CLI with environment variables:
+
+- `GITHUB_TOKEN` – required token if you do not pass `--token`
+- `GITHUB_OWNER` – defaults to `GALP`
+- `GITHUB_REPO` – defaults to `GALP`
+
+### Auditing artifacts
+
+Run the auditor with the owner and repository that hosts your GALP workflows:
+
+```bash
+python -m artifact_auditor --owner my-org --repo GALP --older-than 14 --name-contains build
+```
+
+The script prints a table containing the artifacts that match your filters followed by an aggregate
+summary. Use the filters to narrow the output:
+
+| Option | Description |
+| ------ | ----------- |
+| `--older-than <days>` | Only include artifacts created at least the specified number of days ago. |
+| `--name-contains <text>` | Only include artifacts whose name contains the provided text. |
+| `--limit <n>` | Stop after the first `n` matching artifacts. |
+
+### Cleaning up artifacts
+
+After reviewing the audit output you can remove the artifacts directly from the command line:
+
+```bash
+python -m artifact_auditor --owner my-org --repo GALP --older-than 30 --delete --apply
+```
+
+- `--delete` instructs the tool to stage the selected artifacts for deletion.
+- `--apply` tells the tool to perform the deletion. Omit `--apply` to run a dry run; the tool will
+  print the IDs it would delete without performing the API calls.
+
+Tip: add `GITHUB_TOKEN`, `GITHUB_OWNER`, and `GITHUB_REPO` to your shell profile so you can reuse the
+command without re-typing the values.
+
+### Testing the script
+
+All of the repository tests—including the artifact auditor unit tests—can be run with `pytest`:
+
+```bash
+pytest -q
+```
+
+## Backend and PWA
+
+This repository continues to host the Origin backend API (FastAPI) and the minimal PWA. Start the
+Docker Compose stack for local development:
 
 ```bash
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000`.
-
-### Configuration
-
-By default the application connects to the Postgres instance defined in
-`docker-compose.yml`. The connection URL can be overridden with the
-`DATABASE_URL` environment variable or by setting `POSTGRES_USER`,
-`POSTGRES_PASSWORD`, `POSTGRES_HOST` and `POSTGRES_DB`.
-
-Additional settings control email delivery and machine claims:
-
-- `RSA_PRIVATE_KEY`: PEM encoded RSA key used to sign machine claim handshakes.
-- `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`: enable transactional email for account verification and password resets.
-- `PUBLIC_HOST_URL`: public base URL used for claim and email links.
-
-The service listens on port `8000` for HTTP traffic.
-
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for details on generating the
-RSA key pair and obtaining email API credentials.
-
-### Database Migrations
-
-Database schema changes are managed with [Flyway](https://flywaydb.org/). SQL migration files live in `flyway/sql`, and a dedicated Flyway image built from this directory is published to GHCR. Docker Compose pulls the prebuilt image so the migrations are baked into the container and no external volume is required. The container waits for Postgres to become available and applies migrations before the app starts. When adding a new numbered SQL file, rebuild and push the Flyway image.
-
-## Progressive Web App
-
-The web host serves a minimal PWA that implements the same login and signup flow as the old Cordova application. Users can install the app to their home screen when prompted by their browser. A minimal hand-written service worker handles installation without any caching yet.
-
-## API Client
-
-Clients can generate an API client on the fly using
-[openapi-client-axios](https://github.com/anttiviljami/openapi-client-axios).
-The OpenAPI specification is served dynamically at `/openapi.json` and the
-API base URL comes from the `PUBLIC_API_URL` environment variable.
-
-## Continuous Integration
-
-Pull requests run backend tests. Docker images are built for releases and
-attached as artifacts.
-
-## Testing
-
-Install dependencies and run the backend test suite:
-
-```bash
-pip install -r requirements.txt -r requirements-test.txt
-pytest -q
-```
+Refer to the documents in [docs/](docs/) for configuration details, API specifications, and the
+original developer guide.
