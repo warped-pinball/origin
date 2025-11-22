@@ -10,8 +10,8 @@ sleep 10
 
 echo "Running tests..."
 # We run pytest inside a temporary container or locally?
-# Since we need to access localhost:8000 and localhost:5000, running locally is fine 
-# IF the user has python installed. 
+# Since we need to access localhost:8000 and localhost:5000, running locally is fine
+# IF the user has python installed.
 # But for CI, we might want to run it in a container.
 # Let's run it locally for now as per the plan, assuming python env is set up or we use a test container.
 # Actually, better to run it in a container to ensure dependencies are there.

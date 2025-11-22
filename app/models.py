@@ -3,15 +3,19 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
 
+
 class Machine(Base):
     __tablename__ = "machines"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     ip_address = Column(String)
-    last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    last_seen = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     games = relationship("Game", back_populates="machine")
+
 
 class Player(Base):
     __tablename__ = "players"
@@ -26,6 +30,7 @@ class Player(Base):
 
     game_players = relationship("GamePlayer", back_populates="player")
 
+
 class Game(Base):
     __tablename__ = "games"
 
@@ -39,6 +44,7 @@ class Game(Base):
     game_players = relationship("GamePlayer", back_populates="game")
     game_states = relationship("GameState", back_populates="game")
 
+
 class GamePlayer(Base):
     __tablename__ = "game_players"
 
@@ -49,6 +55,7 @@ class GamePlayer(Base):
 
     game = relationship("Game", back_populates="game_players")
     player = relationship("Player", back_populates="game_players")
+
 
 class GameState(Base):
     __tablename__ = "game_states"

@@ -6,3 +6,5 @@ pydantic
 asyncpg
 pytest
 httpx
+pre-commit
+black

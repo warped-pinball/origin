@@ -16,6 +16,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 udp_server = udp_listener.UDPListener()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -24,7 +25,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     udp_server.stop()
 
+
 app = FastAPI(title="Vector Pinball Hub", lifespan=lifespan)
+
 
 # Dependency
 def get_db():
@@ -34,19 +37,23 @@ def get_db():
     finally:
         db.close()
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Vector Pinball Hub"}
+
 
 @app.get("/machines/", response_model=List[schemas.Machine])
 def read_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     machines = db.query(models.Machine).offset(skip).limit(limit).all()
     return machines
 
+
 @app.get("/games/", response_model=List[schemas.Game])
 def read_games(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     games = db.query(models.Game).offset(skip).limit(limit).all()
     return games
+
 
 @app.get("/games/active", response_model=List[schemas.Game])
 def read_active_games(db: Session = Depends(get_db)):
