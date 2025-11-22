@@ -1,151 +1,48 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from pydantic import BaseModel
+from typing import List, Optional
 from datetime import datetime
 
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    email: Optional[str] = None
-
-
-class UserBase(BaseModel):
-    email: str
-    screen_name: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    password: str
-
-
-class UserUpdate(BaseModel):
-    screen_name: Optional[str] = None
-
-
-class PasswordUpdate(BaseModel):
-    password: str
-
-
-class User(UserBase):
-    id: int
-    is_verified: bool
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PasswordResetRequest(BaseModel):
-    email: str
-
-
-class PasswordReset(BaseModel):
-    token: str
-    password: str
-
-
 class MachineBase(BaseModel):
-    name: Optional[str] = None
-
+    name: str
+    ip_address: str
 
 class MachineCreate(MachineBase):
-    secret: str
-    location_id: Optional[int] = None
-
-
-class Machine(MachineBase):
-    id: str
-    user_id: Optional[int] = None
-    location_id: Optional[int] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class OwnedMachine(BaseModel):
-    id: str
-    name: str
-    game_title: str
-    location_id: Optional[int] = None
-
-
-class MachineResponse(BaseModel):
-    signature: str
-
-
-class MachineHandshakeRequest(BaseModel):
-    """Payload sent by devices to initiate a handshake."""
-
-    client_public_key_b64: str
-    game_title: str
-
-
-class MachineChallengesRequest(BaseModel):
-    n: int = 1  # number of challenges to generate
-
-
-class MachineHandshake(BaseModel):
-    """Response returned to devices after a successful handshake."""
-
-    machine_id: str
-    server_key: str
-    claim_code: str
-    claim_url: str
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class MachineClaimStatus(BaseModel):
-    is_claimed: bool = True
-    claim_url: Optional[str] = None
-    username: Optional[str] = None
-
-
-class LocationBase(BaseModel):
-    name: str
-    address: Optional[str] = None
-    website: Optional[str] = None
-    hours: Optional[str] = None
-
-
-class LocationCreate(LocationBase):
     pass
 
-
-class Location(LocationBase):
+class Machine(MachineBase):
     id: int
-    machines: list[Machine] = []
+    last_seen: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
+class GameStateBase(BaseModel):
+    seconds_elapsed: int
+    ball: int
+    player_up: int
+    scores: List[int]
 
-class LocationMachineLink(BaseModel):
-    machine_id: str
+class GameStateCreate(GameStateBase):
+    machine_id: int
+    # timestamp is optional as it can be set by server if missing
+    timestamp: Optional[datetime] = None
 
-
-class ScoreBase(BaseModel):
-    game: str
-    value: int
-
-
-class ScoreCreate(ScoreBase):
-    user_id: int
-    machine_id: str
-
-
-class Score(ScoreBase):
+class GameState(GameStateBase):
     id: int
-    created_at: datetime
-    user: User
-    machine: Machine
+    game_id: int
+    timestamp: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
+class GameBase(BaseModel):
+    machine_id: int
+    is_active: bool = True
 
-class ScoreOut(BaseModel):
+class Game(GameBase):
     id: int
-    value: int
-    created_at: datetime
-    user: User
+    start_time: datetime
+    end_time: Optional[datetime] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
