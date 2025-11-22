@@ -1,80 +1,54 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.exceptions import RequestValidationError
-from .database import init_db
-from .routers import (
-    auth,
-    users,
-    machines,
-    machine_ownership,
-    scores,
-    claim,
-    tournaments,
-    qr,
-    qr_codes,
-    locations,
-    meta,
-    pages,
-    scoreboard,
-)
-import os
+import asyncio
 import logging
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List
+from contextlib import asynccontextmanager
 
-# Initialize database (migrations + tables)
-init_db()
+from . import models, schemas, database, udp_listener
+
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Origin")
-app.add_middleware(GZipMiddleware, minimum_size=100)
+# Create tables
+models.Base.metadata.create_all(bind=database.engine)
 
+udp_server = udp_listener.UDPListener()
 
-@app.exception_handler(HTTPException)
-async def log_http_exception(request: Request, exc: HTTPException):
-    logger.warning(
-        "HTTP error %s on %s %s: %s",
-        exc.status_code,
-        request.method,
-        request.url.path,
-        exc.detail,
-    )
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await udp_server.start()
+    yield
+    # Shutdown
+    udp_server.stop()
 
+app = FastAPI(title="Vector Pinball Hub", lifespan=lifespan)
 
-@app.exception_handler(RequestValidationError)
-async def log_validation_exception(request: Request, exc: RequestValidationError):
-    logger.warning(
-        "Validation error on %s %s: %s", request.method, request.url.path, exc.errors()
-    )
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+# Dependency
+def get_db():
+    db = database.SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to Vector Pinball Hub"}
 
-@app.exception_handler(Exception)
-async def log_unhandled_exception(request: Request, exc: Exception):
-    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+@app.get("/machines/", response_model=List[schemas.Machine])
+def read_machines(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    machines = db.query(models.Machine).offset(skip).limit(limit).all()
+    return machines
 
+@app.get("/games/", response_model=List[schemas.Game])
+def read_games(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    games = db.query(models.Game).offset(skip).limit(limit).all()
+    return games
 
-# Mount static files for universal links
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-well_known_dir = os.path.join(static_dir, ".well-known")
-app.mount("/.well-known", StaticFiles(directory=well_known_dir), name="well-known")
-
-
-app.include_router(pages.router)
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(users.router, prefix="/api/v1")
-app.include_router(machines.router, prefix="/api/v1")
-app.include_router(machine_ownership.router, prefix="/api/v1")
-app.include_router(scores.router, prefix="/api/v1")
-app.include_router(locations.router, prefix="/api/v1")
-app.include_router(claim.router)
-app.include_router(tournaments.router, prefix="/api/v1")
-app.include_router(qr.router)
-app.include_router(qr_codes.router, prefix="/api/v1")
-app.include_router(meta.router, prefix="/api/v1")
-app.include_router(scoreboard.router)
+@app.get("/games/active", response_model=List[schemas.Game])
+def read_active_games(db: Session = Depends(get_db)):
+    games = db.query(models.Game).filter(models.Game.is_active == True).all()
+    return games

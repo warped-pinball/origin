@@ -1,78 +1,28 @@
-version: "3.8"
-
-networks:
-  default:
-    external: true
-    name: "traefik_default"
+version: '3.8'
 
 services:
-  origin-beta:
-    image: ghcr.io/warped-pinball/origin:beta
-    restart: unless-stopped
+  app:
+    build: .
     ports:
-      - 8000
+      - "8000:8000"
+      - "5000:5000/udp"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: origin-beta-db
-      POSTGRES_DB: postgres
-      SECRET_KEY: 9829uhf087w4hiou4whsdd
-      PUBLIC_HOST_URL: https://origin-beta.doze.dev
-      # PEM encoded key for signing machine claim handshakes
-      RSA_PRIVATE_KEY: |
-        -----BEGIN PRIVATE KEY-----
-        -----END PRIVATE KEY-----
-
-      # Brevo credentials enable email sending
-      # BREVO_API_KEY: your_api_key
-      # BREVO_SENDER_EMAIL: noreply@example.com
+      - DATABASE_URL=postgresql://vector_user:vector_password@db:5432/vector_db
     depends_on:
-      flyway:
-        condition: service_completed_successfully
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-      - "traefik.http.routers.origin-beta.rule=Host(`origin-beta.doze.dev`)"
-      - "traefik.http.services.origin-beta.loadbalancer.server.port=8000"
-      - "flame.type=application"
-      - "flame.name=Origin Beta"
-      - "flame.url=https://origin-beta.doze.dev"
-      - "flame.icon=mdi:gamepad-variant"
+      - db
+    restart: always
 
-
-  qr-service:
-    build:
-      context: ./qr_service
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@origin-beta-db/postgres
-      QR_BASE_URL: https://example.com
-    depends_on:
-      flyway:
-        condition: service_completed_successfully
-    ports:
-      - 9100:8000
-
-  origin-beta-db:
+  db:
     image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     volumes:
-      - origin-beta-db-data:/var/lib/postgresql/data
-
-  flyway:
-    image: ghcr.io/warped-pinball/origin-flyway:beta
-    command: -url=jdbc:postgresql://origin-beta-db:5432/postgres -user=postgres -password=postgres -connectRetries=60 migrate
-    depends_on:
-      origin-beta-db:
-        condition: service_healthy
-    restart: "no"
-
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=vector_user
+      - POSTGRES_PASSWORD=vector_password
+      - POSTGRES_DB=vector_db
+    ports:
+      - "5432:5432"
+    restart: always
 
 volumes:
-  origin-beta-db-data:
+  postgres_data:

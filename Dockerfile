@@ -1,9 +1,14 @@
-# syntax=docker/dockerfile:1
 FROM python:3.11-slim
+
 WORKDIR /app
-COPY requirements.txt requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip pip install --no-cache-dir -r requirements.txt
-COPY build app
-COPY scripts/start.sh start.sh
-RUN chmod +x start.sh
-CMD ["./start.sh"]
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Expose ports for Web API and UDP Listener
+EXPOSE 8000
+EXPOSE 5000/udp
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
