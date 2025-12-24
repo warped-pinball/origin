@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/components/admin.css">
+</head>
+<body data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a class="site-nav__link" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link" href="/players">Players</a>
+                <a class="site-nav__link" href="/big-screen">Big screen</a>
+                <a class="site-nav__link site-nav__link--current" href="/admin">Admin</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="admin" hidden>
+        <section class="card">
+            <div class="card__header card__header--balanced">
+                <div>
+                    <h1>Admin tools</h1>
+                    <p class="hint">Private tools for managing players and machines.</p>
+                </div>
+                <div class="card__header__actions">
+                    <div class="status" id="status-banner" aria-live="polite"></div>
+                    <button class="button button--ghost" type="button" id="admin-logout" hidden>Logout</button>
+                </div>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Admin sections">
+                <button class="tab tab--current" role="tab" aria-selected="true" aria-controls="games-panel" id="tab-games" data-tab-target="games-panel">Machines</button>
+                <button class="tab" role="tab" aria-selected="false" aria-controls="tournaments-panel" id="tab-tournaments" data-tab-target="tournaments-panel">Tournaments</button>
+            </div>
+
+            <section class="tab-panel" id="games-panel" role="tabpanel" aria-labelledby="tab-games" hidden>
+                <div class="card__header card__header--balanced">
+                    <div>
+                        <h2>Machines</h2>
+                        <p class="hint" id="games-status">Listening for nearby boards…</p>
+                    </div>
+                </div>
+                <div class="list list--cards" id="game-roster" role="list">
+                    <p class="hint">No games detected yet.</p>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tournaments-panel" role="tabpanel" aria-labelledby="tab-tournaments" hidden>
+                <div class="card__header card__header--balanced">
+                    <div>
+                        <h2>Tournaments</h2>
+                        <p class="hint">Pick a tournament type, set dates, and select machines or players.</p>
+                    </div>
+                    <div class="card__header__actions">
+                        <a class="button" href="/admin/tournaments/new">New tournament</a>
+                    </div>
+                </div>
+
+                <div class="list list--cards" id="tournament-roster" role="list">
+                    <p class="hint">No tournaments yet.</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="modal" id="login-modal" role="dialog" aria-modal="true">
+        <div class="modal__content">
+            <div class="modal__header">
+                <div>
+                    <p class="eyebrow">Restricted</p>
+                    <h2>Admin sign in</h2>
+                </div>
+            </div>
+            <p class="hint">Enter the admin password to view rosters and control detected games.</p>
+            <form class="form" id="admin-login">
+                <div class="grid">
+                    <label class="field">
+                        <span>Admin password</span>
+                        <input class="wp-input" type="password" name="password" id="password" required autocomplete="current-password" placeholder="Enter password">
+                    </label>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="button">Sign in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+    <script src="/static/js/admin.js" defer></script>
+</body>
+</html>

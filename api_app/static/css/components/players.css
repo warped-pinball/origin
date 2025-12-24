@@ -1,0 +1,145 @@
+#players .card {
+  position: relative;
+  overflow: hidden;
+}
+
+#players .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+
+#players .toolbar__meta {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#players .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  font-weight: 800;
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+}
+
+#players .badge--quiet {
+  background: var(--page-surface-muted);
+}
+
+#players .toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-3);
+  justify-content: flex-end;
+}
+
+#players .field {
+  margin: 0;
+  min-width: min(360px, 100%);
+}
+
+#players .field--inline .hint {
+  font-size: var(--fs-sm);
+}
+
+#players #search {
+  background: #f8fbff;
+}
+
+#players .list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+@media (min-width: 720px) {
+  #players .list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+#players .list__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: var(--page-surface-muted);
+  text-decoration: none;
+  color: var(--c-ink);
+  box-shadow: var(--sh-1);
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+#players .list__item:hover {
+  transform: translateY(-1px);
+  background: var(--c-accent-2);
+}
+
+#players .list__item:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+#players .list__item__header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+#players .list__item .badge {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--c-accent);
+  flex-shrink: 0;
+}
+
+#players .list__item__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-weight: 800;
+}
+
+#players .list__item__title strong {
+  font-size: var(--fs-lg);
+}
+
+#players .list__item__title .hint {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+
+#players #empty-copy {
+  margin: 0;
+}
+
+@media (max-width: 540px) {
+  #players .toolbar {
+    align-items: stretch;
+  }
+
+  #players .toolbar__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  #players .toolbar__actions .wp-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

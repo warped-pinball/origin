@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Guide | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/brand-guide.css">
+</head>
+<body data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav c-nav" aria-label="Primary">
+                <a class="site-nav__link c-nav__link" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link c-nav__link" href="/players">Players</a>
+                <a class="site-nav__link c-nav__link" href="/big-screen">Big screen</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="component-guide">
+        <section class="card">
+            <div class="card__header card__header--balanced">
+                <div>
+                    <p class="eyebrow">Warped Pinball product system</p>
+                    <h1>Component guide</h1>
+                    <p class="lede">Component library patterns are listed below. Use these HTML + CSS patterns to assemble pages quickly without a frontend framework. Each example includes markup that can drop straight into Jinja macros.</p>
+                </div>
+                <div class="status status--info">Responsive by default</div>
+            </div>
+            <section class="guide-section">
+                <div class="guide-section__header">
+                    <h2>Page shells</h2>
+                    <p class="hint">Standard shells, gutters, and backgrounds keep admin screens aligned with public pages.</p>
+                </div>
+                <ul class="tokens">
+                    <li class="token">
+                        <p class="token__title">Shells</p>
+                        <p class="token__value"><code>page-shell</code> (static pages) · <code>c-shell</code> (component demos)</p>
+                        <p class="token__note">Both shells share <code>--page-max-width</code> (1200px) and <code>--page-gutter</code> (24px) spacing.</p>
+                    </li>
+                    <li class="token">
+                        <p class="token__title">Backgrounds</p>
+                        <p class="token__value"><code>--page-background</code> for spiral skies · <code>--page-background-plain</code> for focused tools</p>
+                        <p class="token__note">Apply <code>page--plain</code> on admin detail pages like <code>/admin/machines/&lt;id&gt;</code> to keep the surface white.</p>
+                    </li>
+                    <li class="token">
+                        <p class="token__title">Space scale</p>
+                        <p class="token__value"><code>--space-050</code>–<code>--space-1200</code></p>
+                        <p class="token__note">Use the shared spacing variables for gaps and padding to keep rhythm between sections.</p>
+                    </li>
+                </ul>
+            </section>
+            <div class="guide-grid">
+                <div class="c-accordion c-accordion--compact c-accordion--micro" id="component-library">
+                    <details class="c-accordion__item" id="guide-usage">
+                        <summary class="c-accordion__summary">
+                            <span class="c-accordion__label">
+                                <span class="c-accordion__title">Usage</span>
+                                <span class="c-accordion__hint">All components rely on the <code>c-</code> namespace and fluid grids to prevent overflow.</span>
+                            </span>
+                            <span class="c-accordion__chevron" aria-hidden="true">
+                                <span class="c-accordion__chevron-icon"></span>
+                            </span>
+                        </summary>
+                        <div class="c-accordion__panel">
+                            <ul class="tokens">
+                                <li class="token">
+                                    <p class="token__title">Drop-in macros</p>
+                                    <p class="token__value">Wrap card content with <code>c-card</code> and lists with <code>c-list</code>.</p>
+                                    <p class="token__note">Macros keep markup consistent and let you swap data easily between debug and live views.</p>
+                                </li>
+                                <li class="token">
+                                    <p class="token__title">Responsive grid</p>
+                                    <p class="token__value">Use <code>minmax(0, 1fr)</code> columns</p>
+                                    <p class="token__note">List rows and cards stretch to the available space while avoiding horizontal scroll.</p>
+                                </li>
+                                <li class="token">
+                                    <p class="token__title">Overflow safety</p>
+                                    <p class="token__value">Text wraps and score values stay readable</p>
+                                    <p class="token__note">Long names, dates, and scores are clamped with flex + grid alignment.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details class="c-accordion__item" id="component-nav">
+                        <summary class="c-accordion__summary">
+                            <span class="c-accordion__label">
+                                <span class="c-accordion__title">Navigation (c-nav)</span>
+                                <span class="c-accordion__hint">Wrap primary links; items wrap automatically on smaller screens.</span>
+                            </span>
+                            <span class="c-accordion__chevron" aria-hidden="true">
+                                <span class="c-accordion__chevron-icon"></span>
+                            </span>
+                        </summary>
+                        <div class="c-accordion__panel">
+                            <div class="component-card">
+                                <div class="component-card__preview">
+                                    <nav class="c-nav component-preview__nav" aria-label="Component navigation">
+                                        <a class="c-nav__link" href="#">Register</a>
+                                        <a class="c-nav__link" href="#">Players</a>
+                                        <a class="c-nav__link c-nav__link--current" href="#">Big screen</a>
+                                        <a class="c-nav__link" href="#">Component guide</a>
+                                    </nav>
+                                </div>
+                                <p class="token__note">Use <code>c-nav</code> with <code>c-nav__link</code> on any page shell or debug route.</p>
+                                <div class="code-snippet" aria-label="Navigation markup example">
+                                    <p class="code-snippet__label">HTML</p>
+<code>&lt;nav class="c-nav" aria-label="Primary"&gt;
+    &lt;a class="c-nav__link" href="/players"&gt;Players&lt;/a&gt;
+    &lt;a class="c-nav__link c-nav__link--current" href="/big-screen"&gt;Big screen&lt;/a&gt;
+&lt;/nav&gt;</code>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="c-accordion__item" id="component-leaderboard">
+                        <summary class="c-accordion__summary">
+                            <span class="c-accordion__label">
+                                <span class="c-accordion__title">Leaderboard list</span>
+                                <span class="c-accordion__hint">Cards and lists that auto-fill the available grid space.</span>
+                            </span>
+                            <span class="c-accordion__chevron" aria-hidden="true">
+                                <span class="c-accordion__chevron-icon"></span>
+                            </span>
+                        </summary>
+                        <div class="c-accordion__panel">
+                            <article class="component-card">
+                                <div class="component-card__preview">
+                                    <article class="card c-card c-card--window">
+                                        <div class="card__header c-card__header">
+                                            <h3 class="card__title c-card__title">Weekly leaderboard</h3>
+                                            <p class="card__meta c-card__meta">Stacks or grids with <code>minmax</code> columns.</p>
+                                        </div>
+                                        <div class="list c-list">
+                                            <ul class="list__body c-list__body">
+                                                <li class="list__item c-list__item">
+                                                    <div class="placement c-list__cell">#1</div>
+                                                    <div class="player c-list__cell">
+                                                        <p class="player__name rank c-chip">Orbit Queen</p>
+                                                        <p class="c-list__note">Handles long names without overflow.</p>
+                                                    </div>
+                                                    <div class="score c-list__cell c-list__cell--value">
+                                                        <div class="score__value c-list__value">1.2M</div>
+                                                        <div class="score__date c-list__note">Mar 14, 2024</div>
+                                                    </div>
+                                                </li>
+                                                <li class="list__item c-list__item">
+                                                    <div class="placement c-list__cell">#2</div>
+                                                    <div class="player c-list__cell">
+                                                        <p class="player__name rank c-chip">Gravity Ghost</p>
+                                                    </div>
+                                                    <div class="score c-list__cell c-list__cell--value">
+                                                        <div class="score__value c-list__value">986K</div>
+                                                        <div class="score__date c-list__note">Mar 10, 2024</div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </article>
+                                </div>
+                                <p class="token__note">Apply <code>c-card</code> to any board and wrap rows in <code>c-list</code>. Use <code>rank</code> with <code>c-chip</code> to center names on the same accent color as the score badge.</p>
+                                <div class="code-snippet" aria-label="Leaderboard component macro">
+                                    <p class="code-snippet__label">Jinja macro</p>
+<code>{% macro leaderboard_card(title, rows) %}
+&lt;article class="card c-card c-card--window"&gt;
+    &lt;div class="card__header c-card__header"&gt;
+        &lt;h2 class="card__title c-card__title"&gt;{{ title }}&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;div class="list c-list"&gt;
+        &lt;ul class="list__body c-list__body"&gt;
+            {% for row in rows %}
+            &lt;li class="list__item c-list__item"&gt;
+                &lt;div class="placement c-list__cell"&gt;#{{ loop.index }}&lt;/div&gt;
+                &lt;div class="player c-list__cell"&gt;
+                    &lt;p class="player__name rank c-chip"&gt;{{ row.name }}&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div class="score c-list__cell c-list__cell--value"&gt;{{ row.score }}&lt;/div&gt;
+            &lt;/li&gt;
+            {% endfor %}
+        &lt;/ul&gt;
+    &lt;/div&gt;
+&lt;/article&gt;
+{% endmacro %}</code>
+                                </div>
+                            </article>
+                        </div>
+                    </details>
+
+                    <details class="c-accordion__item" id="component-champion">
+                        <summary class="c-accordion__summary">
+                            <span class="c-accordion__label">
+                                <span class="c-accordion__title">Champion highlight</span>
+                                <span class="c-accordion__hint">Feature the top score across all time windows.</span>
+                            </span>
+                            <span class="c-accordion__chevron" aria-hidden="true">
+                                <span class="c-accordion__chevron-icon"></span>
+                            </span>
+                        </summary>
+                        <div class="c-accordion__panel">
+                            <article class="component-card">
+                                <div class="component-card__preview">
+                                    <article class="card card--champion c-card c-card--hero">
+                                        <div class="card__header c-card__header">
+                                            <h3 class="card__title c-card__title">Champion highlight</h3>
+                                            <p class="card__meta c-card__meta">Use for the top score across all windows.</p>
+                                        </div>
+                                        <div class="champion c-card__body">
+                                            <div class="champion__banner">
+                                                <span class="champion__rank">#1</span>
+                                                <p class="champion__name">Nebula Rider</p>
+                                            </div>
+                                            <div class="champion__score">2.4M</div>
+                                            <p class="champion__details">Set Mar 6, 2024 · Orbit Queen</p>
+                                        </div>
+                                    </article>
+                                </div>
+                                <p class="token__note">Pair <code>c-card</code> with <code>champion</code> styles for the hero tile shown on the big screen.</p>
+                                <div class="code-snippet" aria-label="Champion component example">
+                                    <p class="code-snippet__label">HTML</p>
+<code>&lt;article class="card card--champion c-card"&gt;
+    &lt;header class="card__header c-card__header"&gt;...&lt;/header&gt;
+    &lt;div class="champion c-card__body"&gt;...&lt;/div&gt;
+&lt;/article&gt;</code>
+                                </div>
+                            </article>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+</body>
+</html>

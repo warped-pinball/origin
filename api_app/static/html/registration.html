@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Registration | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/register.css">
+</head>
+<body class="body--registration" data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a class="site-nav__link site-nav__link--current" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link" href="/players">Players</a>
+                <a class="site-nav__link" href="/big-screen">Big screen</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="registration">
+        <section class="card wp-card registration-card">
+            <div class="card__header card__header--balanced">
+                <div>
+                    <h1>Registration</h1>
+                    <p class="hint">Add a player to the roster. Initials, screen name, and email are required.</p>
+                </div>
+                <div class="status" id="status-banner" aria-live="polite"></div>
+            </div>
+
+            <form class="form registration-form" id="registration-form">
+                <div class="grid">
+                    <label class="field">
+                        <span>Initials <sup aria-label="required">*</sup></span>
+                        <input class="wp-input" type="text" name="initials" id="initials" placeholder="ABC" maxlength="3" pattern="[A-Za-z0-9]{3" required>
+                    </label>
+                    <label class="field">
+                        <span>Screen name <sup aria-label="required">*</sup></span>
+                        <input class="wp-input" type="text" name="screen_name" id="screen_name" placeholder="WizardKing" required>
+                    </label>
+                </div>
+
+                <div class="grid">
+                    <label class="field">
+                        <span>Email <sup aria-label="required">*</sup></span>
+                        <input class="wp-input" type="email" name="email" id="email" placeholder="alex@example.com" required>
+                    </label>
+                    <label class="field">
+                        <span>Phone number</span>
+                        <input class="wp-input" type="tel" name="phone_number" id="phone_number" placeholder="(555) 123-4567">
+                    </label>
+                </div>
+
+                <div class="grid">
+                    <label class="field">
+                        <span>First name</span>
+                        <input class="wp-input" type="text" name="first_name" id="first_name" placeholder="Alex">
+                    </label>
+                    <label class="field">
+                        <span>Last name</span>
+                        <input class="wp-input" type="text" name="last_name" id="last_name" placeholder="Rivera">
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="reset" class="wp-btn button--ghost">Reset</button>
+                    <button type="submit" class="wp-btn wp-btn--primary">Save player</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+    <script src="/static/js/register.js" defer></script>
+</body>
+</html>

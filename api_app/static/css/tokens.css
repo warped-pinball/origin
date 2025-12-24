@@ -1,0 +1,92 @@
+:root {
+  /* Core palette tuned to the existing registration page */
+  --c-ink: #0b121d;
+  --c-paper: #ffffff;
+  --c-bg-1: #c3e8ff;
+  --c-bg-2: #92c7d7;
+  --c-accent: #f4c542;
+  --c-accent-2: #ffd76f;
+  --c-muted: #2f5675;
+
+  /* Borders and radii (chunky look) */
+  --bw-1: 2px;
+  --bw-2: 4px;
+  --r-1: 10px;
+  --r-2: 16px;
+  --r-3: 22px;
+
+  /* Shadow (subtle but present) */
+  --sh-1: 0 6px 0 rgba(0, 0, 0, 0.18);
+
+  /* Spacing scale */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1.25rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+
+  /* Typography */
+  --fs-sm: 0.9rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2.5rem;
+
+  /* Layout */
+  --container-max: 75rem;
+  --gutter: var(--s-5);
+
+  /* Breakpoints (documentation) */
+  /* mobile: <= 480px */
+  /* tablet: 481px–768px */
+  /* desktop: 769px–1199px */
+  /* wide: >= 1200px */
+
+  /* Legacy aliases to support existing components */
+  --bg: var(--c-bg-1);
+  --bg-rays: #b3def7;
+  --spiral-deep: var(--c-bg-2);
+  --spiral-glow: #caf5fe;
+  --bg-night: var(--c-bg-2);
+  --swirl-1: #d7f2ff;
+  --swirl-2: #9fd4f7;
+  --swirl-3: #c9e8ff;
+  --card: var(--c-paper);
+  --accent: var(--c-accent);
+  --accent-strong: var(--c-accent-2);
+  --text: var(--c-ink);
+  --muted: var(--c-muted);
+  --border: var(--c-ink);
+  --border-muted: rgba(11, 18, 29, 0.35);
+  --ink-soft: #122336;
+  --success: #13834f;
+  --error: #c2272d;
+
+  --page-background: var(--bg-night);
+  --page-background-plain: #ffffff;
+  --page-surface: var(--c-paper);
+  --page-surface-muted: #f7fbff;
+  --color-surface-primary: var(--page-surface);
+  --color-text-secondary: var(--c-muted);
+  --shadow-card: var(--sh-1);
+  --radius-400: var(--r-2);
+
+  --page-max-width: var(--container-max);
+  --page-gutter: var(--gutter);
+  --page-gutter-narrow: var(--s-3);
+
+  /* Spacing aliases */
+  --space-050: var(--s-1);
+  --space-100: var(--s-2);
+  --space-200: var(--s-3);
+  --space-300: 1rem;
+  --space-400: var(--s-4);
+  --space-500: var(--s-5);
+  --space-600: var(--s-6);
+  --space-800: calc(var(--s-6) + var(--s-2));
+  --space-1200: var(--s-7);
+
+  --font-size-300: var(--fs-md);
+}

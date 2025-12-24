@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Screen Leaderboard | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/big-screen.css">
+</head>
+<body data-spiral="animated">
+    <main id="big-screen">
+        <nav class="screen-nav c-nav" aria-label="Primary">
+            <a class="site-nav__link c-nav__link" href="/register#registration-form">Registration</a>
+            <a class="site-nav__link c-nav__link" href="/players">Players</a>
+            <a class="site-nav__link site-nav__link--current c-nav__link c-nav__link--current" href="/big-screen">Big screen</a>
+        </nav>
+
+        <div class="live-anchor" id="status-banner" aria-live="polite"></div>
+
+        <section class="board-shell">
+            <section class="live-wall" id="live-games" aria-label="Live game feed"></section>
+            <section class="board-surface board-grid--visible" id="leaderboard">
+                <section class="game-board card-page game-board--active" aria-hidden="false">
+                    <div class="board-grid board-grid--cards">
+                        <article class="card card--champion c-card c-card--hero">
+                            <div class="card__header c-card__header">
+                                <div class="card__title-group">
+                                    <p class="card__eyebrow">Leaderboards</p>
+                                    <h2 class="card__title c-card__title">All-time champion</h2>
+                                </div>
+                            </div>
+                            <div class="champion c-card__body champion--empty"></div>
+                        </article>
+                        <article class="card c-card">
+                            <div class="card__header c-card__header">
+                                <div class="card__title-group">
+                                    <p class="card__eyebrow">Leaderboards</p>
+                                    <h2 class="card__title c-card__title">Loading…</h2>
+                                </div>
+                            </div>
+                            <div class="c-card__body">
+                                <p class="hint">Loading leaderboards…</p>
+                                <div class="list c-list">
+                                    <ul class="list__body c-list__body"></ul>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+    <script src="/static/js/big-screen.js" defer></script>
+</body>
+</html>

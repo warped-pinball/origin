@@ -1,0 +1,502 @@
+/* Admin UI enhancements to align with player list styling */
+
+#admin .card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Tabs styled like the main site navigation */
+#admin .tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  padding: var(--s-2) var(--s-3);
+  background: rgba(255, 255, 255, 0.86);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  box-shadow: var(--sh-1);
+}
+
+#admin .tab {
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-1);
+  background: var(--c-paper);
+  padding: var(--s-2) var(--s-3);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+#admin .tab:hover,
+#admin .tab:focus-visible {
+  background: var(--c-accent-2);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+#admin .tab--current {
+  background: var(--c-accent);
+  border-color: var(--c-ink);
+}
+
+/* Toolbar */
+#admin .toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+
+#admin .toolbar__meta {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#admin .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  font-weight: 800;
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+}
+
+#admin .badge--quiet {
+  background: var(--page-surface-muted);
+}
+
+#admin .toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-3);
+  justify-content: flex-end;
+}
+
+#admin .field {
+  margin: 0;
+  min-width: min(360px, 100%);
+}
+
+#admin .field--inline .hint {
+  font-size: var(--fs-sm);
+}
+
+#admin #search {
+  background: #f8fbff;
+}
+
+/* Rosters */
+#admin .list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+@media (min-width: 720px) {
+  #admin .list {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+#admin .list__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: var(--page-surface-muted);
+  text-decoration: none;
+  color: var(--c-ink);
+  box-shadow: var(--sh-1);
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+#admin .list__item:hover {
+  transform: translateY(-1px);
+  background: var(--c-accent-2);
+}
+
+#admin .list__item:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+#admin .list__item--offline {
+  background: #f7f0f0;
+  border-color: #d87d7d;
+}
+
+#admin .list__item__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+#admin .list__item .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: var(--c-accent);
+  flex-shrink: 0;
+  text-align: center;
+  padding-inline: var(--s-3);
+  line-height: 1;
+}
+
+#admin .list__item--machine .badge {
+  min-width: max-content;
+  height: auto;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-2);
+}
+
+#admin .list__item--tournament .badge {
+  background: var(--c-accent-2);
+}
+
+#admin .list__item__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-weight: 800;
+  min-width: 0;
+}
+
+#admin .list__item__title strong {
+  font-size: var(--fs-lg);
+  word-break: break-word;
+}
+
+#admin .list__item__title .hint {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+
+#admin .list__item__footer {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+#admin #games-panel .list {
+  grid-template-columns: 1fr;
+}
+
+#admin #tournament-roster {
+  display: flex;
+  flex-direction: column;
+}
+
+#admin .list__item--machine {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+#admin .list__item--machine .list__item__header {
+  flex: 1;
+  align-items: center;
+}
+
+#admin .list__item--machine .list__item__title .hint {
+  white-space: normal;
+}
+
+#admin .list__item--machine .list__item__title {
+  gap: var(--s-2);
+}
+
+#admin .list__item--machine .list__item__footer {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+#admin .list__item--machine .pill {
+  white-space: nowrap;
+}
+
+#admin .tournament-section {
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+  padding: var(--s-3);
+}
+
+#admin .tournament-section + .tournament-section {
+  margin-top: var(--s-3);
+}
+
+#admin .tournament-section summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#admin .tournament-section summary::-webkit-details-marker {
+  display: none;
+}
+
+#admin .tournament-section__summary {
+  padding: var(--s-2) var(--s-1);
+}
+
+#admin .tournament-section__list {
+  margin-top: var(--s-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+#admin #tournament-roster .list__item {
+  width: 100%;
+}
+
+#login-modal .wp-input {
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 86%);
+  border-color: var(--c-ink);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+#login-modal .wp-input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+#admin .player-detail {
+  margin-top: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: var(--s-3);
+}
+
+#admin .player-detail .actions {
+  justify-content: flex-start;
+}
+
+#admin .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-3);
+  border-radius: 999px;
+  font-weight: 800;
+  border: var(--bw-2) solid var(--c-ink);
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+}
+
+#admin .pill--success {
+  background: #e1f7d7;
+}
+
+#admin .pill--muted {
+  background: #f1f5f9;
+  color: var(--c-muted);
+}
+
+/* Chip selectors for tournaments */
+#admin .chip-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(15, 22, 37, 0.05) 100%);
+}
+
+#admin .chip-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s-2) var(--s-3);
+  align-items: start;
+  padding: var(--s-3);
+  border-radius: var(--r-2);
+  background: var(--c-paper);
+  border: var(--bw-2) solid var(--c-ink);
+  color: var(--c-ink);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+  box-shadow: var(--sh-1);
+}
+
+#admin .chip-option:hover,
+#admin .chip-option:focus-within {
+  border-color: var(--c-accent);
+}
+
+#admin .chip-option input {
+  accent-color: var(--c-accent);
+  margin-top: 4px;
+}
+
+#admin .chip-option__title {
+  display: block;
+  font-weight: 800;
+  color: var(--c-ink);
+  line-height: 1.2;
+}
+
+#admin .chip-option__meta {
+  grid-column: 2 / span 1;
+  color: var(--c-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+#admin .chip-option--active {
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 2px rgba(38, 159, 255, 0.22), var(--sh-1);
+  background: #f7fbff;
+}
+
+#admin #tournament-form-container {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: var(--c-paper);
+  box-shadow: var(--sh-1);
+}
+
+#admin #tournament-form-container .form {
+  margin-top: 0;
+}
+
+/* Admin tournament editor */
+#admin-tournament .chip-search {
+  display: block;
+  margin: 0 0 var(--s-2);
+}
+
+#admin-tournament .chip-search .wp-input {
+  width: 100%;
+}
+
+#admin-tournament .chip-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: var(--bw-2) solid var(--c-ink);
+  border-radius: var(--r-2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(15, 22, 37, 0.05) 100%);
+  box-shadow: var(--sh-1);
+}
+
+#admin-tournament .chip-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s-2) var(--s-3);
+  align-items: start;
+  padding: var(--s-2);
+  border-radius: var(--r-2);
+  background: var(--c-paper);
+  border: var(--bw-2) solid var(--c-ink);
+  color: var(--c-ink);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+  box-shadow: var(--sh-1);
+}
+
+#admin-tournament .chip-option:hover,
+#admin-tournament .chip-option:focus-within {
+  border-color: var(--c-accent);
+}
+
+#admin-tournament .chip-option input {
+  accent-color: var(--c-accent);
+  margin-top: 2px;
+}
+
+#admin-tournament .chip-option__title {
+  display: block;
+  font-weight: 800;
+  color: var(--c-ink);
+  line-height: 1.2;
+}
+
+#admin-tournament .chip-option__meta {
+  grid-column: 2 / span 1;
+  color: var(--c-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+#admin-tournament .chip-option--active {
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 2px rgba(38, 159, 255, 0.22), var(--sh-1);
+  background: #f7fbff;
+}
+
+/* Form tweaks */
+#admin .form .grid {
+  margin-top: var(--s-2);
+}
+
+#admin input[type="datetime-local"],
+#admin select,
+#admin textarea {
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 80%);
+  font-weight: 700;
+}
+
+#admin input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(20%) sepia(8%) saturate(1259%) hue-rotate(314deg) brightness(92%) contrast(92%);
+  cursor: pointer;
+}
+
+#admin input[type="datetime-local"]::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+#admin select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%2316202a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 22px;
+  padding-right: calc(var(--s-6) + 12px);
+}
+
+#admin #tournament-type {
+  min-height: 48px;
+}
+
+@media (max-width: 540px) {
+  #admin .toolbar {
+    align-items: stretch;
+  }
+
+  #admin .toolbar__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

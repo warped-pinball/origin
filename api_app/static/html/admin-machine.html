@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine settings | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="page--plain" data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a class="site-nav__link" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link" href="/players">Players</a>
+                <a class="site-nav__link" href="/big-screen">Big screen</a>
+                <a class="site-nav__link site-nav__link--current" href="/admin">Admin</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="machine-admin" hidden>
+        <section class="card machine-shell">
+            <header class="card__header card__header--balanced machine-hero">
+                <div>
+                    <p class="eyebrow">Machine admin</p>
+                    <h1 id="machine-title">Machine</h1>
+                    <p class="hint" id="machine-subtitle">Loading machine details…</p>
+                </div>
+                <div class="machine-hero__actions">
+                    <div class="status" id="status-banner" aria-live="polite"></div>
+                    <button class="button button--ghost" type="button" id="admin-logout" hidden>Back to admin</button>
+                </div>
+            </header>
+
+            <section class="machine-section">
+                <div class="machine-section__header">
+                    <div>
+                        <p class="eyebrow">Connection</p>
+                        <h2>Machine details</h2>
+                        <p class="hint" id="machine-last-seen">Seen: Unknown</p>
+                    </div>
+                    <div class="machine-section__status" id="machine-meta">IP unknown • UID unknown</div>
+                </div>
+                <dl class="definition-list">
+                    <div class="definition-list__item">
+                        <dt>Status</dt>
+                        <dd id="machine-status">Checking…</dd>
+                    </div>
+                    <div class="definition-list__item">
+                        <dt>Last seen</dt>
+                        <dd id="machine-last-seen-detail">Unknown</dd>
+                    </div>
+                    <div class="definition-list__item">
+                        <dt>Network</dt>
+                        <dd id="machine-network">Unknown</dd>
+                    </div>
+                </dl>
+                <div class="section-actions">
+                    <a class="button" id="machine-open-link" target="_blank" rel="noopener">Open web UI</a>
+                </div>
+            </section>
+
+            <section class="machine-section" id="machine-live-section" hidden>
+                <div class="machine-section__header">
+                    <div>
+                        <p class="eyebrow">Live game</p>
+                        <h2>In progress</h2>
+                        <p class="hint" id="live-game-updated">Waiting for game data…</p>
+                    </div>
+                </div>
+                <div class="live-panel" id="live-game-panel">
+                    <div class="live-panel__stats" id="live-game-meta">No active game.</div>
+                    <div class="live-panel__scores" id="live-game-scores"></div>
+                </div>
+            </section>
+
+            <section class="machine-section">
+                <div class="machine-section__header">
+                    <div>
+                        <p class="eyebrow">Security</p>
+                        <h2>Admin access</h2>
+                        <p class="hint" id="machine-password-status">Password status unknown.</p>
+                    </div>
+                </div>
+                <div class="section-actions section-actions--stacked">
+                    <button class="button" type="button" id="machine-set-password">Set machine password</button>
+                    <p class="hint" id="machine-auth-status">Use the password modal to store credentials for authenticated requests.</p>
+                </div>
+            </section>
+
+            <section class="machine-section">
+                <div class="machine-section__header">
+                    <div>
+                        <p class="eyebrow">Updates</p>
+                        <h2>Software</h2>
+                        <p class="hint" id="machine-version">Version: Unknown</p>
+                    </div>
+                </div>
+                <div class="machine-updates">
+                    <div class="machine-updates__info" id="machine-update-status">Check for updates to see what's new.</div>
+                    <div class="section-actions section-actions--stacked">
+                        <button class="button" type="button" id="machine-check-updates">Check for updates</button>
+                        <button class="button button--ghost" type="button" id="machine-apply-update" disabled>Apply update</button>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="modal" id="login-modal" role="dialog" aria-modal="true">
+        <div class="modal__content">
+            <div class="modal__header">
+                <div>
+                    <p class="eyebrow">Restricted</p>
+                    <h2>Admin sign in</h2>
+                </div>
+            </div>
+            <p class="hint">Enter the admin password to manage this machine.</p>
+            <form class="form" id="admin-login">
+                <div class="grid">
+                    <label class="field">
+                        <span>Admin password</span>
+                        <input type="password" name="password" id="password" required autocomplete="current-password">
+                    </label>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="button">Sign in</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="game-password-modal" role="dialog" aria-modal="true" hidden>
+        <div class="modal__content">
+            <div class="modal__header">
+                <div>
+                    <p class="eyebrow">Secure game</p>
+                    <h2 id="game-password-title">Set game password</h2>
+                </div>
+                <button class="icon-button" type="button" id="close-game-modal" aria-label="Close">×</button>
+            </div>
+            <p class="hint" id="game-password-hint">Choose a password to authenticate requests for this game.</p>
+            <form class="form" id="game-password-form">
+                <input type="hidden" name="gameId" id="game-id-field">
+                <div class="grid">
+                    <label class="field">
+                        <span>Game password</span>
+                        <input type="password" name="password" id="game-password-input" required minlength="4">
+                    </label>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="button">Save password</button>
+                    <button type="button" class="button button--ghost" id="cancel-game-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+    <script src="/static/js/admin-machine.js" defer></script>
+</body>
+</html>

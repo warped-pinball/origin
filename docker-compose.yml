@@ -2,27 +2,28 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: api_app/Dockerfile
     ports:
       - "8000:8000"
-      - "5000:5000/udp"
     environment:
-      - DATABASE_URL=postgresql://vector_user:vector_password@db:5432/vector_db
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: postgres:15
+      - DATABASE_URL=sqlite+aiosqlite:///app/data/app.db
+      - ADMIN_PASSWORD=pinball
+      - RAY_PASSWORD=raypass
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - sqlite_data:/app/data
+
+  ray:
+    build:
+      context: .
+      dockerfile: ray_app/Dockerfile
+    depends_on:
+      - app
+    network_mode: "host"
     environment:
-      - POSTGRES_USER=vector_user
-      - POSTGRES_PASSWORD=vector_password
-      - POSTGRES_DB=vector_db
-    ports:
-      - "5432:5432"
-    restart: always
+      - RAY_API_URL=http://127.0.0.1:8000
+      - RAY_API_PASSWORD=raypass
 
 volumes:
-  postgres_data:
+  sqlite_data:

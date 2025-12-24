@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Guide | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/brand-guide.css">
+</head>
+<body data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav c-nav" aria-label="Primary">
+                <a class="site-nav__link c-nav__link" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link c-nav__link" href="/players">Players</a>
+                <a class="site-nav__link c-nav__link" href="/big-screen">Big screen</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="brand-guide">
+        <section class="card">
+            <div class="card__header card__header--balanced">
+                <div>
+                    <p class="eyebrow">Warped Pinball product system</p>
+                    <h1>Brand guide</h1>
+                    <p class="lede">Use this reference to keep every page sharp, clear, and consistent. Each section spells out the visual tokens and interaction patterns our product relies on.</p>
+                </div>
+                <div class="status status--info">Built for internal teams</div>
+            </div>
+
+            <div class="guide-grid">
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Brand assets</h2>
+                        <p class="hint">Use the primary logo on light or deep spiral skies with clear padding.</p>
+                    </div>
+                    <div class="brand-assets">
+                        <div class="brand-assets__tile brand-assets__tile--light">
+                            <img src="/static/img/logo.svg" alt="Warped Pinball primary logo on spiral glow background">
+                            <p class="token__note">Spiral glow</p>
+                        </div>
+                        <div class="brand-assets__tile brand-assets__tile--dark">
+                            <img src="/static/img/logo.svg" alt="Warped Pinball primary logo on spiral deep sky background">
+                            <p class="token__note">Spiral deep sky</p>
+                        </div>
+                    </div>
+                    <div class="code-snippet" aria-label="Logo usage example">
+                        <p class="code-snippet__label">HTML</p>
+                        <code>&lt;a class="brand-mark" href="/" aria-label="Warped Pinball"&gt;
+    &lt;img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo"&gt;
+&lt;/a&gt;</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Core palette</h2>
+                        <p class="hint">Use the primary and accent colors for layout backgrounds, cards, and highlights.</p>
+                        <p class="hint">Load <code>tokens.css</code> before other stylesheets to keep every page on the shared palette.</p>
+                    </div>
+                    <div class="code-snippet" aria-label="Shared palette include">
+                        <p class="code-snippet__label">HTML</p>
+                        <code>&lt;link rel="stylesheet" href="/static/css/tokens.css"&gt;</code>
+                    </div>
+                    <ul class="swatches">
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--bg);"></span>
+                            <p class="swatch__label">Sky base<br><small>#c3e8ff</small></p>
+                            <p class="swatch__usage">Default page background for airy screens.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--spiral-glow);"></span>
+                            <p class="swatch__label">Spiral glow<br><small>#caf5fe</small></p>
+                            <p class="swatch__usage">Highlight hero panels and light logo placements.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--bg-night);"></span>
+                            <p class="swatch__label">Spiral deep sky<br><small>#92c7d7</small></p>
+                            <p class="swatch__usage">Dark section backgrounds and footer shells.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--card);"></span>
+                            <p class="swatch__label">Card canvas<br><small>#fdfefe</small></p>
+                            <p class="swatch__usage">Surface color for cards and modals.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--accent);"></span>
+                            <p class="swatch__label">Accent yellow<br><small>#f4c542</small></p>
+                            <p class="swatch__usage">CTAs, hover fills, and nav highlights.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--border);"></span>
+                            <p class="swatch__label">Ink<br><small>#0b121d</small></p>
+                            <p class="swatch__usage">Primary text, borders, and high-contrast outlines.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--success);"></span>
+                            <p class="swatch__label">Success<br><small>#13834f</small></p>
+                            <p class="swatch__usage">Positive banners and confirmation states.</p>
+                        </li>
+                        <li class="swatch">
+                            <span class="swatch__tone" style="--tone: var(--error);"></span>
+                            <p class="swatch__label">Error<br><small>#c2272d</small></p>
+                            <p class="swatch__usage">Form validation errors and destructive actions.</p>
+                        </li>
+                    </ul>
+                    <div class="code-snippet" aria-label="Color tokens example">
+                        <p class="code-snippet__label">CSS</p>
+<code>:root {
+    --panel: var(--card);
+}
+
+.cta-button {
+    background: var(--accent);
+    color: var(--border);
+}
+
+.status--success {
+    background: var(--success);
+    color: #fff;
+}</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Layout tokens</h2>
+                        <p class="hint">Use the shared background and spacing variables to keep admin tools consistent with marketing pages.</p>
+                    </div>
+                    <ul class="tokens">
+                        <li class="token">
+                            <p class="token__title">Backgrounds</p>
+                            <p class="token__value"><code>--page-background</code> (spiral sky) · <code>--page-background-plain</code> (white)</p>
+                            <p class="token__note">Apply the plain surface to focused tools like the machine admin view; keep the spiral base for public-facing pages.</p>
+                        </li>
+                        <li class="token">
+                            <p class="token__title">Surfaces</p>
+                            <p class="token__value"><code>--page-surface</code> · <code>--page-surface-muted</code></p>
+                            <p class="token__note">Cards, hero strips, and inline sections rely on these values for readable contrast.</p>
+                        </li>
+                        <li class="token">
+                            <p class="token__title">Spacing + shells</p>
+                            <p class="token__value"><code>--page-max-width</code> (1200px) · <code>--page-gutter</code> (24px) · <code>--space-050…1200</code></p>
+                            <p class="token__note">Wrap content with <code>page-shell</code> or <code>c-shell</code> and use the space scale to balance sections.</p>
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Typography</h2>
+                        <p class="hint">Pair display headers set in Lilita One with Inter for everything else.</p>
+                    </div>
+                    <ul class="tokens">
+                        <li class="token">
+                            <p class="token__title">Headlines</p>
+                            <p class="token__value">Lilita One, 46px, 1.05 line height</p>
+                            <p class="token__note">Used on page titles and card titles that lead sections.</p>
+                        </li>
+                        <li class="token">
+                            <p class="token__title">Body</p>
+                            <p class="token__value">Inter, 16–18px, 1.5 line height</p>
+                            <p class="token__note">Default font for paragraphs, table text, and labels.</p>
+                        </li>
+                        <li class="token">
+                            <p class="token__title">Labels</p>
+                            <p class="token__value">Inter Bold, uppercase, letter spacing 0.04em</p>
+                            <p class="token__note">Apply to nav links, buttons, and eyebrows.</p>
+                        </li>
+                    </ul>
+                    <div class="code-snippet" aria-label="Typography example">
+                        <p class="code-snippet__label">HTML + CSS</p>
+<code>&lt;h1 class="display-title"&gt;Warped Pinball League&lt;/h1&gt;
+&lt;p class="body-text"&gt;Inter keeps long-form content comfortable to read.&lt;/p&gt;
+
+.display-title {
+    font-family: 'Lilita One', cursive;
+    font-size: 46px;
+    line-height: 1.05;
+}
+
+.body-text {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+}</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Cards and layout</h2>
+                        <p class="hint">Cards keep content contained, with bold borders and playful shadows.</p>
+                    </div>
+                    <div class="layout-callout">
+                        <div>
+                            <p class="token__title">Spacing</p>
+                            <p class="token__value">24px padding, 22px border radius, 4px border</p>
+                            <p class="token__note">Use <code>card</code> for primary content areas and <code>card--aside</code> for sticky support panels.</p>
+                        </div>
+                        <div>
+                            <p class="token__title">Page shell</p>
+                            <p class="token__value">Max width 1200px with 24px gutter</p>
+                            <p class="token__note">Wrap screens with <code>page-shell</code> to keep layouts centered and breathable.</p>
+                        </div>
+                    </div>
+                    <div class="code-snippet" aria-label="Card layout example">
+                        <p class="code-snippet__label">HTML</p>
+<code>&lt;main class="page-shell layout"&gt;
+    &lt;article class="card"&gt;Primary content&lt;/article&gt;
+    &lt;aside class="card card--aside"&gt;Helper panel&lt;/aside&gt;
+&lt;/main&gt;</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Buttons</h2>
+                        <p class="hint">Buttons are chunky, bright, and provide clear hover feedback.</p>
+                    </div>
+                    <div class="button-row">
+                        <button class="button" type="button">Primary action</button>
+                        <button class="button button--ghost" type="button">Ghost action</button>
+                        <button class="button" type="button" disabled>Disabled</button>
+                    </div>
+                    <ul class="tokens">
+                        <li class="token">
+                            <p class="token__title">Shape</p>
+                            <p class="token__value">14px radius, 3px border, inset shadow</p>
+                            <p class="token__note">Keep inline padding at 14–18px and use bold labels.</p>
+                        </li>
+                        <li class="token">
+                            <p class="token__title">Hover</p>
+                            <p class="token__value">Lift by 1px with accent fill</p>
+                            <p class="token__note">Maintain high contrast between the label and background.</p>
+                        </li>
+                    </ul>
+                    <div class="code-snippet" aria-label="Button markup example">
+                        <p class="code-snippet__label">HTML</p>
+<code>&lt;button class="button" type="submit"&gt;Save changes&lt;/button&gt;
+&lt;button class="button button--ghost" type="button"&gt;Cancel&lt;/button&gt;</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Forms</h2>
+                        <p class="hint">Fields are roomy with generous spacing and clear inline validation.</p>
+                    </div>
+                    <div class="form-grid">
+                        <label class="field">
+                            <span>Label</span>
+                            <input type="text" placeholder="Jane Doe" aria-label="Sample input">
+                        </label>
+                        <label class="field">
+                            <span>Label</span>
+                            <input type="email" placeholder="player@example.com" aria-label="Sample input">
+                        </label>
+                        <label class="field">
+                            <span>Label</span>
+                            <select aria-label="Sample select">
+                                <option>Option one</option>
+                                <option>Option two</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="token__note">Form rows use a two-column grid on desktop and stack on smaller screens.</p>
+                    <div class="code-snippet" aria-label="Form markup example">
+                        <p class="code-snippet__label">HTML</p>
+<code>&lt;label class="field field--error"&gt;
+    &lt;span&gt;Email&lt;/span&gt;
+    &lt;input type="email" aria-invalid="true" placeholder="player@example.com"&gt;
+&lt;/label&gt;</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Interaction cues</h2>
+                        <p class="hint">Communicate changes with banners and focused outlines.</p>
+                    </div>
+                    <div class="callouts">
+                        <div class="status status--success">Success banner</div>
+                        <div class="status status--error">Error banner</div>
+                        <div class="status status--info">Informational banner</div>
+                    </div>
+                    <p class="token__note">Use <code>status</code> to announce saves, validation results, and live updates.</p>
+                    <div class="code-snippet" aria-label="Status component example">
+                        <p class="code-snippet__label">HTML</p>
+<code>&lt;div class="status status--success" role="status"&gt;
+    Player saved successfully
+&lt;/div&gt;</code>
+                    </div>
+                </section>
+
+                <section class="guide-section">
+                    <div class="guide-section__header">
+                        <h2>Component guide</h2>
+                        <p class="hint">Reusable navigation, leaderboard, and hero tiles now live on their own reference page.</p>
+                    </div>
+                    <p class="token__note">Use the component guide to copy-ready markup, preview responsive behavior, and grab Jinja macros.</p>
+                    <a class="button" href="/component-guide">Open the component guide</a>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+</body>
+</html>

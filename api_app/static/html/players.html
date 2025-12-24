@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Players | The Box</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/components/players.css">
+</head>
+<body data-spiral="static">
+    <div class="site-header" role="banner">
+        <div class="site-header__inner page-shell">
+            <a href="/register" class="brand-mark">
+                <img src="/static/img/logo.svg" alt="Warped Pinball logo" class="brand-mark__logo">
+                <span class="sr-only">Warped Pinball</span>
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a class="site-nav__link" href="/register#registration-form">Registration</a>
+                <a class="site-nav__link site-nav__link--current" href="/players">Players</a>
+                <a class="site-nav__link" href="/big-screen">Big screen</a>
+            </nav>
+        </div>
+    </div>
+
+    <main class="layout layout--single page-shell" id="players">
+        <section class="card">
+            <div class="card__header card__header--balanced">
+                <div>
+                    <h1>Players</h1>
+                    <p class="hint">Browse the roster and open a profile to make edits.</p>
+                </div>
+                <div class="status" id="status-banner" aria-live="polite"></div>
+            </div>
+
+            <div class="toolbar">
+                <div class="toolbar__actions">
+                    <label class="field field--inline">
+                        <span class="hint">Search</span>
+                        <input class="wp-input" type="search" name="search" id="search" placeholder="ABC or screen name">
+                    </label>
+                    <a class="wp-btn wp-btn--primary" href="/register#registration-form">Add new player</a>
+                </div>
+            </div>
+
+            <div class="list list--cards" id="roster-list" role="list">
+                <p class="hint" id="empty-copy">Loading players…</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" role="contentinfo">
+        <div class="site-footer__inner page-shell">
+            <div class="site-footer__section">
+                <p class="site-footer__label">Resources</p>
+                <a class="site-footer__link" href="/docs">API docs</a>
+                <a class="site-footer__link" href="/component-guide">Component guide</a>
+                <a class="site-footer__link" href="/brand-guide">Brand guide</a>
+                <a class="site-footer__link" href="/admin">Admin</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/spiral-background.js" defer></script>
+    <script src="/static/js/players.js" defer></script>
+</body>
+</html>

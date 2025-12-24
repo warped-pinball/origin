@@ -1,0 +1,86 @@
+/* Registration page specific styles */
+.body--registration {
+  background: radial-gradient(140% 120% at 14% 8%, var(--swirl-1) 0%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(120% 120% at 76% 0%, var(--swirl-3) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, var(--c-bg-1) 0%, var(--c-bg-2) 100%);
+}
+
+.site-header {
+  padding: 4px 22px;
+}
+
+.brand-mark,
+.brand-mark__logo {
+  height: 80px;
+}
+
+#registration {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.registration-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.registration-card::after {
+  content: "";
+  position: absolute;
+  inset: var(--s-2);
+  border-radius: calc(var(--r-3) - var(--s-2));
+  border: var(--bw-1) dashed rgba(11, 18, 29, 0.12);
+  pointer-events: none;
+}
+
+.registration-card .card__header {
+  margin-bottom: var(--s-4);
+}
+
+.registration-card h1 {
+  margin-top: 0;
+}
+
+.registration-card .hint {
+  font-size: var(--fs-lg);
+}
+
+.registration-form {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.registration-form .grid {
+  gap: var(--s-4);
+}
+
+.registration-form .field span {
+  font-size: var(--fs-md);
+}
+
+.registration-form sup {
+  color: var(--c-accent);
+}
+
+.registration-form input,
+.registration-form select,
+.registration-form textarea {
+  background: #f8fbff;
+}
+
+.form-actions {
+  justify-content: flex-end;
+  gap: var(--s-3);
+}
+
+@media (max-width: 540px) {
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions .wp-btn,
+  .form-actions .button,
+  .form-actions .button--ghost {
+    width: 100%;
+  }
+}

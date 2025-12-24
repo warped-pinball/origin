@@ -1,10 +1,12 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
-psycopg2-binary
+aiosqlite
 pydantic
-asyncpg
+pydantic-settings
 pytest
+pyyaml
 httpx
-pre-commit
-black
+pytest-asyncio
+pytest-playwright
+playwright
